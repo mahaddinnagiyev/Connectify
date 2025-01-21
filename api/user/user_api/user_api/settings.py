@@ -43,7 +43,6 @@ ROOT_URLCONF = 'user_api.urls'
 
 WSGI_APPLICATION = 'user_api.wsgi.application'
 
-
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
