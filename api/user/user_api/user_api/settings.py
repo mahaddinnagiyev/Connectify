@@ -28,7 +28,8 @@ INSTALLED_APPS = [
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'rest_framework',
-    'user'
+    'user',
+    'custom_auth'
 ]
 
 MIDDLEWARE = [
