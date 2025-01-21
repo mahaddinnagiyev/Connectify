@@ -1,0 +1,7 @@
+# Global ignores
+.env
+Dockerfile
+docker-compose.yml
+*.log
+.DS_Store
+.idea/
