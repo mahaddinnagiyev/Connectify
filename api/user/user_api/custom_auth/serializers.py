@@ -55,3 +55,16 @@ class SignupSerializer(serializers.ModelSerializer):
         if User.objects.filter(email=value):
             raise serializers.ValidationError({"validation_error": "This email already registered"})
         return value
+
+
+# Confirm Account Serializer
+class ConfirmSerializer(serializers.Serializer):
+
+    code = serializers.IntegerField(min_value=100000, max_value=999999)
+
+    def validate_code(self, value):
+
+        if (value < 0) or (len(str(value)) != 6):
+            raise serializers.ValidationError({ "error": "Please write valid code" })
+
+        return value
