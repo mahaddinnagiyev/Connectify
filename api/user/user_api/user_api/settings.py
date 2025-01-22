@@ -41,6 +41,24 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
+# Rest Framework and JWT Settings
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.AllowAny',
+    ],
+}
+
+SIMPLE_JWT = {
+    'USER_ID_FIELD': 'id',
+    'USER_ID_CLAIM': 'id',
+    "ACCESS_TOKEN_LIFETIME": timedelta(hours=1),
+    "BLACKLIST_AFTER_ROTATION": True,
+}
+
+
 ROOT_URLCONF = 'user_api.urls'
 
 WSGI_APPLICATION = 'user_api.wsgi.application'

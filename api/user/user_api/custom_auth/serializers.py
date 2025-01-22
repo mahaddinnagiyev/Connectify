@@ -1,6 +1,11 @@
 from rest_framework import serializers
 from user.models import User
 import re
+from django.contrib.auth.hashers import check_password
+from rest_framework_simplejwt.tokens import AccessToken, Token
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer, AuthUser
+from django.conf import settings
+
 
 # Signup Serializer
 class SignupSerializer(serializers.ModelSerializer):
@@ -60,7 +65,11 @@ class SignupSerializer(serializers.ModelSerializer):
 # Confirm Account Serializer
 class ConfirmSerializer(serializers.Serializer):
 
-    code = serializers.IntegerField(min_value=100000, max_value=999999)
+    code = serializers.IntegerField(
+        min_value=100000,
+        max_value=999999,
+        required=True
+    )
 
     def validate_code(self, value):
 
@@ -68,3 +77,48 @@ class ConfirmSerializer(serializers.Serializer):
             raise serializers.ValidationError({ "error": "Please write valid code" })
 
         return value
+
+
+# Login Serializer
+class LoginSerializer(serializers.Serializer):
+
+    username_or_email = serializers.CharField(
+        max_length=255,
+        required=True
+    )
+    password = serializers.CharField(
+        max_length=255,
+        required=True,
+        write_only=True
+    )
+
+    def validate(self, data):
+
+        username_or_email = data.get("username_or_email")
+        password = data.get("password")
+
+        user = None
+        if "@" in username_or_email and "." in username_or_email:
+            user = User.objects.filter(email=username_or_email).first()
+
+        else:
+            user = User.objects.filter(username=username_or_email).first()
+
+        if user is None:
+            raise serializers.ValidationError({ "error": "Invalid credentials. Please try again" })
+
+        if not check_password(password, user.password):
+            raise serializers.ValidationError({ "error": "Invalid credentials. Please try again" })
+
+        return { "user": user }
+
+
+# Custom Access Token Serializer
+class CustomTokenSerializer(TokenObtainPairSerializer):
+
+    @classmethod
+    def get_token(cls, user):
+        token = AccessToken.for_user(user)
+
+        token.set_exp(lifetime=settings.SIMPLE_JWT["ACCESS_TOKEN_LIFETIME"])
+        return token

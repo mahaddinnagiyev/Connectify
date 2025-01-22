@@ -11,9 +11,10 @@ from django.contrib.auth.hashers import make_password
 # Rate Limiter
 from django_ratelimit.decorators import ratelimit
 from django.utils.decorators import method_decorator
+from django.core.cache import cache
 
 # Serializer
-from .serializers import SignupSerializer, ConfirmSerializer
+from .serializers import SignupSerializer, ConfirmSerializer, LoginSerializer, CustomTokenSerializer
 
 # Models
 from user.models import User
@@ -90,6 +91,7 @@ class AuthViewSet(ViewSet):
     @method_decorator(ratelimit(key='ip', rate='10/m', block=False))
     def confirm(self, request):
 
+        # If rate-limited
         if getattr(request, 'limited', False):
             return Response(
                 {"error": "Too many requests. Please try again later"},
@@ -156,3 +158,77 @@ class AuthViewSet(ViewSet):
         except Exception as e:
             print(e)
             return Response({ "error": "Internal Server Error" }, status=HTTP_500_INTERNAL_SERVER_ERROR)
+
+    # Login
+    @method_decorator(ratelimit(key='ip', rate='20/m', block=False))
+    def login(self, request):
+
+        # If rate-limited
+        if getattr(request, 'limited', False):
+            return Response(
+                {"error": "Too many requests. Please try again later"},
+                status=status.HTTP_429_TOO_MANY_REQUESTS
+            )
+
+
+        try:
+            serializer = LoginSerializer(data=request.data)
+
+            ip = self.get_client_ip(request)
+
+            if not serializer.is_valid():
+
+                failures = cache.get(f"failed_logins_{ip}", 0) + 1
+                cache.set(f"failed_logins_{ip}", failures, timeout=90)
+
+                if failures > 5:
+                    cache.set(f"blocked_{ip}", True, timeout=90)
+                    return Response(
+                        { "error": "Too many fail login attempts. Please try again later with correct credentials" },
+                        status=status.HTTP_429_TOO_MANY_REQUESTS
+                    )
+
+                return Response(
+                    serializer.errors,
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            is_blocked = cache.get(f"blocked_{ip}")
+            if is_blocked:
+                return Response(
+                    {"error": "Too many failed login attempts. Your IP is blocked for 90 seconds."},
+                    status=status.HTTP_429_TOO_MANY_REQUESTS
+                )
+
+            user = serializer.validated_data["user"]
+            token = CustomTokenSerializer.get_token(user)
+
+            cache.delete(f"failed_logins_{ip}")
+
+            return Response(
+                {
+                    "success": True,
+                    "access_token": str(token),
+                },
+                status=status.HTTP_200_OK
+            )
+
+        except Exception as e:
+            print(e)
+            return Response({ "error": "Internal Server Error" })
+
+
+    # Get Client's IP
+    def get_client_ip(self, request):
+
+        """
+            Handling client ip by request
+        """
+        x_forwarded_to = request.META.get('HTTP_X_FORWARDED_FOR')
+
+        if x_forwarded_to:
+            ip = x_forwarded_to.split(',')[0]
+        else:
+            ip = request.META.get('REMOTE_ADDR')
+
+        return ip
