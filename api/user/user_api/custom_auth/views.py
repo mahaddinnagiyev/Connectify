@@ -40,57 +40,61 @@ class AuthViewSet(ViewSet):
                 status=status.HTTP_429_TOO_MANY_REQUESTS
             )
 
-        serializer = SignupSerializer(data=request.data)
+        try:
 
-        if serializer.is_valid():
-            try:
-                data = serializer.validated_data
+            serializer = SignupSerializer(data=request.data)
 
-                confirm_code = generate_code.generate_confirm_code()
+            if serializer.is_valid():
+                    data = serializer.validated_data
 
-                unconfirmed_user = {
-                    "first_name": data["first_name"],
-                    "last_name": data["last_name"],
-                    "username": data["username"],
-                    "email": data["email"],
-                    "gender": data["gender"],
-                    "password": data["password"],
-                }
+                    confirm_code = generate_code.generate_confirm_code()
 
-                request.session["unconfirmed_user"] = unconfirmed_user
-                request.session["confirm_code"] = confirm_code
+                    unconfirmed_user = {
+                        "first_name": data["first_name"],
+                        "last_name": data["last_name"],
+                        "username": data["username"],
+                        "email": data["email"],
+                        "gender": data["gender"],
+                        "password": data["password"],
+                    }
 
-                send_mail(
-                    "Confirm Your Connectify Account",
-                    confirm_message.send_confirmation_code_email(
-                        data["first_name"],
-                        data["last_name"],
-                        confirm_code
-                    ),
-                    settings.EMAIL_HOST_USER,
-                    [data["email"]]
-                )
+                    request.session["unconfirmed_user"] = unconfirmed_user
+                    request.session["confirm_code"] = confirm_code
 
-                return Response(
-                    {
-                        "success": "True",
-                        "message": "Confirmation code sent. Please check your email inbox."
-                    },
-                    status=status.HTTP_201_CREATED
-                )
+                    send_mail(
+                        "Confirm Your Connectify Account",
+                        confirm_message.send_confirmation_code_email(
+                            data["first_name"],
+                            data["last_name"],
+                            confirm_code
+                        ),
+                        settings.EMAIL_HOST_USER,
+                        [data["email"]]
+                    )
 
-            except Exception as e:
-                print(e)
-                return Response(
-                    { "error": "Internal Server Error" },
-                    status=status.HTTP_500_INTERNAL_SERVER_ERROR
-                )
+                    return Response(
+                        {
+                            "success": "True",
+                            "message": "Confirmation code sent. Please check your email inbox."
+                        },
+                        status=status.HTTP_201_CREATED
+                    )
 
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+        except Exception as e:
+            print(e)
+            return Response({ "error": "Internal Server Error" }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     # Confirm Account
+    @method_decorator(ratelimit(key='ip', rate='10/m', block=False))
     def confirm(self, request):
+
+        if getattr(request, 'limited', False):
+            return Response(
+                {"error": "Too many requests. Please try again later"},
+                status=status.HTTP_429_TOO_MANY_REQUESTS
+            )
 
         try:
             serializer = ConfirmSerializer(data=request.data)
