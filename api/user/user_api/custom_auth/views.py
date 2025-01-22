@@ -1,4 +1,3 @@
-from Custom_Widgets import Object
 from rest_framework import status
 from django.db import DatabaseError
 from rest_framework.viewsets import ViewSet
@@ -20,7 +19,7 @@ from user.models import User
 class AuthViewSet(ViewSet):
 
     @method_decorator(ratelimit(key='ip', rate='20/m', block=False))
-    def singup(self, request):
+    def signup(self, request):
 
         # If rate-limited
         if getattr(request, 'limited', False):

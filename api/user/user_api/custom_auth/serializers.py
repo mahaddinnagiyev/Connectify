@@ -16,7 +16,7 @@ class SignupSerializer(serializers.ModelSerializer):
     class Meta:
 
         model = User
-        fields = ['first_name', 'last_name', 'username', 'email', 'gender', 'password']
+        fields = ['first_name', 'last_name', 'username', 'email', 'gender', 'password', 'confirm']
         extra_kwargs = {
             'password': {
                 'write_only': True
@@ -35,24 +35,23 @@ class SignupSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError({ "validation_error": "Password must contain at least one special character." })
         return value
 
-    def validate_confirm(self, data):
+    def validate_confirm(self, value):
 
-        password = data.get("password")
-        confirm = data.get("confirm")
+        password = self.initial_data.get("password")
 
-        if password != confirm:
+        if password != value:
             raise serializers.ValidationError({ "validation_error": "Passwords does not match." })
 
-        return data
+        return value
 
     def validate_username(self, value):
 
-        if User.objects.get(username=value):
+        if User.objects.filter(username=value):
             raise serializers.ValidationError({ "validation_error": "This username already taken" })
         return value
 
     def validate_email(self, value):
 
-        if User.objects.get(email=value):
+        if User.objects.filter(email=value):
             raise serializers.ValidationError({"validation_error": "This email already registered"})
         return value
