@@ -1,6 +1,5 @@
 from django.conf import settings
 from rest_framework import status
-from django.db import DatabaseError
 from rest_framework.status import HTTP_400_BAD_REQUEST, HTTP_500_INTERNAL_SERVER_ERROR
 from rest_framework.viewsets import ViewSet
 from rest_framework.response import Response
@@ -216,7 +215,6 @@ class AuthViewSet(ViewSet):
         except Exception as e:
             print(e)
             return Response({ "error": "Internal Server Error" })
-
 
     # Get Client's IP
     def get_client_ip(self, request):

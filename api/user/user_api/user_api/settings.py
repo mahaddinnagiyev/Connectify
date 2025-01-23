@@ -29,7 +29,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'rest_framework',
     'user',
-    'custom_auth'
+    'custom_auth',
+    'oauth2_provider',
 ]
 
 MIDDLEWARE = [
