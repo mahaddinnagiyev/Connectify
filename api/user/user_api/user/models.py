@@ -48,11 +48,13 @@ class User(AbstrasctModel):
     username = models.CharField(
         verbose_name="Username",
         null=False,
+        unique=True,
         validators=[MinLengthValidator(1), MaxLengthValidator(255)]
     )
     email = models.EmailField(
         verbose_name="Email",
         null=False,
+        unique=True,
         validators=[MinLengthValidator(10), MaxLengthValidator(255)]
     )
     is_admin = models.BooleanField(
@@ -78,6 +80,51 @@ class User(AbstrasctModel):
         verbose_name="Reset Token Expiration",
         null=True
     )
+    friend_list = models.ManyToManyField(
+        'self',
+        symmetrical=False,
+        through='user.Friend',
+        related_name="friends",
+        verbose_name="Friends"
+    )
 
     class Meta:
         ordering = ["id"]
+
+
+# Friendship Model
+class Friend(models.Model):
+
+    STATUS_CHOICES = (
+        ('Y', 'Accept'),
+        ('F', 'Reject'),
+        ('P', 'Pending')
+    )
+
+    user = models.ForeignKey(
+        'user.User',
+        on_delete=models.CASCADE,
+        related_name="friendships_initiated",
+        verbose_name="friends"
+    )
+    friend_user = models.ForeignKey(
+        'user.User',
+        on_delete=models.CASCADE,
+        related_name="friendships_received",
+        verbose_name="friend_of"
+    )
+    status = models.CharField(
+        choices=STATUS_CHOICES,
+        verbose_name="friendship_status",
+        max_length=1,
+        default='P'
+    ),
+    created_at = models.DateTimeField(
+        blank=True,
+        auto_now_add=True,
+        verbose_name='Created Date'
+    )
+
+    class Meta:
+        ordering = ["id"]
+        unique_together = ('user', 'friend_user')
