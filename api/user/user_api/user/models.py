@@ -55,6 +55,9 @@ class User(AbstrasctModel):
         null=False,
         validators=[MinLengthValidator(10), MaxLengthValidator(255)]
     )
+    is_admin = models.BooleanField(
+        default=False
+    )
     gender = models.CharField(
         choices=GENDER_CHOICES,
         verbose_name="Gender",

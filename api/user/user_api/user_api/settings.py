@@ -31,6 +31,7 @@ INSTALLED_APPS = [
     'user',
     'custom_auth',
     'oauth2_provider',
+    'account'
 ]
 
 MIDDLEWARE = [
