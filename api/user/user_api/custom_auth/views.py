@@ -26,7 +26,14 @@ from django.core.mail import send_mail
 from user_api.utils import generate_code
 from user_api.utils.messages import confirm_message
 
-
+"""
+    ********************************************************************************************
+    User Authenticate Views
+    /auth/signup --> To sign up to app --> POST
+    /auth/signup/confirm --> To confirm email and creating new user and its account --> POST
+    /auth/login -->  To login user account --> POST    
+    ********************************************************************************************
+"""
 # Auth View Set
 class AuthViewSet(ViewSet):
 
