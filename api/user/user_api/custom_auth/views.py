@@ -17,6 +17,7 @@ from .serializers import SignupSerializer, ConfirmSerializer, LoginSerializer, C
 
 # Models
 from user.models import User
+from account.models import Account
 
 # Email
 from django.core.mail import send_mail
@@ -135,6 +136,8 @@ class AuthViewSet(ViewSet):
                     password=hashed_password
                 )
 
+                account = Account.objects.create(user=user)
+
                 del request.session["confirm_code"]
                 del request.session["unconfirmed_user"]
 
@@ -142,11 +145,15 @@ class AuthViewSet(ViewSet):
                     {
                         "success": True,
                         "user": {
+                            "id": user.id,
                             "first_name": user.first_name,
                             "last_name": user.last_name,
                             "username": user.username,
                             "email": user.email,
                             "gender": user.gender,
+                            "account": {
+                                "id": account.id
+                            }
                         }
                     },
                     status=status.HTTP_201_CREATED

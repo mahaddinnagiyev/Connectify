@@ -22,7 +22,7 @@ class Account(AbstrasctModel):
     )
     location = models.CharField(
         max_length=255,
-        null=False,
+        null=True,
         verbose_name="Location"
     )
     profile_pic = models.ImageField(
