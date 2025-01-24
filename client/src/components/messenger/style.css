@@ -1,0 +1,135 @@
+/* Message Styling */
+.messenger-container {
+  width: 90%;
+  padding-top: 20px;
+  margin: 0 auto;
+}
+
+.messenger {
+  height: calc(100vh - 150px);
+  padding: 15px;
+  background-color: #fff;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  border-radius: 10px;
+  text-align: center;
+  font-size: 18px;
+  font-weight: bold;
+  color: #333;
+  margin-top: 120px;
+}
+
+/* Left Side of Messenger */
+.messenger-left {
+  width: 33%;
+}
+
+.message-users {
+  height: calc(100% - 85px);
+  overflow-y: auto;
+}
+
+/* Styles for the MoreVert button */
+.more-vert-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+}
+
+/* Container for the action buttons */
+.action-buttons {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background-color: white;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: max-content;
+  z-index: 10000;
+}
+
+.action-buttons-2 {
+  position: absolute;
+  top: 29%;
+  right: 8%;
+  background-color: white;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: max-content;
+  z-index: 10000;
+}
+
+/* Styles for the delete button */
+.delete-btn,
+.block-btn {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.875rem;
+  padding: 8px 16px;
+  width: 100%;
+  text-align: left;
+  border: none;
+  background: none;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: background-color 0.3s ease;
+}
+
+/* Hover effect for both buttons */
+.delete-btn:hover,
+.block-btn:hover {
+  background-color: #f3f3f3;
+  color: red;
+}
+
+/* Icon styling inside buttons */
+.delete-icon {
+  font-size: 16px;
+}
+
+/* Right Part of Messenger */
+.messenger-right {
+  width: 67%;
+}
+
+.call-btn {
+    border: 2px solid var(--primary-color);
+    background-color: var(--solid-color);
+    border-radius: 5px;
+    padding: 7px 15px;
+    transition: .3s ease-in-out;
+}
+
+.call-btn:hover {
+    background-color: var(--primary-color);
+    color: #fff;
+}
+
+/* Body styling */
+@media (max-width: 884px) {
+  .messenger-container {
+    width: 88%;
+  }
+}
+
+@media (max-width: 768px) {
+
+  .messenger-left {
+    width: 100%;
+  }
+
+  .messenger-right {
+    display: none;
+  }
+}
