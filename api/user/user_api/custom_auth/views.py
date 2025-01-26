@@ -134,7 +134,7 @@ class AuthViewSet(ViewSet):
 
                 hashed_password = make_password(unconfirmed_user["password"])
 
-                user = User.objects.create(
+                user = User(
                     first_name=unconfirmed_user["first_name"],
                     last_name=unconfirmed_user["last_name"],
                     username=unconfirmed_user["username"],
@@ -143,7 +143,10 @@ class AuthViewSet(ViewSet):
                     password=hashed_password
                 )
 
-                account = Account.objects.create(user=user)
+                user.save()
+
+                account = Account(user=user)
+                account.save()
 
                 del request.session["confirm_code"]
                 del request.session["unconfirmed_user"]

@@ -21,6 +21,7 @@ from .serializers import ChangeUserInfoSerializer
     /user/my-profile/update --> To update user information --> PATCH 
     **********************************************************************
 """
+
 # User View Set
 class UserViewSet(ViewSet):
 
@@ -37,7 +38,7 @@ class UserViewSet(ViewSet):
 
         try:
 
-            user = User.objects.filter(id=request.user).first()
+            user = User.objects.filter(id=request.user.id).first()
 
             if user is None:
                 return Response({"error": "User not found"}, status=status.HTTP_400_BAD_REQUEST)
@@ -52,7 +53,7 @@ class UserViewSet(ViewSet):
                         "username": user.username,
                         "email": user.email,
                         "gender": user.gender,
-                        "friend_list": user.friend_list,
+                        "friend_list": list(user.friend_list),
                         "role": user.is_admin
                     }
                 },

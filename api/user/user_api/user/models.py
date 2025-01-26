@@ -83,7 +83,7 @@ class User(AbstrasctModel):
     friend_list = models.ManyToManyField(
         'self',
         symmetrical=False,
-        through='user.Friend',
+        through='Friend',
         related_name="friends",
         verbose_name="Friends"
     )
@@ -100,15 +100,19 @@ class Friend(models.Model):
         ('F', 'Reject'),
         ('P', 'Pending')
     )
-
+    id = models.UUIDField(
+        primary_key=True,
+        default=uuid4,
+        editable=False
+    )
     user = models.ForeignKey(
-        'user.User',
+        User,
         on_delete=models.CASCADE,
         related_name="friendships_initiated",
         verbose_name="friends"
     )
     friend_user = models.ForeignKey(
-        'user.User',
+        User,
         on_delete=models.CASCADE,
         related_name="friendships_received",
         verbose_name="friend_of"

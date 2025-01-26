@@ -120,5 +120,6 @@ class CustomTokenSerializer(TokenObtainPairSerializer):
     def get_token(cls, user):
         token = AccessToken.for_user(user)
 
+        token['user_id'] = str(user.id)
         token.set_exp(lifetime=settings.SIMPLE_JWT["ACCESS_TOKEN_LIFETIME"])
         return token
