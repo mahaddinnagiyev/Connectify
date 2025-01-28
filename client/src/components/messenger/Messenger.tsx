@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import "../../colors.css";
 import "./style.css";
 import Chat from "./Chat";
+import SearchModal from "../modals/SearchModal";
 
 import no_profile_photo from "../../assets/no-profile-photo.png";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
@@ -9,9 +10,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import BlockIcon from "@mui/icons-material/Block";
 import VideocamIcon from "@mui/icons-material/Videocam";
 import LocalPhoneIcon from "@mui/icons-material/LocalPhone";
-import SearchIcon from "@mui/icons-material/Search";
 import AccountBoxIcon from "@mui/icons-material/AccountBox";
-import { Tooltip } from "@mui/material";
 
 const Messenger = () => {
   const [visibleUserIndex, setVisibleUserIndex] = useState<number | null>(null);
@@ -49,11 +48,8 @@ const Messenger = () => {
           <div className="left-header pt-2 pb-5 px-1 flex justify-between">
             <div>Messenger</div>
             <div>
-              <Tooltip title="Search in your friends" placement="top">
-                <button className="search-btn">
-                  <SearchIcon />
-                </button>
-              </Tooltip>
+              {/* Modal Component */}
+              <SearchModal />
             </div>
           </div>
           <hr className="font-bold" />
