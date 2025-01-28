@@ -69,6 +69,7 @@
 }
 
 /* Styles for the delete button */
+.user-profile-btn,
 .delete-btn,
 .block-btn {
   display: flex;
@@ -91,6 +92,11 @@
 .block-btn:hover {
   background-color: #f3f3f3;
   color: red;
+}
+
+.user-profile-btn:hover {
+  background-color: #f3f3f3;
+  color: var(--primary-color);
 }
 
 /* Icon styling inside buttons */

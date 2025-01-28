@@ -10,8 +10,8 @@ import BlockIcon from "@mui/icons-material/Block";
 import VideocamIcon from "@mui/icons-material/Videocam";
 import LocalPhoneIcon from "@mui/icons-material/LocalPhone";
 import SearchIcon from "@mui/icons-material/Search";
+import AccountBoxIcon from "@mui/icons-material/AccountBox";
 import { Tooltip } from "@mui/material";
-
 
 const Messenger = () => {
   const [visibleUserIndex, setVisibleUserIndex] = useState<number | null>(null);
@@ -49,7 +49,7 @@ const Messenger = () => {
           <div className="left-header pt-2 pb-5 px-1 flex justify-between">
             <div>Messenger</div>
             <div>
-              <Tooltip title="Search in friends" placement="top">
+              <Tooltip title="Search in your friends" placement="top">
                 <button className="search-btn">
                   <SearchIcon />
                 </button>
@@ -90,6 +90,10 @@ const Messenger = () => {
                     <div className="relative">
                       {visibleUserIndex === index && (
                         <div className="action-buttons">
+                          <button className="user-profile-btn">
+                            <AccountBoxIcon className="profile-icon" /> User
+                            Profile
+                          </button>
                           <button className="delete-btn">
                             <DeleteIcon className="delete-icon" /> Delete Chat
                           </button>
@@ -133,6 +137,9 @@ const Messenger = () => {
                 </button>
                 {visibleChatIndex && (
                   <div className="action-buttons-2">
+                    <button className="user-profile-btn">
+                      <AccountBoxIcon className="profile-icon" /> User Profile
+                    </button>
                     <button className="delete-btn">
                       <DeleteIcon className="delete-icon" /> Delete Chat
                     </button>
