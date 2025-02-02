@@ -10,6 +10,10 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { Account } from 'src/entities/account.entity';
+import { MailerService } from '@nestjs-modules/mailer';
+import { signup_confirm_message } from './utils/messages/signup-confirm';
+import { generate_confirm_code } from './utils/generate-codes';
+import { ConfirmAccountDTO } from './dto/confirm-account-dto';
 
 @Injectable()
 export class AuthService {
@@ -18,11 +22,13 @@ export class AuthService {
     private userRepository: Repository<User>,
     @InjectRepository(Account)
     private accountRepository: Repository<Account>,
+    private readonly mailService: MailerService,
   ) {}
 
   async signup(
     signupDTO: SignupDTO,
-  ): Promise<{ success: boolean; message: string; user: any } | HttpException> {
+    session: Record<string, any>,
+  ): Promise<{ success: boolean; message: string } | HttpException> {
     try {
       const {
         first_name,
@@ -41,7 +47,7 @@ export class AuthService {
       if (isUsernameExist) {
         return new BadRequestException({
           success: false,
-          message: 'Username already exist',
+          message: 'This username already taken',
         });
       }
 
@@ -52,7 +58,7 @@ export class AuthService {
       if (checkEmailExist) {
         return new BadRequestException({
           success: false,
-          message: 'Email already exist',
+          message: 'This email already registered',
         });
       }
 
@@ -63,15 +69,61 @@ export class AuthService {
         });
       }
 
-      const salt = await bcrypt.genSalt(10);
-      const hashedPassword = await bcrypt.hash(password, salt);
+      const confirm_code = generate_confirm_code();
 
-      const newUser: User = this.userRepository.create({
+      await this.mailService.sendMail({
+        from: process.env.EMAIL_USER,
+        to: email,
+        subject: 'Confirm your email',
+        text: signup_confirm_message(first_name, last_name, confirm_code),
+      });
+
+      session.confirm_code = confirm_code;
+      session.unconfirmed_user = {
         first_name: first_name,
         last_name: last_name,
         username: username,
         email: email,
         gender: gender,
+        password: password,
+      };
+
+      return {
+        success: true,
+        message: 'Confirm code has been sent. Please check your inbox',
+      };
+    } catch (error) {
+      console.log(error);
+      return new InternalServerErrorException();
+    }
+  }
+
+  async confirmAccount(
+    confirmDTO: ConfirmAccountDTO,
+    session: Record<string, any>,
+  ): Promise<{ success: boolean; message: string; user: any } | HttpException> {
+    try {
+      const { code } = confirmDTO;
+      const confirm_code = session.confirm_code;
+
+      if (code !== confirm_code) {
+        return new BadRequestException({
+          success: false,
+          message: 'Invalid code',
+        });
+      }
+
+      const unconfirmed_user = session.unconfirmed_user;
+
+      const salt = await bcrypt.genSalt(10);
+      const hashedPassword = await bcrypt.hash(unconfirmed_user.password, salt);
+
+      const newUser: User = this.userRepository.create({
+        first_name: unconfirmed_user.first_name,
+        last_name: unconfirmed_user.last_name,
+        username: unconfirmed_user.username,
+        email: unconfirmed_user.email,
+        gender: unconfirmed_user.gender,
         password: hashedPassword,
       });
 
@@ -80,6 +132,7 @@ export class AuthService {
       const newAccount: Account = this.accountRepository.create({
         user: newUser,
       });
+
       await this.accountRepository.save(newAccount);
 
       return {
@@ -103,7 +156,6 @@ export class AuthService {
         },
       };
     } catch (error) {
-      console.log(error);
       return new InternalServerErrorException();
     }
   }
