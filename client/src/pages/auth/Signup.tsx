@@ -52,7 +52,7 @@ const Signup = () => {
           <form action="" method="POST" className="signup-form">
             <div className="signup-form-group">
               <div className="flex gap-4">
-                <div>
+                <div className="w-1/2">
                   <label htmlFor="first_name">First Name</label>
                   <input
                     type="text"
@@ -63,7 +63,7 @@ const Signup = () => {
                   />
                 </div>
 
-                <div>
+                <div className="w-1/2">
                   <label htmlFor="last_name">Last Name</label>
                   <input
                     type="text"
@@ -78,7 +78,18 @@ const Signup = () => {
 
             <div className="signup-form-group">
               <div className="flex gap-4">
-                <div>
+                <div className="w-1/2">
+                  <label htmlFor="email">Email</label>
+                  <input
+                    type="email"
+                    id="email"
+                    name="email"
+                    placeholder="Enter your email"
+                    required
+                  />
+                </div>
+
+                <div className="w-1/2">
                   <label htmlFor="username">Username</label>
                   <input
                     type="text"
@@ -88,29 +99,41 @@ const Signup = () => {
                     required
                   />
                 </div>
-
-                <div>
-                  <label htmlFor="last_name">Last Name</label>
-                  <input
-                    type="text"
-                    id="last_name"
-                    name="last_name"
-                    placeholder="Enter your last name"
-                    required
-                  />
-                </div>
               </div>
             </div>
 
             <div className="signup-form-group">
-              <label htmlFor="email">Email</label>
-              <input
-                type="email"
-                id="email"
-                name="email"
-                placeholder="Enter your email"
-                required
-              />
+              <div className="">
+                <label>Select Gender</label>
+                <div className="gender-group">
+                  <input
+                    type="radio"
+                    id="male"
+                    name="gender"
+                    value="male"
+                    required
+                  />
+                  <label htmlFor="male">Male</label>
+
+                  <input
+                    type="radio"
+                    id="female"
+                    name="gender"
+                    value="female"
+                    required
+                  />
+                  <label htmlFor="female">Female</label>
+
+                  <input
+                    type="radio"
+                    id="other"
+                    name="gender"
+                    value="other"
+                    required
+                  />
+                  <label htmlFor="other">Other</label>
+                </div>
+              </div>
             </div>
 
             <div className="signup-form-group">
