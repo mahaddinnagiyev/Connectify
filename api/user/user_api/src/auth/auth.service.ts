@@ -1,19 +1,23 @@
 import {
   BadRequestException,
+  ForbiddenException,
   HttpException,
   Injectable,
   InternalServerErrorException,
 } from '@nestjs/common';
+import * as bcrypt from 'bcrypt';
+import * as jwt from 'jsonwebtoken';
 import { User } from 'src/entities/user.entity';
 import { SignupDTO } from './dto/signup-dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import * as bcrypt from 'bcrypt';
 import { Account } from 'src/entities/account.entity';
 import { MailerService } from '@nestjs-modules/mailer';
 import { signup_confirm_message } from './utils/messages/signup-confirm';
 import { generate_confirm_code } from './utils/generate-codes';
 import { ConfirmAccountDTO } from './dto/confirm-account-dto';
+import { LoginDTO } from './dto/login-dto';
+import { JwtPayload } from '../jwt/jwt-payload';
 
 @Injectable()
 export class AuthService {
@@ -25,6 +29,7 @@ export class AuthService {
     private readonly mailService: MailerService,
   ) {}
 
+  // Signup
   async signup(
     signupDTO: SignupDTO,
     session: Record<string, any>,
@@ -98,6 +103,7 @@ export class AuthService {
     }
   }
 
+  // Confirm Account
   async confirmAccount(
     confirmDTO: ConfirmAccountDTO,
     session: Record<string, any>,
@@ -156,6 +162,62 @@ export class AuthService {
         },
       };
     } catch (error) {
+      return new InternalServerErrorException();
+    }
+  }
+
+  // Login
+  async login(
+    loginDTO: LoginDTO,
+  ): Promise<{ success: boolean; access_token: string } | HttpException> {
+    try {
+      const { username_or_email, password } = loginDTO;
+      const check_email_exist = await this.userRepository.findOne({
+        where: { email: username_or_email },
+      });
+      const check_username_exist = await this.userRepository.findOne({
+        where: { username: username_or_email },
+      });
+
+      if (!check_email_exist && !check_username_exist) {
+        return new BadRequestException({
+          success: false,
+          error: 'Invalid credentials',
+        });
+      }
+
+      const user = check_email_exist ? check_email_exist : check_username_exist;
+      const isPasswordValid = await bcrypt.compare(password, user.password);
+
+      if (!isPasswordValid) {
+        return new BadRequestException({
+          success: false,
+          message: 'Invalid credentials',
+        });
+      }
+
+      if (user.is_banned) {
+        return new ForbiddenException({
+          success: false,
+          message: 'Your account has been banned',
+        });
+      }
+
+      const payload: JwtPayload = {
+        id: user.id,
+        username: user.username,
+      };
+
+      const access_token = jwt.sign(payload, process.env.JWT_SECRET_KEY, {
+        expiresIn: '7d',
+      });
+
+      return {
+        success: true,
+        access_token: access_token,
+      };
+    } catch (error) {
+      console.log(error);
       return new InternalServerErrorException();
     }
   }

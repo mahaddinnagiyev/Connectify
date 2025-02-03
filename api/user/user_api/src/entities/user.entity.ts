@@ -28,6 +28,9 @@ export class User {
     @Column({ nullable: false, default: false })
     is_admin: boolean
 
+    @Column({ nullable: false, default: false })
+    is_banned: boolean 
+
     @Column({ nullable: false })
     password: string
 
