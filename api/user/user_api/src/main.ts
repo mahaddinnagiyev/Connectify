@@ -10,6 +10,10 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   
   app.useGlobalPipes(new ValidationPipe());
+  app.enableCors({
+    origin: process.env.CLIENT_URL,
+    credentials: true
+  });
 
   app.use(session({
     name: "nestjs_sid",
@@ -23,6 +27,6 @@ async function bootstrap() {
     }
   }))
 
-  await app.listen(process.env.PORT ?? 3000);
+  await app.listen(process.env.PORT ?? 3535);
 }
 bootstrap();
