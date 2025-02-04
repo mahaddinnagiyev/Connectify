@@ -1,184 +1,120 @@
+import { useState } from "react";
 import "./signup.css";
-import google_logo from "../../assets/google.png";
-
-import { Link } from "react-router-dom";
+import ConfirmAccount from "../../components/forms/ConfirmAccount";
+import Alert from "@mui/material/Alert";
+import Stack from "@mui/material/Stack";
+import { signup } from "../../services/auth/auth-service";
+import { Gender, SignupDTO } from "../../services/auth/dto/singup-dto";
+import SignupForm from "../../components/forms/SignupForm"; // Import the SignupForm component
+import CheckModal from "../../components/modals/CheckModal";
 
 const Signup = () => {
-  const getUrl = (params: string) => {
-    const url = window.location.href;
+  const [showConfirmForm, setShowConfirmForm] = useState(false);
+  const [formData, setFormData] = useState({
+    first_name: "",
+    last_name: "",
+    email: "",
+    username: "",
+    gender: "",
+    password: "",
+    confirm: "",
+  });
+  const [errorMessage, setErrorMessage] = useState<string | null>(null); // State for error message
+  const [isLoading, setIsLoading] = useState(false); // State to manage loading state
 
-    if (url.split("/").includes(params)) {
-      return true;
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    const isFormComplete = Object.values(formData).every(
+      (value) => value.trim() !== ""
+    );
+
+    if (!formData.gender) {
+      setErrorMessage("Please select your gender");
+      return;
     }
 
-    return false;
+    if (isFormComplete) {
+      setIsLoading(true); // Show the loading modal
+
+      const signupDTO: SignupDTO = {
+        ...formData,
+        gender: formData.gender as Gender,
+      };
+
+      const response = await signup(signupDTO);
+
+      if (response.success) {
+        setShowConfirmForm(true);
+      } else {
+        if (Array.isArray(response.message)) {
+          console.log(response.message[0]);
+          setErrorMessage(response.message[0]);
+        }
+        setErrorMessage(
+          response.response.message ??
+            response.response.error ??
+            response.message ??
+            response.error ??
+            "An error occurred"
+        );
+      }
+
+      setIsLoading(false); // Hide the loading modal
+    } else {
+      setErrorMessage("Please fill all the fields");
+    }
   };
 
   return (
-    <>
-      <main id="auth-main">
-        <section id="signup">
-          <div className="logo">
-            <h1 className="">
-              Welcome to <p className="text-[#00ff00]">Connectify</p>
-            </h1>
-          </div>
-          <div className="auth-buttons">
-            <Link to="/auth/login" className={getUrl("login") ? "active" : ""}>
-              Log in
-            </Link>
-            <Link
-              to="/auth/signup"
-              className={getUrl("signup") ? "active" : ""}
-            >
-              Sign up
-            </Link>
-          </div>
+    <main id="auth-main">
+      <section id="signup">
+        <div className="logo">
+          <h1>
+            Welcome to <span className="text-[#00ff00]">Connectify</span>
+          </h1>
+        </div>
 
-          <div className="google-btn">
-            <div className="google-icon-wrapper">
-              <img
-                className="google-icon"
-                src={google_logo}
-                alt="google button"
-                width={30}
-              />
-            </div>
-            <p className="btn-text">
-              <b>Sign up with google</b>
-            </p>
-          </div>
+        {/* Conditionally render the error message */}
+        {errorMessage && (
+          <Stack sx={{ width: "30%" }} spacing={2} className="error-message">
+            <Alert variant="filled" severity="error">
+              {errorMessage}
+            </Alert>
+          </Stack>
+        )}
 
-          <form action="" method="POST" className="signup-form">
-            <div className="signup-form-group">
-              <div className="flex gap-4">
-                <div className="w-1/2">
-                  <label htmlFor="first_name">First Name</label>
-                  <input
-                    type="text"
-                    id="first_name"
-                    name="first_name"
-                    placeholder="Enter your first name"
-                    required
-                  />
-                </div>
+        {/* Modal to show "Checking" */}
+        {isLoading && (
+          <CheckModal />
+        )}
 
-                <div className="w-1/2">
-                  <label htmlFor="last_name">Last Name</label>
-                  <input
-                    type="text"
-                    id="last_name"
-                    name="last_name"
-                    placeholder="Enter your last name"
-                    required
-                  />
-                </div>
-              </div>
-            </div>
-
-            <div className="signup-form-group">
-              <div className="flex gap-4">
-                <div className="w-1/2">
-                  <label htmlFor="email">Email</label>
-                  <input
-                    type="email"
-                    id="email"
-                    name="email"
-                    placeholder="Enter your email"
-                    required
-                  />
-                </div>
-
-                <div className="w-1/2">
-                  <label htmlFor="username">Username</label>
-                  <input
-                    type="text"
-                    id="username"
-                    name="username"
-                    placeholder="Enter username"
-                    required
-                  />
-                </div>
-              </div>
-            </div>
-
-            <div className="signup-form-group">
-              <div className="">
-                <label>Select Gender</label>
-                <div className="gender-group">
-                  <input
-                    type="radio"
-                    id="male"
-                    name="gender"
-                    value="male"
-                    required
-                  />
-                  <label htmlFor="male">Male</label>
-
-                  <input
-                    type="radio"
-                    id="female"
-                    name="gender"
-                    value="female"
-                    required
-                  />
-                  <label htmlFor="female">Female</label>
-
-                  <input
-                    type="radio"
-                    id="other"
-                    name="gender"
-                    value="other"
-                    required
-                  />
-                  <label htmlFor="other">Other</label>
-                </div>
-              </div>
-            </div>
-
-            <div className="signup-form-group">
-              <label htmlFor="password">Password</label>
-              <input
-                type="password"
-                id="password"
-                name="password"
-                placeholder="Enter password"
-                required
-              />
-              <p className="text-xs font-serif">
-                Password must contain at least 8 characters, 1 uppercase letter,
-                1 lowercase letter, 1 number, and 1 special character
-              </p>
-            </div>
-
-            <div className="signup-form-group">
-              <label htmlFor="confirm">Confirm Password</label>
-              <input
-                type="confirm"
-                id="confirm"
-                name="confirm"
-                placeholder="Enter password again"
-                required
-              />
-            </div>
-
-            <div className="signup-form-group">
-              <button type="submit">Sign up</button>
-            </div>
-
-            <p className="text-center">
-              You already have an account?{" "}
-              <Link
-                to="/auth/login"
-                className="font-serif underline hover:text-[#00ff00] transition duration-300"
-              >
-                Log in
-              </Link>
-            </p>
-          </form>
-        </section>
-      </main>
-    </>
+        {!showConfirmForm ? (
+          <>
+            <SignupForm
+              formData={formData}
+              handleChange={handleChange}
+              handleSubmit={handleSubmit}
+            />
+          </>
+        ) : (
+          <ConfirmAccount
+            handleConfirmationSubmit={(e: React.FormEvent) => {
+              e.preventDefault();
+              <Stack sx={{ width: "100%" }} spacing={2}>
+                <Alert variant="filled" severity="success">
+                  Account confirmed successfully
+                </Alert>
+              </Stack>;
+            }}
+          />
+        )}
+      </section>
+    </main>
   );
 };
 

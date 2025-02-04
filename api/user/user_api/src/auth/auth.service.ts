@@ -52,7 +52,7 @@ export class AuthService {
       if (isUsernameExist) {
         return new BadRequestException({
           success: false,
-          message: 'This username already taken',
+          error: 'This username already taken',
         });
       }
 
@@ -63,14 +63,14 @@ export class AuthService {
       if (checkEmailExist) {
         return new BadRequestException({
           success: false,
-          message: 'This email already registered',
+          error: 'This email already registered',
         });
       }
 
       if (password !== confirm) {
         return new BadRequestException({
           success: false,
-          message: 'Password does not match',
+          error: 'Password does not match',
         });
       }
 
