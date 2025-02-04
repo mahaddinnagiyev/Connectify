@@ -8,7 +8,7 @@ const ConfirmAccount = ({ handleConfirmationSubmit }: ConfirmAccountProps ) => {
   return (
     <>
       <form onSubmit={handleConfirmationSubmit} className="signup-form">
-        <div className="signup-form-group">
+        <div className="signup-form-group flex flex-col gap-1">
           <label htmlFor="confirmationCode">Confirmation Code</label>
           <input
             type="text"

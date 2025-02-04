@@ -25,3 +25,24 @@ body {
   -webkit-box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.3);
   background-color: var(--primary-color);
 }
+
+.success-message {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: 30%;
+}
+
+.error-message {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: 30%;
+}
+
+@media (max-width: 768px) {
+  .success-message,
+  .error-message {
+    width: 80%;
+  }
+}

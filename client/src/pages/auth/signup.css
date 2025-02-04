@@ -175,12 +175,6 @@ body {
   color: white;
 }
 
-.error-message {
-  position: fixed;
-  top: 0;
-  right: 0;
-}
-
 /* Media Queries */
 @media (max-width: 600px) {
   .login-form {

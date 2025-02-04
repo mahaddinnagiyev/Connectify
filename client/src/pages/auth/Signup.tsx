@@ -5,8 +5,10 @@ import Alert from "@mui/material/Alert";
 import Stack from "@mui/material/Stack";
 import { signup } from "../../services/auth/auth-service";
 import { Gender, SignupDTO } from "../../services/auth/dto/singup-dto";
-import SignupForm from "../../components/forms/SignupForm"; // Import the SignupForm component
+import SignupForm from "../../components/forms/SignupForm";
 import CheckModal from "../../components/modals/CheckModal";
+import SuccessMessage from "../../components/messages/SuccessMessage";
+import ErrorMessage from "../../components/messages/ErrorMessage";
 
 const Signup = () => {
   const [showConfirmForm, setShowConfirmForm] = useState(false);
@@ -19,8 +21,9 @@ const Signup = () => {
     password: "",
     confirm: "",
   });
-  const [errorMessage, setErrorMessage] = useState<string | null>(null); // State for error message
-  const [isLoading, setIsLoading] = useState(false); // State to manage loading state
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -39,7 +42,7 @@ const Signup = () => {
     }
 
     if (isFormComplete) {
-      setIsLoading(true); // Show the loading modal
+      setIsLoading(true);
 
       const signupDTO: SignupDTO = {
         ...formData,
@@ -50,9 +53,12 @@ const Signup = () => {
 
       if (response.success) {
         setShowConfirmForm(true);
+        setSuccessMessage(
+          "Confirm code has been sent to your email. Please check your inbox."
+        );
       } else {
+        setIsLoading(false);
         if (Array.isArray(response.message)) {
-          console.log(response.message[0]);
           setErrorMessage(response.message[0]);
         }
         setErrorMessage(
@@ -64,9 +70,10 @@ const Signup = () => {
         );
       }
 
-      setIsLoading(false); // Hide the loading modal
+      setIsLoading(false);
     } else {
       setErrorMessage("Please fill all the fields");
+      setIsLoading(false);
     }
   };
 
@@ -81,17 +88,21 @@ const Signup = () => {
 
         {/* Conditionally render the error message */}
         {errorMessage && (
-          <Stack sx={{ width: "30%" }} spacing={2} className="error-message">
-            <Alert variant="filled" severity="error">
-              {errorMessage}
-            </Alert>
-          </Stack>
+          <ErrorMessage
+            message={errorMessage}
+            onClose={() => setErrorMessage(null)}
+          />
+        )}
+
+        {successMessage && (
+          <SuccessMessage
+            message={successMessage}
+            onClose={() => setSuccessMessage(null)}
+          />
         )}
 
         {/* Modal to show "Checking" */}
-        {isLoading && (
-          <CheckModal />
-        )}
+        {isLoading && <CheckModal />}
 
         {!showConfirmForm ? (
           <>
