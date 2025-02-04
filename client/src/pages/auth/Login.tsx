@@ -6,6 +6,7 @@ import { useState } from "react";
 import { login } from "../../services/auth/auth-service";
 import ErrorMessage from "../../components/messages/ErrorMessage";
 import SuccessMessage from "../../components/messages/SuccessMessage";
+import CheckModal from "../../components/modals/CheckModal";
 
 const Login = () => {
   const getUrl = (params: string) => {
@@ -24,6 +25,7 @@ const Login = () => {
   });
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormdata({ ...formData, [e.target.name]: e.target.value });
@@ -32,23 +34,29 @@ const Login = () => {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    const response = await login(formData);
+    setIsLoading(true);
+    setTimeout(async () => {
+      const response = await login(formData);
 
-    if (response.success) {
-      window.location.replace("/");
-      setSuccessMessage("Logged in successfully!");
-    } else {
-      if (Array.isArray(response.message)) {
-        setErrorMessage(response.message[0]);
+      if (response.success) {
+        setSuccessMessage("Login successfull!");
+        setTimeout(() => {
+          window.location.replace("/");
+        }, 1500);
       } else {
-        setErrorMessage(
-          response.response?.error ??
-            response.message ??
-            response.error ??
-            "Invalid username or password"
-        );
+        setIsLoading(false);
+        if (Array.isArray(response.message)) {
+          setErrorMessage(response.message[0]);
+        } else {
+          setErrorMessage(
+            response.response?.error ??
+              response.message ??
+              response.error ??
+              "Invalid username or password"
+          );
+        }
       }
-    }
+    }, 1000);
   };
 
   return (
@@ -66,6 +74,8 @@ const Login = () => {
           onClose={() => setSuccessMessage(null)}
         />
       )}
+
+      {isLoading && <CheckModal />}
 
       <main id="auth-main">
         <section id="login">
