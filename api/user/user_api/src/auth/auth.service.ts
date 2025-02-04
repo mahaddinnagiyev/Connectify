@@ -111,15 +111,35 @@ export class AuthService {
     try {
       const { code } = confirmDTO;
       const confirm_code = session.confirm_code;
+      const unconfirmed_user = session.unconfirmed_user;
+
+      if (!confirm_code) {
+        return new BadRequestException({
+          success: false,
+          error: 'Confirm code not found',
+        });
+      }
+
+      if (!unconfirmed_user) {
+        return new BadRequestException({
+          success: false,
+          error: 'User not found',
+        });
+      }
 
       if (code !== confirm_code) {
         return new BadRequestException({
           success: false,
-          message: 'Invalid code',
+          error: 'Invalid code',
         });
       }
 
-      const unconfirmed_user = session.unconfirmed_user;
+      if (!session.unconfirmed_user) {
+        return new BadRequestException({
+          success: false,
+          error: 'User not found',
+        });
+      }
 
       const salt = await bcrypt.genSalt(10);
       const hashedPassword = await bcrypt.hash(unconfirmed_user.password, salt);
@@ -140,6 +160,9 @@ export class AuthService {
       });
 
       await this.accountRepository.save(newAccount);
+
+      delete session.unconfirmed_user;
+      delete session.confirm_code;
 
       return {
         success: true,

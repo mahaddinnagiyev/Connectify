@@ -1,8 +1,6 @@
 import { useState } from "react";
 import "./signup.css";
 import ConfirmAccount from "../../components/forms/ConfirmAccount";
-import Alert from "@mui/material/Alert";
-import Stack from "@mui/material/Stack";
 import { signup } from "../../services/auth/auth-service";
 import { Gender, SignupDTO } from "../../services/auth/dto/singup-dto";
 import SignupForm from "../../components/forms/SignupForm";
@@ -113,16 +111,7 @@ const Signup = () => {
             />
           </>
         ) : (
-          <ConfirmAccount
-            handleConfirmationSubmit={(e: React.FormEvent) => {
-              e.preventDefault();
-              <Stack sx={{ width: "100%" }} spacing={2}>
-                <Alert variant="filled" severity="success">
-                  Account confirmed successfully
-                </Alert>
-              </Stack>;
-            }}
-          />
+          <ConfirmAccount />
         )}
       </section>
     </main>
