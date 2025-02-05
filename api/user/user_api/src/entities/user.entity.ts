@@ -1,13 +1,12 @@
-import { Entity, PrimaryColumn, Column, CreateDateColumn, UpdateDateColumn, OneToOne } from "typeorm";
+import { Entity, Column, CreateDateColumn, UpdateDateColumn, OneToOne, PrimaryGeneratedColumn } from "typeorm";
 import { Gender } from "src/enums/gender.enum";
 import { Account } from "./account.entity";
-import { v4 as uuid } from "uuid";
 
 
 @Entity('users')
 export class User {
 
-    @PrimaryColumn('uuid', { default: uuid() })
+    @PrimaryGeneratedColumn('uuid')
     id: string;
 
     @Column({ nullable: false })

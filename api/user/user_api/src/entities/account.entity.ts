@@ -1,12 +1,11 @@
-import { Entity, PrimaryColumn, Column, CreateDateColumn, UpdateDateColumn, OneToOne, JoinColumn } from "typeorm";
+import { Entity, Column, CreateDateColumn, UpdateDateColumn, OneToOne, JoinColumn, PrimaryGeneratedColumn } from "typeorm";
 import { User } from "./user.entity";
-import { v4 as uuid } from "uuid";
 
 
 @Entity('accounts')
 export class Account {
 
-    @PrimaryColumn('uuid', { default: uuid() })
+    @PrimaryGeneratedColumn('uuid')
     id: string;
 
     @OneToOne(() => User, (user) => user.id, { onDelete: "CASCADE" })
