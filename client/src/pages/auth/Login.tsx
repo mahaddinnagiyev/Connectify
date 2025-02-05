@@ -7,6 +7,7 @@ import { login } from "../../services/auth/auth-service";
 import ErrorMessage from "../../components/messages/ErrorMessage";
 import SuccessMessage from "../../components/messages/SuccessMessage";
 import CheckModal from "../../components/modals/CheckModal";
+import { setTokenToStorage } from "../../services/auth/token-service";
 
 const Login = () => {
   const getUrl = (params: string) => {
@@ -40,6 +41,7 @@ const Login = () => {
 
       if (response.success) {
         setSuccessMessage("Login successfull!");
+        setTokenToStorage(response.access_token)
         setTimeout(() => {
           window.location.replace("/");
         }, 1500);

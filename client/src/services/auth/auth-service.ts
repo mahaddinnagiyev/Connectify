@@ -53,6 +53,7 @@ export const login = async (
   user: LoginDTO
 ): Promise<{
   success?: boolean;
+  access_token: string;
   message?: string;
   error?: string;
   response: { success: boolean; message?: string; error?: string };
