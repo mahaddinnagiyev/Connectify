@@ -18,6 +18,7 @@ import { generate_confirm_code } from './utils/generate-codes';
 import { ConfirmAccountDTO } from './dto/confirm-account-dto';
 import { LoginDTO } from './dto/login-dto';
 import { JwtPayload } from '../jwt/jwt-payload';
+import { TokenBlackList } from 'src/entities/token-black-list.entity';
 
 @Injectable()
 export class AuthService {
@@ -26,6 +27,8 @@ export class AuthService {
     private userRepository: Repository<User>,
     @InjectRepository(Account)
     private accountRepository: Repository<Account>,
+    @InjectRepository(TokenBlackList)
+    private tokenBlackListRepository: Repository<TokenBlackList>,
     private readonly mailService: MailerService,
   ) {}
 
@@ -195,9 +198,11 @@ export class AuthService {
   ): Promise<{ success: boolean; access_token: string } | HttpException> {
     try {
       const { username_or_email, password } = loginDTO;
+
       const check_email_exist = await this.userRepository.findOne({
         where: { email: username_or_email },
       });
+
       const check_username_exist = await this.userRepository.findOne({
         where: { username: username_or_email },
       });
@@ -231,13 +236,52 @@ export class AuthService {
         username: user.username,
       };
 
-      const access_token = jwt.sign(payload, process.env.JWT_SECRET_KEY, {
-        expiresIn: '7d',
-      });
+      const access_token = jwt.sign(
+        payload,
+        process.env.JWT_ACCESS_SECRET_KEY,
+        {
+          expiresIn: '30m',
+        },
+      );
 
       return {
         success: true,
         access_token: access_token,
+      };
+    } catch (error) {
+      console.log(error);
+      return new InternalServerErrorException();
+    }
+  }
+
+  // Logout
+  async logout(
+    req: any,
+  ): Promise<{ success: boolean; message: string } | HttpException> {
+    try {
+
+      const token = req.headers.authorization?.split(' ')[1];
+      
+      const isTokenInBlackList = await this.tokenBlackListRepository.findOne({
+        where: { token: token },
+      });
+
+      if (isTokenInBlackList) {
+        return new BadRequestException({
+          success: false,
+          message: 'Token is invalid or expired',
+        });
+      }
+
+      const blackListToken = this.tokenBlackListRepository.create({
+        token: token,
+      });
+
+      await this.tokenBlackListRepository.save(blackListToken);
+
+      return {
+        success: true,
+        message: 'Logged out successfully',
       };
     } catch (error) {
       console.log(error);
