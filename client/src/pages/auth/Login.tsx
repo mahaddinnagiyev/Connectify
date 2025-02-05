@@ -77,7 +77,7 @@ const Login = () => {
         />
       )}
 
-      {isLoading && <CheckModal />}
+      {isLoading && <CheckModal message={"Checking..."} />}
 
       <main id="auth-main">
         <section id="login">

@@ -13,79 +13,118 @@ import SmartToyIcon from "@mui/icons-material/SmartToy";
 // import ForumIcon from '@mui/icons-material/Forum';
 import AccountBoxIcon from "@mui/icons-material/AccountBox";
 import LogoutIcon from "@mui/icons-material/Logout";
+import { logout } from "../../services/auth/auth-service";
+import ErrorMessage from "../messages/ErrorMessage";
+import CheckModal from "../modals/CheckModal";
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
   };
 
-  return (
-    <div className="header">
-      {/* Logo */}
-      <div>
-        <a href="/">
-          {logo && <img src={logo} alt="App Logo" className="app-logo" />}
-        </a>
-      </div>
+  const handleLogout = async () => {
+    setIsLoading(true);
+    const response = await logout();
 
-      {/* Navbar buttons */}
-      <div className={`navbar ${isMenuOpen ? "open" : ""} flex gap-8`}>
-        <a href="/chat">
-          <ChatIcon className="mt-1" /> Messenger
-        </a>
-        <a href="/groups">
-          <GroupsIcon /> Groups
-        </a>
-        {/* <a href="/channels">
+    if (response.success) {
+      localStorage.removeItem("token");
+
+      window.location.href = "/auth/login";
+    } else {
+      setIsLoading(false);
+      if (Array.isArray(response.message)) {
+        setErrorMessage(response.message[0]);
+      } else {
+        setErrorMessage(
+          response.response?.error ??
+            response.message ??
+            response.error ??
+            "Logout failed"
+        );
+      }
+    }
+    setIsLoading(false);
+  };
+
+  return (
+    <>
+      {errorMessage && (
+        <ErrorMessage
+          message={errorMessage}
+          onClose={() => setErrorMessage(null)}
+        />
+      )}
+
+      {isLoading && <CheckModal message={"Loggin out..."} />}
+
+      <div className="header">
+        {/* Logo */}
+        <div>
+          <a href="/">
+            {logo && <img src={logo} alt="App Logo" className="app-logo" />}
+          </a>
+        </div>
+
+        {/* Navbar buttons */}
+        <div className={`navbar ${isMenuOpen ? "open" : ""} flex gap-8`}>
+          <a href="/chat">
+            <ChatIcon className="mt-1" /> Messenger
+          </a>
+          <a href="/groups">
+            <GroupsIcon /> Groups
+          </a>
+          {/* <a href="/channels">
           <ForumIcon /> Channels
         </a> */}
-        <a href="/friends">
-          <PeopleIcon /> Friends
-        </a>
-        <a href="/bot">
-          <SmartToyIcon /> Bots
-        </a>
+          <a href="/friends">
+            <PeopleIcon /> Friends
+          </a>
+          <a href="/bot">
+            <SmartToyIcon /> Bots
+          </a>
 
-        {/* Show profile actions inside the burger menu when open */}
-        {isMenuOpen && (
-          <div className="profile-actions-burger flex flex-col gap-2">
+          {/* Show profile actions inside the burger menu when open */}
+          {isMenuOpen && (
+            <div className="profile-actions-burger flex flex-col gap-2">
+              <a href="/profile">
+                <AccountBoxIcon /> View Profile
+              </a>
+              <a onClick={handleLogout} className="text-center cursor-pointer">
+                <LogoutIcon /> Logout
+              </a>
+            </div>
+          )}
+        </div>
+
+        {/* Burger menu */}
+        <div className="burger-menu" onClick={toggleMenu}>
+          <div></div>
+          <div></div>
+          <div></div>
+        </div>
+
+        {/* Profile (hidden for mobile unless burger menu is open) */}
+        <div className="profile-container flex gap-5 mr-3 items-center">
+          <img
+            src={profile_photo}
+            alt=""
+            className="w-10 h-10 rounded-full cursor-pointer profile-img"
+          />
+          <div className="profile-actions">
             <a href="/profile">
               <AccountBoxIcon /> View Profile
             </a>
-            <a href="/logout" className="text-center">
+            <a onClick={handleLogout} className="cursor-pointer">
               <LogoutIcon /> Logout
             </a>
           </div>
-        )}
-      </div>
-
-      {/* Burger menu */}
-      <div className="burger-menu" onClick={toggleMenu}>
-        <div></div>
-        <div></div>
-        <div></div>
-      </div>
-
-
-      {/* Profile (hidden for mobile unless burger menu is open) */}
-      <div className="profile-container flex gap-5 mr-3 items-center">
-        <img
-          src={profile_photo}
-          alt=""
-          className="w-10 h-10 rounded-full cursor-pointer profile-img"
-        />
-        <div className="profile-actions">
-          <a href="/profile">
-            <AccountBoxIcon /> View Profile
-          </a>
-          <a href="/logout">
-            <LogoutIcon /> Logout
-          </a>
         </div>
       </div>
-    </div>
+    </>
   );
 };
 

@@ -31,6 +31,7 @@ body {
   top: 0;
   right: 0;
   width: 30%;
+  z-index: 9999999;
 }
 
 .error-message {
@@ -38,6 +39,7 @@ body {
   top: 0;
   right: 0;
   width: 30%;
+  z-index: 9999999;
 }
 
 @media (max-width: 768px) {

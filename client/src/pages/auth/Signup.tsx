@@ -100,7 +100,7 @@ const Signup = () => {
         )}
 
         {/* Modal to show "Checking" */}
-        {isLoading && <CheckModal />}
+        {isLoading && <CheckModal message={"Checking..."} />}
 
         {!showConfirmForm ? (
           <>

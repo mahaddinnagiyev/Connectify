@@ -1,6 +1,7 @@
 import { ConfirmAccountDTO } from "./dto/confirm-account-dto";
 import { LoginDTO } from "./dto/login-dto";
 import { SignupDTO } from "./dto/singup-dto";
+import { getTokenFromStorage } from "./token-service";
 
 const SERVER_USER_URL = "http://localhost:3535";
 
@@ -68,5 +69,25 @@ export const login = async (
   });
 
   const data = await resposne.json();
+  return data;
+};
+
+// Logout
+export const logout = async (): Promise<{
+  success?: boolean;
+  message?: string;
+  error?: string;
+  response: { success: boolean; message?: string; error?: string };
+}> => {
+  const response = await fetch(`${SERVER_USER_URL}/auth/logout`, {
+    method: "POST",
+    credentials: "include",
+    headers: {
+      "Content-Type": "application/json; charset=utf-8",
+      Authorization: `Bearer ${getTokenFromStorage()}`,
+    },
+  });
+
+  const data = response.json();
   return data;
 };

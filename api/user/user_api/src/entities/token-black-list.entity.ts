@@ -1,9 +1,9 @@
-import { Column, CreateDateColumn, Entity, PrimaryColumn, UpdateDateColumn } from 'typeorm';
+import { Column, CreateDateColumn, Entity, PrimaryColumn, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
 import { v4 as uuid } from 'uuid';
 
 @Entity('token_black_list')
 export class TokenBlackList {
-  @PrimaryColumn('uuid', { default: uuid() })
+  @PrimaryGeneratedColumn('uuid')
   id: string;
 
   @Column()
