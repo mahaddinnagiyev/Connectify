@@ -1,8 +1,8 @@
 import "./login.css";
 import google_logo from "../../assets/google.png";
 
-import { Link } from "react-router-dom";
-import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
 import { login, logout } from "../../services/auth/auth-service";
 import ErrorMessage from "../../components/messages/ErrorMessage";
 import SuccessMessage from "../../components/messages/SuccessMessage";
@@ -22,6 +22,29 @@ const Login = () => {
 
     return false;
   };
+
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const accessToken = urlParams.get('access_token');
+
+    if (accessToken) {
+      setTokenToStorage(accessToken);
+      setIsLoading(true);
+
+      setTimeout(() => {
+        setIsLoading(false);
+        navigate('/chat');
+      }, 2000);
+    }
+  }, [navigate]);
+  
+  const handleGoogleLogin = () => {
+    window.location.replace(
+      `${process.env.GOOGLE_CLIENT_REDIRECT_URL}`
+    );
+  }
 
   const [formData, setFormdata] = useState({
     username_or_email: "",
@@ -105,7 +128,7 @@ const Login = () => {
             </Link>
           </div>
 
-          <div className="google-btn">
+          <div className="google-btn" onClick={handleGoogleLogin}>
             <div className="google-icon-wrapper">
               <img
                 className="google-icon"

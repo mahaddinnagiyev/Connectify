@@ -408,7 +408,7 @@ export class AuthService {
   }
 
   private generateUsername(email: string): string {
-    const username = `${email.split('@')[0]}_${uuid()}`;
-    return username.slice(0, 5);
+    const username = `${email.split('@')[0]}_${uuid().slice(0, 5)}`;
+    return username;
   }
 }

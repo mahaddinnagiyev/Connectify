@@ -21,6 +21,13 @@ const SignupForm: React.FC<SignupFormProps> = ({
   handleChange,
   handleSubmit,
 }) => {
+
+  const handleGoogleLogin = () => {
+    window.location.replace(
+      `${process.env.GOOGLE_CLIENT_REDIRECT_URL}`
+    );
+  };
+
   return (
     <>
       <div className="auth-buttons">
@@ -30,7 +37,7 @@ const SignupForm: React.FC<SignupFormProps> = ({
         </Link>
       </div>
 
-      <div className="google-btn">
+      <div className="google-btn" onClick={handleGoogleLogin}>
         <div className="google-icon-wrapper">
           <img
             className="google-icon"
