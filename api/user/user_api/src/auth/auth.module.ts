@@ -8,14 +8,17 @@ import { JwtStrategy } from 'src/jwt/jwt-strategy';
 import { PassportModule } from '@nestjs/passport';
 import { TokenBlackList } from 'src/entities/token-black-list.entity';
 import { LoggerModule } from 'src/logger/logger.module';
+import { GoogleStrategy } from './strategy/google.strategy';
+import { HttpModule } from '@nestjs/axios';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([User, Account, TokenBlackList]),
     PassportModule.register({ defaultStrategy: 'jwt' }),
-    LoggerModule
+    LoggerModule,
+    HttpModule
   ],
-  providers: [AuthService, JwtStrategy],
+  providers: [AuthService, JwtStrategy, GoogleStrategy],
   controllers: [AuthController],
 })
 export class AuthModule {}

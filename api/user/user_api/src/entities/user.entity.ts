@@ -21,7 +21,7 @@ export class User {
     @Column({ nullable: false, unique: true })
     email: string;
 
-    @Column({ nullable: false, enum: Gender, type: "enum" })
+    @Column({ nullable: false, enum: Gender, type: "enum", default: Gender.notProvided })
     gender: Gender;
 
     @Column({ nullable: false, default: false })
@@ -30,7 +30,7 @@ export class User {
     @Column({ nullable: false, default: false })
     is_banned: boolean 
 
-    @Column({ nullable: false })
+    @Column({ nullable: true })
     password: string
 
     @OneToOne(() => Account, (account) => account.user)

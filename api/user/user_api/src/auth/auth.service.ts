@@ -7,6 +7,7 @@ import {
 } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import * as jwt from 'jsonwebtoken';
+import { v4 as uuid } from 'uuid';
 import { User } from 'src/entities/user.entity';
 import { SignupDTO } from './dto/signup-dto';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -20,6 +21,8 @@ import { LoginDTO } from './dto/login-dto';
 import { JwtPayload } from '../jwt/jwt-payload';
 import { TokenBlackList } from 'src/entities/token-black-list.entity';
 import { LoggerService } from 'src/logger/logger.service';
+import { HttpService } from '@nestjs/axios';
+import { Gender } from 'src/enums/gender.enum';
 
 @Injectable()
 export class AuthService {
@@ -32,6 +35,7 @@ export class AuthService {
     private tokenBlackListRepository: Repository<TokenBlackList>,
     private readonly mailService: MailerService,
     private readonly logger: LoggerService,
+    private httpService: HttpService,
   ) {}
 
   // Signup
@@ -50,14 +54,20 @@ export class AuthService {
         confirm,
       } = signupDTO;
 
-      await this.logger.debug(`Signup attempt: ${JSON.stringify(signupDTO)}`, "auth");
+      await this.logger.debug(
+        `Signup attempt: ${JSON.stringify(signupDTO)}`,
+        'auth',
+      );
 
       const isUsernameExist = await this.userRepository.findOne({
         where: { username: username },
       });
 
       if (isUsernameExist) {
-        await this.logger.warn(`Signup failed - Username already taken: ${username}`, "auth");
+        await this.logger.warn(
+          `Signup failed - Username already taken: ${username}`,
+          'auth',
+        );
         return new BadRequestException({
           success: false,
           error: 'This username already taken',
@@ -69,7 +79,10 @@ export class AuthService {
       });
 
       if (checkEmailExist) {
-        await this.logger.warn(`Signup failed - Email already registered: ${email}`, "auth");
+        await this.logger.warn(
+          `Signup failed - Email already registered: ${email}`,
+          'auth',
+        );
         return new BadRequestException({
           success: false,
           error: 'This email already registered',
@@ -103,7 +116,8 @@ export class AuthService {
       };
 
       await this.logger.info(
-        `Signup successful - Verification email sent to: ${signupDTO.email}`, "auth"
+        `Signup successful - Verification email sent to: ${signupDTO.email}`,
+        'auth',
       );
 
       return {
@@ -111,8 +125,15 @@ export class AuthService {
         message: 'Confirm code has been sent. Please check your inbox',
       };
     } catch (error) {
-      await this.logger.error(error.message, "auth", "There's an error in the signup process", error.stack);
-      return new InternalServerErrorException("Signup failed - Due to Internal Server Error");
+      await this.logger.error(
+        error.message,
+        'auth',
+        "There's an error in the signup process",
+        error.stack,
+      );
+      return new InternalServerErrorException(
+        'Signup failed - Due to Internal Server Error',
+      );
     }
   }
 
@@ -127,7 +148,10 @@ export class AuthService {
       const unconfirmed_user = session.unconfirmed_user;
 
       if (!confirm_code) {
-        await this.logger.warn('Account confirmation failed - Confirm code not found in session', "auth");
+        await this.logger.warn(
+          'Account confirmation failed - Confirm code not found in session',
+          'auth',
+        );
         return new BadRequestException({
           success: false,
           error: 'Confirm code not found',
@@ -135,7 +159,10 @@ export class AuthService {
       }
 
       if (!unconfirmed_user) {
-        await this.logger.warn('Account confirmation failed - User not found in session', "auth");
+        await this.logger.warn(
+          'Account confirmation failed - User not found in session',
+          'auth',
+        );
         return new BadRequestException({
           success: false,
           error: 'User not found',
@@ -143,7 +170,10 @@ export class AuthService {
       }
 
       if (code !== confirm_code) {
-        await this.logger.warn('Account confirmation failed - Invalid code', "auth");
+        await this.logger.warn(
+          'Account confirmation failed - Invalid code',
+          'auth',
+        );
         return new BadRequestException({
           success: false,
           error: 'Invalid code',
@@ -175,7 +205,7 @@ export class AuthService {
 
       await this.logger.info(
         `New user created:\nFull name: ${newUser.first_name} ${newUser.last_name},\nusername: ${newUser.username},\nemail: ${newUser.email}`,
-        "auth",
+        'auth',
       );
 
       return {
@@ -199,8 +229,15 @@ export class AuthService {
         },
       };
     } catch (error) {
-      await this.logger.error(error.message, "auth", "There's an error in the account confirmation process", error.stack);
-      return new InternalServerErrorException("Account confirm failed - Due to Internal Server Error");
+      await this.logger.error(
+        error.message,
+        'auth',
+        "There's an error in the account confirmation process",
+        error.stack,
+      );
+      return new InternalServerErrorException(
+        'Account confirm failed - Due to Internal Server Error',
+      );
     }
   }
 
@@ -220,7 +257,10 @@ export class AuthService {
       });
 
       if (!check_email_exist && !check_username_exist) {
-        await this.logger.warn('Login failed - Invalid credentials(username or email)', "auth");
+        await this.logger.warn(
+          'Login failed - Invalid credentials(username or email)',
+          'auth',
+        );
         return new BadRequestException({
           success: false,
           error: 'Invalid credentials',
@@ -231,7 +271,10 @@ export class AuthService {
       const isPasswordValid = await bcrypt.compare(password, user.password);
 
       if (!isPasswordValid) {
-        await this.logger.warn('Login failed - Invalid credentials(password)', "auth");
+        await this.logger.warn(
+          'Login failed - Invalid credentials(password)',
+          'auth',
+        );
         return new BadRequestException({
           success: false,
           message: 'Invalid credentials',
@@ -239,7 +282,7 @@ export class AuthService {
       }
 
       if (user.is_banned) {
-        await this.logger.warn('Login failed - Due to user banned', "auth");
+        await this.logger.warn('Login failed - Due to user banned', 'auth');
         return new ForbiddenException({
           success: false,
           message: 'Your account has been banned',
@@ -260,7 +303,8 @@ export class AuthService {
       );
 
       await this.logger.info(
-        `Login successfully:\nFull name: ${user.first_name} ${user.last_name},\nusername: ${user.username},\nemail: ${user.email}`, "auth"
+        `Login successfully:\nFull name: ${user.first_name} ${user.last_name},\nusername: ${user.username},\nemail: ${user.email}`,
+        'auth',
       );
 
       return {
@@ -268,8 +312,15 @@ export class AuthService {
         access_token: access_token,
       };
     } catch (error) {
-      await this.logger.error(error.message, "auth", "There is an error in the login process", error.stack);
-      return new InternalServerErrorException("Login failed - Due to Internal Server Error");
+      await this.logger.error(
+        error.message,
+        'auth',
+        'There is an error in the login process',
+        error.stack,
+      );
+      return new InternalServerErrorException(
+        'Login failed - Due to Internal Server Error',
+      );
     }
   }
 
@@ -296,15 +347,68 @@ export class AuthService {
       });
 
       await this.tokenBlackListRepository.save(blackListToken);
-      await this.logger.info(`User logged out: ${req.user.username}\nToken added to black list: ${token}`, "auth");
-      
+      await this.logger.info(
+        `User logged out: ${req.user.username}\nToken added to black list: ${token}`,
+        'auth',
+      );
+
       return {
         success: true,
         message: 'Logged out successfully',
       };
     } catch (error) {
-      await this.logger.error(error.message, "auth", "There is an error - in the logout process", error.stack);
-      return new InternalServerErrorException("Logout failed - Due to Internal Server Error");
+      await this.logger.error(
+        error.message,
+        'auth',
+        'There is an error - in the logout process',
+        error.stack,
+      );
+      return new InternalServerErrorException(
+        'Logout failed - Due to Internal Server Error',
+      );
     }
+  }
+
+  // Google User Authentication
+  async validateGoogleUser(user: any): Promise<any> {
+    let existingUser = await this.userRepository.findOne({
+      where: {
+        email: user.email,
+      },
+    });
+
+    if (!existingUser) {
+      existingUser = this.userRepository.create({
+        first_name: user.firstName,
+        last_name: user.lastName,
+        email: user.email,
+        username: this.generateUsername(user.email),
+        password: 'signed_up_with_google',
+      });
+
+      await this.userRepository.save(existingUser);
+
+      const newAccount = this.accountRepository.create({
+        user: existingUser,
+        profile_picture: user.profile_picture,
+      });
+
+      await this.accountRepository.save(newAccount);
+    }
+
+    const payload = { id: existingUser.id, username: existingUser.username };
+    const access_token = jwt.sign(payload, process.env.JWT_ACCESS_SECRET_KEY, {
+      expiresIn: '5d',
+    });
+
+    return {
+      success: true,
+      access_token,
+    };
+  }
+
+  private generateUsername(email: string): string {
+    const username = `${email.split('@')[0]}_${uuid()}`;
+    return username.slice(0, 5);
   }
 }

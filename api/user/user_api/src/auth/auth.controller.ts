@@ -1,9 +1,11 @@
 import {
   Body,
   Controller,
+  Get,
   HttpException,
   Post,
   Req,
+  Res,
   Session,
   UseGuards,
 } from '@nestjs/common';
@@ -13,6 +15,7 @@ import { ConfirmAccountDTO } from './dto/confirm-account-dto';
 import { LoginDTO } from './dto/login-dto';
 import { JwtAuthGuard } from '../jwt/jwt-auth-guard';
 import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
+import { AuthGuard } from '@nestjs/passport';
 
 @Controller('auth')
 export class AuthController {
@@ -59,5 +62,22 @@ export class AuthController {
     @Req() req,
   ): Promise<{ success: boolean; message: string } | HttpException> {
     return this.authService.logout(req);
+  }
+
+
+  // Google Login
+  @Get('google')
+  @UseGuards(AuthGuard('google'))
+  async googleAuth() {}
+
+  @Get('google/callback')
+  @UseGuards(AuthGuard('google'))
+  async googleCallback(
+    @Res() res: any,
+    @Req() req: any,
+  ) {
+    const { access_token } = await this.authService.validateGoogleUser(req.user);
+
+    res.redirect(`${process.env.GOOGLE_CLIENT_REDIRECT_URL}/auth/login?access_token=${access_token}`);
   }
 }
