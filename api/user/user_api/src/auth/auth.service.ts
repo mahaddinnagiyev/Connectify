@@ -255,7 +255,7 @@ export class AuthService {
         payload,
         process.env.JWT_ACCESS_SECRET_KEY,
         {
-          expiresIn: '30m',
+          expiresIn: '5d',
         },
       );
 
