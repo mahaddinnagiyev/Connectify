@@ -115,7 +115,7 @@ const SignupForm: React.FC<SignupFormProps> = ({
 
         <div className="signup-form-group flex flex-col">
           <div>
-            <label>Select Gender</label>
+            <label className="flex items-center gap-2">Select Gender <p className="text-xs font-serif">(Optional)</p></label>
           </div>
           <div className="gender-group">
             <input
@@ -123,7 +123,6 @@ const SignupForm: React.FC<SignupFormProps> = ({
               id="male"
               name="gender"
               value="male"
-              required
               onChange={handleChange}
               checked={formData.gender === "male"}
             />
@@ -134,7 +133,6 @@ const SignupForm: React.FC<SignupFormProps> = ({
               id="female"
               name="gender"
               value="female"
-              required
               onChange={handleChange}
               checked={formData.gender === "female"}
             />
@@ -145,7 +143,6 @@ const SignupForm: React.FC<SignupFormProps> = ({
               id="other"
               name="gender"
               value="other"
-              required
               onChange={handleChange}
               checked={formData.gender === "other"}
             />
