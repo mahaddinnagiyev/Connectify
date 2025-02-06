@@ -3,11 +3,14 @@ import google_logo from "../../assets/google.png";
 
 import { Link } from "react-router-dom";
 import { useState } from "react";
-import { login } from "../../services/auth/auth-service";
+import { login, logout } from "../../services/auth/auth-service";
 import ErrorMessage from "../../components/messages/ErrorMessage";
 import SuccessMessage from "../../components/messages/SuccessMessage";
 import CheckModal from "../../components/modals/CheckModal";
-import { setTokenToStorage } from "../../services/auth/token-service";
+import {
+  getTokenFromStorage,
+  setTokenToStorage,
+} from "../../services/auth/token-service";
 
 const Login = () => {
   const getUrl = (params: string) => {
@@ -37,11 +40,15 @@ const Login = () => {
 
     setIsLoading(true);
     setTimeout(async () => {
+      if (getTokenFromStorage()) {
+        await logout();
+      }
+
       const response = await login(formData);
 
       if (response.success) {
         setSuccessMessage("Login successfull!");
-        setTokenToStorage(response.access_token)
+        setTokenToStorage(response.access_token);
         setTimeout(() => {
           window.location.replace("/");
         }, 1500);
