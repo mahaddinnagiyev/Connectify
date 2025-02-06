@@ -19,6 +19,7 @@ import { ConfirmAccountDTO } from './dto/confirm-account-dto';
 import { LoginDTO } from './dto/login-dto';
 import { JwtPayload } from '../jwt/jwt-payload';
 import { TokenBlackList } from 'src/entities/token-black-list.entity';
+import { LoggerService } from 'src/logger/logger.service';
 
 @Injectable()
 export class AuthService {
@@ -30,6 +31,7 @@ export class AuthService {
     @InjectRepository(TokenBlackList)
     private tokenBlackListRepository: Repository<TokenBlackList>,
     private readonly mailService: MailerService,
+    private readonly logger: LoggerService,
   ) {}
 
   // Signup
@@ -48,11 +50,14 @@ export class AuthService {
         confirm,
       } = signupDTO;
 
+      await this.logger.debug(`Signup attempt: ${JSON.stringify(signupDTO)}`, "auth");
+
       const isUsernameExist = await this.userRepository.findOne({
         where: { username: username },
       });
 
       if (isUsernameExist) {
+        await this.logger.warn(`Signup failed - Username already taken: ${username}`, "auth");
         return new BadRequestException({
           success: false,
           error: 'This username already taken',
@@ -64,6 +69,7 @@ export class AuthService {
       });
 
       if (checkEmailExist) {
+        await this.logger.warn(`Signup failed - Email already registered: ${email}`, "auth");
         return new BadRequestException({
           success: false,
           error: 'This email already registered',
@@ -96,13 +102,17 @@ export class AuthService {
         password: password,
       };
 
+      await this.logger.info(
+        `Signup successful - Verification email sent to: ${signupDTO.email}`, "auth"
+      );
+
       return {
         success: true,
         message: 'Confirm code has been sent. Please check your inbox',
       };
     } catch (error) {
-      console.log(error);
-      return new InternalServerErrorException();
+      await this.logger.error(error.message, "auth", "There's an error in the signup process", error.stack);
+      return new InternalServerErrorException("Signup failed - Due to Internal Server Error");
     }
   }
 
@@ -117,6 +127,7 @@ export class AuthService {
       const unconfirmed_user = session.unconfirmed_user;
 
       if (!confirm_code) {
+        await this.logger.warn('Account confirmation failed - Confirm code not found in session', "auth");
         return new BadRequestException({
           success: false,
           error: 'Confirm code not found',
@@ -124,6 +135,7 @@ export class AuthService {
       }
 
       if (!unconfirmed_user) {
+        await this.logger.warn('Account confirmation failed - User not found in session', "auth");
         return new BadRequestException({
           success: false,
           error: 'User not found',
@@ -131,16 +143,10 @@ export class AuthService {
       }
 
       if (code !== confirm_code) {
+        await this.logger.warn('Account confirmation failed - Invalid code', "auth");
         return new BadRequestException({
           success: false,
           error: 'Invalid code',
-        });
-      }
-
-      if (!session.unconfirmed_user) {
-        return new BadRequestException({
-          success: false,
-          error: 'User not found',
         });
       }
 
@@ -167,6 +173,11 @@ export class AuthService {
       delete session.unconfirmed_user;
       delete session.confirm_code;
 
+      await this.logger.info(
+        `New user created:\nFull name: ${newUser.first_name} ${newUser.last_name},\nusername: ${newUser.username},\nemail: ${newUser.email}`,
+        "auth",
+      );
+
       return {
         success: true,
         message: 'User created successfully',
@@ -188,7 +199,8 @@ export class AuthService {
         },
       };
     } catch (error) {
-      return new InternalServerErrorException();
+      await this.logger.error(error.message, "auth", "There's an error in the account confirmation process", error.stack);
+      return new InternalServerErrorException("Account confirm failed - Due to Internal Server Error");
     }
   }
 
@@ -208,6 +220,7 @@ export class AuthService {
       });
 
       if (!check_email_exist && !check_username_exist) {
+        await this.logger.warn('Login failed - Invalid credentials(username or email)', "auth");
         return new BadRequestException({
           success: false,
           error: 'Invalid credentials',
@@ -218,6 +231,7 @@ export class AuthService {
       const isPasswordValid = await bcrypt.compare(password, user.password);
 
       if (!isPasswordValid) {
+        await this.logger.warn('Login failed - Invalid credentials(password)', "auth");
         return new BadRequestException({
           success: false,
           message: 'Invalid credentials',
@@ -225,6 +239,7 @@ export class AuthService {
       }
 
       if (user.is_banned) {
+        await this.logger.warn('Login failed - Due to user banned', "auth");
         return new ForbiddenException({
           success: false,
           message: 'Your account has been banned',
@@ -244,13 +259,17 @@ export class AuthService {
         },
       );
 
+      await this.logger.info(
+        `Login successfully:\nFull name: ${user.first_name} ${user.last_name},\nusername: ${user.username},\nemail: ${user.email}`, "auth"
+      );
+
       return {
         success: true,
         access_token: access_token,
       };
     } catch (error) {
-      console.log(error);
-      return new InternalServerErrorException();
+      await this.logger.error(error.message, "auth", "There is an error in the login process", error.stack);
+      return new InternalServerErrorException("Login failed - Due to Internal Server Error");
     }
   }
 
@@ -259,9 +278,8 @@ export class AuthService {
     req: any,
   ): Promise<{ success: boolean; message: string } | HttpException> {
     try {
-
       const token = req.headers.authorization?.split(' ')[1];
-      
+
       const isTokenInBlackList = await this.tokenBlackListRepository.findOne({
         where: { token: token },
       });
@@ -278,14 +296,15 @@ export class AuthService {
       });
 
       await this.tokenBlackListRepository.save(blackListToken);
-
+      await this.logger.info(`User logged out: ${req.user.username}\nToken added to black list: ${token}`, "auth");
+      
       return {
         success: true,
         message: 'Logged out successfully',
       };
     } catch (error) {
-      console.log(error);
-      return new InternalServerErrorException();
+      await this.logger.error(error.message, "auth", "There is an error - in the logout process", error.stack);
+      return new InternalServerErrorException("Logout failed - Due to Internal Server Error");
     }
   }
 }

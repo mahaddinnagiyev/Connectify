@@ -7,11 +7,13 @@ import { Account } from 'src/entities/account.entity';
 import { JwtStrategy } from 'src/jwt/jwt-strategy';
 import { PassportModule } from '@nestjs/passport';
 import { TokenBlackList } from 'src/entities/token-black-list.entity';
+import { LoggerModule } from 'src/logger/logger.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([User, Account, TokenBlackList]),
     PassportModule.register({ defaultStrategy: 'jwt' }),
+    LoggerModule
   ],
   providers: [AuthService, JwtStrategy],
   controllers: [AuthController],
