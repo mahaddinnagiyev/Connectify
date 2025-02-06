@@ -371,40 +371,64 @@ export class AuthService {
 
   // Google User Authentication
   async validateGoogleUser(user: any): Promise<any> {
-    let existingUser = await this.userRepository.findOne({
-      where: {
-        email: user.email,
-      },
-    });
-
-    if (!existingUser) {
-      existingUser = this.userRepository.create({
-        first_name: user.firstName,
-        last_name: user.lastName,
-        email: user.email,
-        username: this.generateUsername(user.email),
-        password: 'signed_up_with_google',
+    try {
+      let existingUser = await this.userRepository.findOne({
+        where: {
+          email: user.email,
+        },
       });
 
-      await this.userRepository.save(existingUser);
+      if (!existingUser) {
+        existingUser = this.userRepository.create({
+          first_name: user.firstName,
+          last_name: user.lastName,
+          email: user.email,
+          username: this.generateUsername(user.email),
+          password: 'signed_up_with_google',
+        });
 
-      const newAccount = this.accountRepository.create({
-        user: existingUser,
-        profile_picture: user.profile_picture,
-      });
+        await this.userRepository.save(existingUser);
 
-      await this.accountRepository.save(newAccount);
+        const newAccount = this.accountRepository.create({
+          user: existingUser,
+          profile_picture: user.profile_picture,
+        });
+
+        await this.accountRepository.save(newAccount);
+        await this.logger.info(
+          `User created successfully:\nFull name: ${existingUser.first_name} ${existingUser.last_name},\nusername: ${existingUser.username},\nemail: ${existingUser.email}`,
+          'auth',
+        )
+      }
+
+      const payload = { id: existingUser.id, username: existingUser.username };
+      const access_token = jwt.sign(
+        payload,
+        process.env.JWT_ACCESS_SECRET_KEY,
+        {
+          expiresIn: '5d',
+        },
+      );
+      await this.logger.info(
+        `Google user authentication successfully:\nFull name: ${existingUser.first_name} ${existingUser.last_name},\nusername: ${existingUser.username},\nemail: ${existingUser.email}`,
+        'auth',
+      );
+
+      return {
+        success: true,
+        access_token,
+      };
+    } catch (error) {
+      await this.logger.error(
+        error.message,
+        'auth',
+        'There is an error - in the google user authentication process',
+        error.stack,
+      );
+      return new InternalServerErrorException(
+        'Google user authentication failed - Due to Internal Server Error',
+      );
     }
-
-    const payload = { id: existingUser.id, username: existingUser.username };
-    const access_token = jwt.sign(payload, process.env.JWT_ACCESS_SECRET_KEY, {
-      expiresIn: '5d',
-    });
-
-    return {
-      success: true,
-      access_token,
-    };
   }
 
   private generateUsername(email: string): string {
