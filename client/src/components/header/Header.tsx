@@ -90,7 +90,7 @@ const Header = () => {
           {/* Show profile actions inside the burger menu when open */}
           {isMenuOpen && (
             <div className="profile-actions-burger flex flex-col gap-2">
-              <a href="/profile">
+              <a href="/user/my-profile">
                 <AccountBoxIcon /> View Profile
               </a>
               <a onClick={handleLogout} className="text-center cursor-pointer">
@@ -115,7 +115,7 @@ const Header = () => {
             className="w-10 h-10 rounded-full cursor-pointer profile-img"
           />
           <div className="profile-actions">
-            <a href="/profile">
+            <a href="/user/my-profile">
               <AccountBoxIcon /> View Profile
             </a>
             <a onClick={handleLogout} className="cursor-pointer">

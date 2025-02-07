@@ -1,0 +1,45 @@
+/* ProfilePage.css */
+.profile-form {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.profile-form .MuiTextField-root {
+  margin-bottom: 20px;
+}
+
+.profile-form .MuiButton-root {
+  margin-top: 20px;
+}
+
+/* ProfilePage.css */
+#profile-container {
+  padding: 0 20px;
+}
+
+/* On small screens (like mobile) stack the tabs and content */
+@media (max-width: 768px) {
+  #profile-container {
+    padding: 0;
+  }
+
+  .MuiTabs-root {
+    flex-direction: row;
+    overflow-x: scroll;
+  }
+
+  .MuiTab-root {
+    padding: 12px 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .MuiTabs-root {
+    font-size: 14px;
+  }
+
+  .MuiTab-root {
+    min-width: 120px;
+  }
+}

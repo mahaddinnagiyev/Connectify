@@ -6,6 +6,7 @@ import ChatPage from "./pages/ChatPage";
 import Login from "./pages/auth/Login";
 import Signup from "./pages/auth/Signup";
 import { getTokenFromStorage } from "./services/auth/token-service";
+import ProfilePage from "./pages/profile/ProfilePage";
 
 function App() {
   return (
@@ -20,9 +21,16 @@ function App() {
             </RouteControl>
           }
         />
+        <Route
+          path="user/my-profile"
+          element={
+            <RouteControl>
+              <ProfilePage />
+            </RouteControl>
+          }
+        />
         <Route path="/auth/login" element={<Login />} />
         <Route path="/auth/signup" element={<Signup />} />
-        
       </Routes>
     </BrowserRouter>
   );
