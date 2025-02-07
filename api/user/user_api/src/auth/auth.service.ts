@@ -74,6 +74,13 @@ export class AuthService {
         });
       }
 
+      if (username.includes(' ')) {
+        return new BadRequestException({
+          success: false,
+          error: 'Username cannot contain spaces',
+        });
+      }
+
       const checkEmailExist = await this.userRepository.findOne({
         where: { email: email },
       });
@@ -398,7 +405,7 @@ export class AuthService {
         await this.logger.info(
           `User created successfully:\nFull name: ${existingUser.first_name} ${existingUser.last_name},\nusername: ${existingUser.username},\nemail: ${existingUser.email}`,
           'auth',
-        )
+        );
       }
 
       const payload = { id: existingUser.id, username: existingUser.username };
