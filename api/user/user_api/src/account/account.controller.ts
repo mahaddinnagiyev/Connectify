@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Delete,
+  Get,
   HttpException,
   Patch,
   Req,
@@ -17,6 +18,28 @@ import { User } from 'src/entities/user.entity';
 @Controller('account')
 export class AccountController {
   constructor(private readonly accountService: AccountService) {}
+
+  
+  // Get Social Link By Id
+  @UseGuards(JwtAuthGuard)
+  @Throttle({
+    default: { limit: 60, ttl: 60 * 1000, blockDuration: 60 * 1000 },
+  })
+  @Get('/social-link/:id')
+  async get_social_by_id(
+    @Req() req: Request,
+  ): Promise<
+    | {
+        success: boolean;
+        social_link: { id: string; name: string; link: string };
+      }
+    | HttpException
+  > {
+    return await this.accountService.get_social_by_id(
+      String(req.params.id),
+      req.user as User,
+    );
+  }
 
 
   // Add New Social Link
@@ -52,7 +75,7 @@ export class AccountController {
       req.user as User,
     );
   }
-
+  
 
   // Delte Social Link
   @UseGuards(JwtAuthGuard)

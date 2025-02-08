@@ -21,7 +21,6 @@ export class AccountService {
     private readonly logger: LoggerService,
   ) {}
 
-
   // Find Account By User
   async get_account_by_user(user: User): Promise<Account | HttpException> {
     try {
@@ -44,7 +43,54 @@ export class AccountService {
     }
   }
 
-  
+  // Get Social Link By Id
+  async get_social_by_id(
+    id: string,
+    user: User
+  ): Promise<
+    | {
+        success: boolean;
+        social_link: { id: string; name: string; link: string };
+      }
+    | HttpException
+  > {
+    try {
+
+        const account = await this.get_account_by_user(user) as Account;
+
+        const social_link = account.social_links.find(
+          (link) => link.id === id
+        )
+
+        if (!social_link) {
+          return new NotFoundException({
+            success: false,
+            error: 'Social link not found',
+          });
+        }
+
+        return {
+          success: true,
+          social_link: {
+            id: social_link.id,
+            name: social_link.name,
+            link: social_link.link,
+          },
+        }
+
+    } catch (error) {
+      await this.logger.error(
+        error.message,
+        'account',
+        'There is an error getting social link by id',
+        error.stack,
+      );
+      return new InternalServerErrorException(
+        'Getting social link by id failed - Due To Internal Server Error',
+      );
+    }
+  }
+
   // Add New Social Links
   async add_social_link(
     socialLinkDTO: SocialLinkDTO,
@@ -113,7 +159,6 @@ export class AccountService {
     }
   }
 
-
   // Edit Social Link
   async edit_social_link(
     socialLinkDTO: EditSocialLinkDTO,
@@ -177,7 +222,6 @@ export class AccountService {
       );
     }
   }
-
 
   // Remove Social Link
   async delete_social_link(id: string, user: User) {
