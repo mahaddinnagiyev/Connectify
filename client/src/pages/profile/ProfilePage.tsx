@@ -44,33 +44,6 @@ const ProfilePage = () => {
   const [value, setValue] = React.useState(0);
   const [gender, setGender] = React.useState("");
 
-  // Mock user data
-  const user = {
-    firstName: "John",
-    lastName: "Doe",
-    username: "johndoe123",
-    email: "john.doe@example.com",
-    gender: "Male",
-
-    account: {
-      bio: "Hello I am new user of Connectify",
-      location: "New York, USA",
-      social_links: [
-        {
-          name: "Facebook",
-          link: "https://www.facebook.com/johndoe",
-        },
-        {
-          name: "Twitter",
-          link: "https://www.twitter.com/johndoe",
-        },
-      ],
-      profile_picture:
-        "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRkMa5nc8TsQv49NV66I15S_E70CIlWUjxLCg&s",
-      last_login: new Date(),
-    },
-  };
-
   const handleChange = (event: React.SyntheticEvent, newValue: number) => {
     setValue(newValue);
   };
@@ -114,7 +87,7 @@ const ProfilePage = () => {
             {" "}
             {/* Left margin for tab positioning */}
             <TabPanel value={value} index={0}>
-              <ProfileInfo user={user} gender={gender} setGender={setGender} />
+              <ProfileInfo gender={gender} setGender={setGender} />
             </TabPanel>
             <TabPanel value={value} index={1}>
               <Typography variant="h4" gutterBottom>

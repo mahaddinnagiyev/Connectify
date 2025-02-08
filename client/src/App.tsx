@@ -52,6 +52,7 @@ export const RouteControl = ({ children }: { children: React.ReactNode }) => {
       id: string;
       username: string;
     } = jwtDecode(token);
+    console.log(decodedToken);
 
     if (!decodedToken || !decodedToken.id || !decodedToken.username) {
       return <Navigate to="/auth/login" />;

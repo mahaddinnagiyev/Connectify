@@ -20,5 +20,6 @@ import { HttpModule } from '@nestjs/axios';
   ],
   providers: [AuthService, JwtStrategy, GoogleStrategy],
   controllers: [AuthController],
+  exports: [TypeOrmModule]
 })
 export class AuthModule {}

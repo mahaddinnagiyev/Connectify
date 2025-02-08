@@ -24,7 +24,9 @@ export class AuthController {
   // Signup
   @Post('signup')
   @UseGuards(ThrottlerGuard)
-  @Throttle({ default: { limit: 40, ttl: 60 * 1000, blockDuration: 60 * 1000 } })
+  @Throttle({
+    default: { limit: 40, ttl: 60 * 1000, blockDuration: 60 * 1000 },
+  })
   async signup(
     @Body() signupDTO: SignupDTO,
     @Session() session: Record<string, any>,
@@ -35,7 +37,9 @@ export class AuthController {
   // Confirm Account
   @Post('signup/confirm')
   @UseGuards(ThrottlerGuard)
-  @Throttle({ default: { limit: 40, ttl: 60 * 1000, blockDuration: 60 * 1000 } })
+  @Throttle({
+    default: { limit: 40, ttl: 60 * 1000, blockDuration: 60 * 1000 },
+  })
   async confirmAccount(
     @Body() confirmDTO: ConfirmAccountDTO,
     @Session() session: Record<string, any>,
@@ -45,7 +49,9 @@ export class AuthController {
 
   // Login
   @UseGuards(ThrottlerGuard)
-  @Throttle({ default: { limit: 24, ttl: 60 * 1000, blockDuration: 60 * 1000 } })
+  @Throttle({
+    default: { limit: 24, ttl: 60 * 1000, blockDuration: 60 * 1000 },
+  })
   @Post('login')
   async login(
     @Body() body: LoginDTO,
@@ -56,7 +62,9 @@ export class AuthController {
   // Logout
   @UseGuards(JwtAuthGuard)
   @UseGuards(ThrottlerGuard)
-  @Throttle({ default: { limit: 40, ttl: 60 * 1000, blockDuration: 60 * 1000 } })
+  @Throttle({
+    default: { limit: 40, ttl: 60 * 1000, blockDuration: 60 * 1000 },
+  })
   @Post('logout')
   async logout(
     @Req() req,
@@ -64,20 +72,32 @@ export class AuthController {
     return this.authService.logout(req);
   }
 
-
   // Google Login
-  @Get('google')
-  @UseGuards(AuthGuard('google'))
-  async googleAuth() {}
+  // @Get('google')
+  // @UseGuards(AuthGuard('google'))
+  // async googleAuth() {}
 
-  @Get('google/callback')
-  @UseGuards(AuthGuard('google'))
-  async googleCallback(
-    @Res() res: any,
-    @Req() req: any,
-  ) {
-    const { access_token } = await this.authService.validateGoogleUser(req.user);
+  // @Get('google/callback')
+  // @UseGuards(AuthGuard('google'))
+  // async googleCallback(@Res() res: any, @Req() req: any) {
+  //   try {
+  //     const { access_token } = await this.authService.validateGoogleUser(
+  //       req.user,
+  //     );
 
-    res.redirect(`${process.env.GOOGLE_CLIENT_REDIRECT_URL}/auth/login?access_token=${access_token}`);
-  }
+  //     if (!access_token) {
+  //       return res.redirect(
+  //         `${process.env.GOOGLE_CLIENT_REDIRECT_URL}/auth/login/?error=true`,
+  //       );
+  //     }
+
+  //     res.redirect(
+  //       `${process.env.GOOGLE_CLIENT_REDIRECT_URL}/auth/login?access_token=${access_token}`,
+  //     );
+  //   } catch (error) {
+  //     res.redirect(
+  //       `${process.env.GOOGLE_CLIENT_REDIRECT_URL}/auth/login/?error=true`,
+  //     );
+  //   }
+  // }
 }

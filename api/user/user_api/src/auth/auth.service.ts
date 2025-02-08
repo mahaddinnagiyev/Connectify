@@ -376,70 +376,96 @@ export class AuthService {
     }
   }
 
-  // Google User Authentication
-  async validateGoogleUser(user: any): Promise<any> {
-    try {
-      let existingUser = await this.userRepository.findOne({
-        where: {
-          email: user.email,
-        },
-      });
+  // // Google User Authentication
+  // async validateGoogleUser(user: any): Promise<any> {
+  //   try {
+  //     console.log("User: ", user);
+  //     let existingUser = await this.userRepository.findOne({
+  //       where: { email: user.email },
+  //       lock: { mode: "pessimistic_write" },
+  //     });
+  //     console.log("User: ", user);
+  //     console.log("Existing user: ", existingUser);
+  //     console.log("Existing user password: ", existingUser.password);
+  //     console.log("Existing boolean: ", existingUser.password && existingUser.password !== 'signed_up_with_google');
+  //     if (existingUser && existingUser.password !== 'signed_up_with_google') {
+  //       return new BadRequestException({
+  //         success: false,
+  //         error: 'This user already registered with normal credentials',
+  //       });
+  //     }
 
-      if (!existingUser) {
-        existingUser = this.userRepository.create({
-          first_name: user.firstName,
-          last_name: user.lastName,
-          email: user.email,
-          username: this.generateUsername(user.email),
-          password: 'signed_up_with_google',
-        });
+  //     console.log('Existing user', existingUser);
 
-        await this.userRepository.save(existingUser);
+  //     if (!existingUser) {
+  //       existingUser = this.userRepository.create({
+  //         first_name: user.firstName,
+  //         last_name: user.lastName,
+  //         email: user.email,
+  //         username: this.generateUsername(user.email),
+  //         password: 'signed_up_with_google',
+  //       });
 
-        const newAccount = this.accountRepository.create({
-          user: existingUser,
-          profile_picture: user.profile_picture,
-        });
+  //       await this.userRepository.save(existingUser);
 
-        await this.accountRepository.save(newAccount);
-        await this.logger.info(
-          `User created successfully:\nFull name: ${existingUser.first_name} ${existingUser.last_name},\nusername: ${existingUser.username},\nemail: ${existingUser.email}`,
-          'auth',
-        );
-      }
+  //       const newAccount = this.accountRepository.create({
+  //         user: existingUser,
+  //         profile_picture: user.profile_picture,
+  //       });
 
-      const payload = { id: existingUser.id, username: existingUser.username };
-      const access_token = jwt.sign(
-        payload,
-        process.env.JWT_ACCESS_SECRET_KEY,
-        {
-          expiresIn: '5d',
-        },
-      );
-      await this.logger.info(
-        `Google user authentication successfully:\nFull name: ${existingUser.first_name} ${existingUser.last_name},\nusername: ${existingUser.username},\nemail: ${existingUser.email}`,
-        'auth',
-      );
+  //       await this.accountRepository.save(newAccount);
+  //       await this.logger.info(
+  //         `User created successfully:\nFull name: ${existingUser.first_name} ${existingUser.last_name},\nusername: ${existingUser.username},\nemail: ${existingUser.email}`,
+  //         'auth',
+  //       );
+  //     }
 
-      return {
-        success: true,
-        access_token,
-      };
-    } catch (error) {
-      await this.logger.error(
-        error.message,
-        'auth',
-        'There is an error - in the google user authentication process',
-        error.stack,
-      );
-      return new InternalServerErrorException(
-        'Google user authentication failed - Due to Internal Server Error',
-      );
-    }
-  }
+  //     if (existingUser === null) {
+  //       return new BadRequestException({
+  //         success: false,
+  //         error: 'User not found',
+  //       });
+  //     }
 
-  private generateUsername(email: string): string {
-    const username = `${email.split('@')[0]}_${uuid().slice(0, 5)}`;
-    return username;
-  }
+  //     const payload = { id: existingUser.id, username: existingUser.username };
+  //     const access_token = jwt.sign(
+  //       payload,
+  //       process.env.JWT_ACCESS_SECRET_KEY,
+  //       {
+  //         expiresIn: '5d',
+  //       },
+  //     );
+  //     await this.logger.info(
+  //       `Google user authentication successfully:\nFull name: ${existingUser.first_name} ${existingUser.last_name},\nusername: ${existingUser.username},\nemail: ${existingUser.email}`,
+  //       'auth',
+  //     );
+
+  //     return {
+  //       success: true,
+  //       access_token,
+  //     };
+  //   } catch (error) {
+  //     console.log(error);
+  //     await this.logger.error(
+  //       error.message,
+  //       'auth',
+  //       'There is an error - in the google user authentication process',
+  //       error.stack,
+  //     );
+  //     return new InternalServerErrorException(
+  //       'Google user authentication failed - Due to Internal Server Error',
+  //     );
+  //   }
+  // }
+
+  // private generateUsername(email: string): string {
+  //   const split_email = email.split('@')[0];
+  //   let username: string;
+  //   if (split_email.includes('.')) {
+  //     username = `${split_email.split('.')[0]}_${uuid().slice(0, 5)}`;
+  //     return username;
+  //   }
+  //   username = `${email.split('@')[0]}_${uuid().slice(0, 5)}`;
+  //   return username;
+  // }
 }

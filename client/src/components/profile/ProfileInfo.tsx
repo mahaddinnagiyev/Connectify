@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Box, Typography, TextField, Avatar } from "@mui/material";
 import InsertLinkIcon from "@mui/icons-material/InsertLink";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
@@ -6,20 +6,14 @@ import Tooltip from "@mui/material/Tooltip";
 import ErrorMessage from "../messages/ErrorMessage";
 import SuccessMessage from "../messages/SuccessMessage";
 import ImageModal from "../modals/ImageModal";
+import { getUserById } from "../../services/user/user-service";
+import { User } from "../../services/user/dto/user-dto";
+import { Account } from "../../services/user/dto/account-dto";
+import no_profile_photo from "../../assets/no-profile-photo.png";
 
 interface UserProfile {
-  firstName: string;
-  lastName: string;
-  username: string;
-  email: string;
-  gender: string;
-  account: {
-    bio: string;
-    location: string;
-    profile_picture: string;
-    social_links: { name: string; link: string }[];
-    last_login: Date;
-  };
+  user: User;
+  account: Account;
 }
 
 interface ProfileInfoProps {
@@ -28,17 +22,18 @@ interface ProfileInfoProps {
   setGender: (value: string) => void;
 }
 
-const ProfileInfo: React.FC<ProfileInfoProps> = ({ user }) => {
+const ProfileInfo: React.FC<ProfileInfoProps> = () => {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
+  const [userData, setUserData] = useState<UserProfile | null>(null);
 
   const copy_soical_link = (link: string) => {
     try {
       navigator.clipboard.writeText(link);
       setSuccessMessage("Link copied to clipboard");
     } catch (error) {
-        console.log(error);
+      console.log(error);
       setErrorMessage("Something went wrong - Link copy failed");
     }
   };
@@ -50,6 +45,38 @@ const ProfileInfo: React.FC<ProfileInfoProps> = ({ user }) => {
   const handleModalClose = () => {
     setModalOpen(false);
   };
+
+  useEffect(() => {
+    getUserById().then((response) => {
+      console.log(response);
+      if (response.success) {
+        setUserData({
+          user: response.user ?? {
+            id: null,
+            first_name: null,
+            last_name: null,
+            email: null,
+            username: null,
+            gender: null,
+          },
+          account: response.account ?? {
+            id: null,
+            bio: null,
+            location: null,
+            profile_picture: null,
+          },
+        });
+      } else {
+        setErrorMessage(
+          response.response?.message ??
+            response.response?.error ??
+            response.message ??
+            response.error ??
+            "Something went wrong"
+        );
+      }
+    });
+  }, []);
 
   return (
     <>
@@ -81,8 +108,10 @@ const ProfileInfo: React.FC<ProfileInfoProps> = ({ user }) => {
           }}
         >
           <Avatar
-            alt={`${user.firstName} ${user.lastName}`}
-            src={user.account.profile_picture}
+            alt={`${userData?.user.first_name || ""} ${
+              userData?.user.last_name || ""
+            }`}
+            src={userData?.account.profile_picture || no_profile_photo}
             sx={{
               width: "150px",
               height: "150px",
@@ -117,7 +146,7 @@ const ProfileInfo: React.FC<ProfileInfoProps> = ({ user }) => {
             <TextField
               id="firstName"
               label="First Name"
-              defaultValue={user.firstName}
+              value={userData?.user.first_name || ""}
               variant="outlined"
               fullWidth
               margin="normal"
@@ -128,7 +157,7 @@ const ProfileInfo: React.FC<ProfileInfoProps> = ({ user }) => {
             <TextField
               id="lastName"
               label="Last Name"
-              defaultValue={user.lastName}
+              value={userData?.user.last_name || ""}
               variant="outlined"
               fullWidth
               margin="normal"
@@ -139,7 +168,7 @@ const ProfileInfo: React.FC<ProfileInfoProps> = ({ user }) => {
             <TextField
               id="username"
               label="Username"
-              defaultValue={user.username}
+              value={userData?.user.username || ""}
               variant="outlined"
               fullWidth
               margin="normal"
@@ -150,7 +179,7 @@ const ProfileInfo: React.FC<ProfileInfoProps> = ({ user }) => {
             <TextField
               id="email"
               label="Email"
-              defaultValue={user.email}
+              value={userData?.user.email || ""}
               variant="outlined"
               fullWidth
               margin="normal"
@@ -161,7 +190,7 @@ const ProfileInfo: React.FC<ProfileInfoProps> = ({ user }) => {
             <TextField
               id="gender"
               label="Gender"
-              defaultValue={user.gender}
+              value={userData?.user.gender || ""}
               variant="outlined"
               fullWidth
               margin="normal"
@@ -193,7 +222,7 @@ const ProfileInfo: React.FC<ProfileInfoProps> = ({ user }) => {
             <TextField
               id="bio"
               label="Bio"
-              defaultValue={user.account.bio}
+              value={userData?.account.bio ? userData.account.bio : "There is no bio yet"}
               variant="outlined"
               fullWidth
               margin="normal"
@@ -204,7 +233,7 @@ const ProfileInfo: React.FC<ProfileInfoProps> = ({ user }) => {
             <TextField
               id="location"
               label="Location"
-              defaultValue={user.account.location}
+              value={userData?.account.location ? userData.account.location : "There is no location yet"}
               variant="outlined"
               fullWidth
               margin="normal"
@@ -215,15 +244,13 @@ const ProfileInfo: React.FC<ProfileInfoProps> = ({ user }) => {
             <TextField
               id="last_login"
               label="Last login"
-              defaultValue={`${user.account.last_login.getFullYear()}-${
-                user.account.last_login.getUTCMonth() + 1
-              }-${user.account.last_login.getDate()} at ${user.account.last_login.getHours()}:${user.account.last_login.getMinutes()}`}
               variant="outlined"
               fullWidth
               margin="normal"
               InputProps={{
                 readOnly: true,
               }}
+              value={userData?.account.last_login ? userData.account.last_login : "There is no last login yet"}
             />
             <div className="px-2 py-2">
               <button className="text-white bg-[#00ff00] px-4 py-3 rounded border-2 border-[#00ff00] hover:bg-white hover:text-[#00ff00] transition duration-300">
@@ -233,39 +260,43 @@ const ProfileInfo: React.FC<ProfileInfoProps> = ({ user }) => {
           </div>
           <h1 className="text-xl font-bold px-2 mt-12 mb-4">Social Links</h1>
           <hr className="border-t-2 pb-4 ml-2 mr-64" />
-          {user.account.social_links.map((link) => (
-            <div key={link.name} className="flex items-center gap-2">
-              <TextField
-                id={link.name}
-                label={link.name}
-                defaultValue={link.link}
-                variant="outlined"
-                fullWidth
-                margin="normal"
-                InputProps={{
-                  readOnly: true,
-                }}
-              />
-              <Tooltip title="Copy link" placement="top">
-                <InsertLinkIcon
-                  className="cursor-pointer"
-                  style={{ fontSize: "30px" }}
-                  onClick={() => copy_soical_link(link.link)}
+          {userData?.account.social_links.length === 0 ? (
+            <h5 className="ml-2 mb-4 font-sans">
+              There is no social media link
+            </h5>
+          ) : (
+            userData?.account.social_links?.map((link) => (
+              <div key={link.name} className="flex items-center gap-2">
+                <TextField
+                  id={link.name}
+                  label={link.name}
+                  value={link.link}
+                  variant="outlined"
+                  fullWidth
+                  margin="normal"
+                  InputProps={{
+                    readOnly: true,
+                  }}
                 />
-              </Tooltip>
-              <Tooltip title="Open link in new tab" placement="top">
-                <OpenInNewIcon
-                  className="cursor-pointer"
-                  style={{ fontSize: "24px" }}
-                  onClick={() => window.open(link.link, "_blank")}
-                />
-              </Tooltip>
-            </div>
-          ))}
+                <Tooltip title="Copy link" placement="top">
+                  <InsertLinkIcon
+                    className="cursor-pointer"
+                    style={{ fontSize: "30px" }}
+                    onClick={() => copy_soical_link(link.link)}
+                  />
+                </Tooltip>
+                <Tooltip title="Open link in new tab" placement="top">
+                  <OpenInNewIcon
+                    className="cursor-pointer"
+                    style={{ fontSize: "24px" }}
+                    onClick={() => window.open(link.link, "_blank")}
+                  />
+                </Tooltip>
+              </div>
+            ))
+          )}
           <div>
-            <button
-              className="border-2 text-sm border-[#00ff00] text-[#00ff00] px-3 py-2 rounded ml-2"
-            >
+            <button className="border-2 text-sm border-[#00ff00] text-[#00ff00] px-3 py-2 rounded ml-2">
               + Add Social Link
             </button>
           </div>
@@ -275,7 +306,11 @@ const ProfileInfo: React.FC<ProfileInfoProps> = ({ user }) => {
         <ImageModal
           open={modalOpen}
           onClose={handleModalClose}
-          imageUrl={user.account.profile_picture}
+          imageUrl={
+            userData?.account.profile_picture
+              ? userData.account.profile_picture
+              : no_profile_photo
+          }
         />
       </Box>
     </>

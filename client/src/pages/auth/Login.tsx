@@ -28,15 +28,18 @@ const Login = () => {
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const accessToken = urlParams.get('access_token');
-
+    const error = urlParams.get('error');
+  
     if (accessToken) {
       setTokenToStorage(accessToken);
       setIsLoading(true);
-
+  
       setTimeout(() => {
         setIsLoading(false);
         navigate('/chat');
       }, 2000);
+    } else if (error) {
+      setErrorMessage("This email already registered with normal way of login");
     }
   }, [navigate]);
   
