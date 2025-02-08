@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Box, Typography, TextField, Avatar } from "@mui/material";
 import ErrorMessage from "../messages/ErrorMessage";
 import SuccessMessage from "../messages/SuccessMessage";
@@ -14,13 +14,7 @@ interface UserProfile {
   account: Account;
 }
 
-interface ProfileInfoProps {
-  user: UserProfile;
-  gender: string;
-  setGender: (value: string) => void;
-}
-
-const ProfileInfo: React.FC<ProfileInfoProps> = () => {
+const ProfileInfo = () => {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
@@ -46,7 +40,6 @@ const ProfileInfo: React.FC<ProfileInfoProps> = () => {
 
   useEffect(() => {
     getUserById().then((response) => {
-      console.log(response);
       if (response.success) {
         setUserData({
           user: response.user ?? {
@@ -62,7 +55,7 @@ const ProfileInfo: React.FC<ProfileInfoProps> = () => {
             bio: null,
             location: null,
             profile_picture: null,
-            social_links: [], // Ensure social_links is always an array
+            social_links: [],
           },
         });
       } else {
@@ -92,15 +85,15 @@ const ProfileInfo: React.FC<ProfileInfoProps> = () => {
         />
       )}
 
-      <Box>
-        <Typography variant="h4" gutterBottom>
+      <Box sx={{ width: "100%", padding: 0 }}>
+        <Typography variant="h4" gutterBottom sx={{ display: { xs: "flex", md: "block" }, justifyContent: "center" }}>
           My Profile
         </Typography>
         <Box
           sx={{
             display: "flex",
             flexDirection: "column",
-            alignItems: "start",
+            alignItems: { xs: "center", sm: "center", md: "flex-start" },
             paddingLeft: 2,
             paddingTop: 2,
             mb: 4,
@@ -129,14 +122,15 @@ const ProfileInfo: React.FC<ProfileInfoProps> = () => {
             </button>
           </Typography>
         </Box>
-        <h1 className="text-2xl font-bold px-2 mt-5 mb-4">
+        <h1 className="text-2xl font-bold sm:px-2 px-6 mt-5 mb-4">
           Personal Information
         </h1>
-        <hr className="border-t-2 pb-4 ml-2 mr-64" />
+        <hr className="border-t-2 pb-4 sm:ml-2 ml-6 sm:mr-64 mr-0" />
         <Box
           component="form"
           sx={{
             "& .MuiTextField-root": { m: 1, width: "50ch" },
+            
           }}
           noValidate
           autoComplete="off"
@@ -152,6 +146,7 @@ const ProfileInfo: React.FC<ProfileInfoProps> = () => {
               InputProps={{
                 readOnly: true,
               }}
+              sx={{ maxWidth: { xs: "100%", sm: "50%", md: "50%" } }}
             />
             <TextField
               id="lastName"
@@ -163,6 +158,7 @@ const ProfileInfo: React.FC<ProfileInfoProps> = () => {
               InputProps={{
                 readOnly: true,
               }}
+              sx={{ maxWidth: { xs: "100%", sm: "50%" } }}
             />
             <TextField
               id="username"
@@ -174,6 +170,7 @@ const ProfileInfo: React.FC<ProfileInfoProps> = () => {
               InputProps={{
                 readOnly: true,
               }}
+              sx={{ maxWidth: { xs: "100%", sm: "50%" } }}
             />
             <TextField
               id="email"
@@ -185,6 +182,7 @@ const ProfileInfo: React.FC<ProfileInfoProps> = () => {
               InputProps={{
                 readOnly: true,
               }}
+              sx={{ maxWidth: { xs: "100%", sm: "50%" } }}
             />
             <TextField
               id="gender"
@@ -196,6 +194,7 @@ const ProfileInfo: React.FC<ProfileInfoProps> = () => {
               InputProps={{
                 readOnly: true,
               }}
+              sx={{ maxWidth: { xs: "100%", sm: "50%" } }}
             />
           </div>
           <div className="px-2 py-2">
@@ -205,10 +204,10 @@ const ProfileInfo: React.FC<ProfileInfoProps> = () => {
           </div>
         </Box>
 
-        <h1 className="text-2xl font-bold px-2 mt-12 mb-4">
+        <h1 className="text-2xl font-bold sm:px-2 px-6 mt-12 mb-4">
           Profile Information
         </h1>
-        <hr className="border-t-2 pb-4 ml-2 mr-64" />
+        <hr className="border-t-2 pb-4 sm:ml-2 ml-6 sm:mr-64 mr-0" />
         <Box
           component="form"
           sx={{
@@ -232,6 +231,7 @@ const ProfileInfo: React.FC<ProfileInfoProps> = () => {
               InputProps={{
                 readOnly: true,
               }}
+              sx={{ maxWidth: { xs: "100%", sm: "50%" } }}
             />
             <TextField
               id="location"
@@ -241,6 +241,7 @@ const ProfileInfo: React.FC<ProfileInfoProps> = () => {
                   ? userData.account.location
                   : "There is no location yet"
               }
+              sx={{ maxWidth: { xs: "100%", sm: "50%" } }}
               variant="outlined"
               fullWidth
               margin="normal"
@@ -262,6 +263,7 @@ const ProfileInfo: React.FC<ProfileInfoProps> = () => {
                   ? userData.account.last_login
                   : "There is no last login yet"
               }
+              sx={{ maxWidth: { xs: "100%", sm: "50%" } }}
             />
             <div className="px-2 py-2">
               <button className="text-white bg-[#00ff00] px-4 py-3 rounded border-2 border-[#00ff00] hover:bg-white hover:text-[#00ff00] transition duration-300">

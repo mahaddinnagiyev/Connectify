@@ -125,7 +125,7 @@ const SocialLink: React.FC<SocialLinkProps> = ({
       )}
 
       <h1 className="text-xl font-bold px-2 mt-12 mb-4">Social Links</h1>
-      <hr className="border-t-2 pb-4 ml-2 mr-64" />
+      <hr className="border-t-2 pb-4 ml-2 sm:mr-64 mr-0" />
       {socialLinks.length === 0 ? (
         <h5 className="ml-2 mb-4 font-sans">There is no social media link</h5>
       ) : (

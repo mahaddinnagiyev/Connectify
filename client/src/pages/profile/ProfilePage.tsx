@@ -4,8 +4,8 @@ import Tabs from "@mui/material/Tabs";
 import Tab from "@mui/material/Tab";
 import Typography from "@mui/material/Typography";
 import Box from "@mui/material/Box";
-import "./style.css";
 import ProfileInfo from "../../components/profile/ProfileInfo";
+import "./style.css";
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -42,7 +42,16 @@ function a11yProps(index: number) {
 
 const ProfilePage = () => {
   const [value, setValue] = React.useState(0);
-  const [gender, setGender] = React.useState("");
+  const [isVertical, setIsVertical] = React.useState(window.innerWidth >= 886);
+
+  React.useEffect(() => {
+    const handleResize = () => {
+      setIsVertical(window.innerWidth >= 886);
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   const handleChange = (event: React.SyntheticEvent, newValue: number) => {
     setValue(newValue);
@@ -54,28 +63,36 @@ const ProfilePage = () => {
       <div id="profile-container">
         <Box
           sx={{
-            flexGrow: 1,
-            bgcolor: "background.paper",
             display: "flex",
+            flexDirection: isVertical ? "row" : "column",
             height: "100%",
-            paddingTop: "140px",
+            paddingTop: "120px",
+            paddingLeft: "0",
           }}
         >
+          {/* Tab Menu */}
           <Tabs
-            orientation="vertical"
+            orientation={isVertical ? "vertical" : "horizontal"}
             variant="scrollable"
+            scrollButtons="auto"
+            allowScrollButtonsMobile
             value={value}
             onChange={handleChange}
-            aria-label="Vertical tabs example"
+            aria-label="Profile tabs"
             sx={{
-              borderRight: 1,
+              borderRight: isVertical ? 1 : 0,
+              borderBottom: isVertical ? 0 : 1,
               borderColor: "divider",
-              minWidth: 300,
-              position: "fixed",
-              top: "140px",
-              left: 0,
-              height: "calc(100vh - 140px)",
+              minWidth: isVertical ? 250 : "100%",
+              position: isVertical ? "fixed" : "relative",
+              top: isVertical ? "140px" : "0",
+              left: isVertical ? "0" : "auto",
+              width: isVertical ? "250px" : "100%",
+              height: isVertical ? "calc(100% - 140px)" : "auto",
               overflowY: "auto",
+              zIndex: 10,
+              bgcolor: "background.paper",
+              paddingLeft: 0
             }}
           >
             <Tab label="My Profile" {...a11yProps(0)} />
@@ -83,23 +100,37 @@ const ProfilePage = () => {
             <Tab label="Friend Requests" {...a11yProps(2)} />
             <Tab label="Block List" {...a11yProps(3)} />
           </Tabs>
-          <Box sx={{ marginLeft: "320px", flexGrow: 1 }}>
-            {" "}
-            {/* Left margin for tab positioning */}
+
+          {/* Content */}
+          <Box
+            sx={{
+              marginLeft: isVertical ? "250px" : "0",
+              flexGrow: 1, // Tam ekranı tutsun
+              padding: 0,
+              minWidth: 0, // Overflow problemini həll edir
+              paddingLeft: 0
+            }}
+          >
             <TabPanel value={value} index={0}>
-              <ProfileInfo gender={gender} setGender={setGender} />
+              <ProfileInfo />
             </TabPanel>
             <TabPanel value={value} index={1}>
               <Typography variant="h4" gutterBottom>
-                Settings
+                Friend List
               </Typography>
-              <Typography>Settings content goes here...</Typography>
+              <Typography>Friend list content goes here...</Typography>
             </TabPanel>
             <TabPanel value={value} index={2}>
               <Typography variant="h4" gutterBottom>
-                Privacy
+                Friend Requests
               </Typography>
-              <Typography>Privacy content goes here...</Typography>
+              <Typography>Friend requests content goes here...</Typography>
+            </TabPanel>
+            <TabPanel value={value} index={3}>
+              <Typography variant="h4" gutterBottom>
+                Block List
+              </Typography>
+              <Typography>Block list content goes here...</Typography>
             </TabPanel>
           </Box>
         </Box>
