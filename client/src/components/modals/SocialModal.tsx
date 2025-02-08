@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import {
   Dialog,
   DialogActions,
@@ -11,48 +11,78 @@ import {
 interface SocialModalProps {
   open: boolean;
   onClose: () => void;
-  onAdd: () => void;
-  socialLink: { name: string; link: string };
-  setSocialLink: (value: { name: string; link: string }) => void;
+  onSubmit: (formData: { name: string; link: string }) => Promise<void>;
+  editMode: boolean;
+  currentLink: { id: string; name: string; link: string } | null;
 }
 
 const SocialModal: React.FC<SocialModalProps> = ({
   open,
   onClose,
+  onSubmit,
+  editMode,
+  currentLink,
 }) => {
+  const [formData, setFormData] = useState({ name: "", link: "" });
+
+  useEffect(() => {
+    if (editMode && currentLink) {
+      setFormData({ name: currentLink.name, link: currentLink.link });
+    } else {
+      setFormData({ name: "", link: "" });
+    }
+  }, [editMode, currentLink]);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    await onSubmit(formData);
+    onClose(); // Modalı bağla
+  };
 
   return (
     <Dialog open={open} onClose={onClose}>
-      <DialogTitle>Add Social Link</DialogTitle>
-      <DialogContent>
-        <TextField
-          autoFocus
-          margin="dense"
-          id="name"
-          label="Social Link Name"
-          type="text"
-          fullWidth
-          variant="outlined"
-          name="name"
-        />
-        <TextField
-          margin="dense"
-          id="link"
-          label="Social Link URL"
-          type="url"
-          fullWidth
-          variant="outlined"
-          name="link"
-        />
-      </DialogContent>
-      <DialogActions>
-        <Button color="primary">
-          Cancel
-        </Button>
-        <Button color="primary">
-          Add Link
-        </Button>
-      </DialogActions>
+      <DialogTitle>
+        {editMode ? "Edit Social Link" : "Add Social Link"}
+      </DialogTitle>
+      <form onSubmit={handleSubmit}>
+        <DialogContent>
+          <TextField
+            autoFocus
+            margin="dense"
+            id="name"
+            label="Name"
+            type="text"
+            fullWidth
+            variant="outlined"
+            name="name"
+            value={formData.name}
+            onChange={handleChange}
+          />
+          <TextField
+            margin="dense"
+            id="link"
+            label="Social URL"
+            type="url"
+            fullWidth
+            variant="outlined"
+            name="link"
+            value={formData.link}
+            onChange={handleChange}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={onClose} color="warning">
+            Cancel
+          </Button>
+          <Button type="submit" color="primary">
+            {editMode ? "Update" : "Add"}
+          </Button>
+        </DialogActions>
+      </form>
     </Dialog>
   );
 };

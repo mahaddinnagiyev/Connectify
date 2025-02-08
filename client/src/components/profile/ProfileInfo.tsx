@@ -1,15 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { Box, Typography, TextField, Avatar } from "@mui/material";
-import InsertLinkIcon from "@mui/icons-material/InsertLink";
-import OpenInNewIcon from "@mui/icons-material/OpenInNew";
-import Tooltip from "@mui/material/Tooltip";
 import ErrorMessage from "../messages/ErrorMessage";
 import SuccessMessage from "../messages/SuccessMessage";
 import ImageModal from "../modals/ImageModal";
 import { getUserById } from "../../services/user/user-service";
 import { User } from "../../services/user/dto/user-dto";
-import { Account } from "../../services/user/dto/account-dto";
+import { Account } from "../../services/account/dto/account-dto";
 import no_profile_photo from "../../assets/no-profile-photo.png";
+import SocialLink from "./SocialLink";
 
 interface UserProfile {
   user: User;
@@ -64,6 +62,7 @@ const ProfileInfo: React.FC<ProfileInfoProps> = () => {
             bio: null,
             location: null,
             profile_picture: null,
+            social_links: [], // Ensure social_links is always an array
           },
         });
       } else {
@@ -201,7 +200,7 @@ const ProfileInfo: React.FC<ProfileInfoProps> = () => {
           </div>
           <div className="px-2 py-2">
             <button className="text-white bg-[#00ff00] px-4 py-3 rounded border-2 border-[#00ff00] hover:bg-white hover:text-[#00ff00] transition duration-300">
-              Edit personal informations
+              Edit personal information
             </button>
           </div>
         </Box>
@@ -222,7 +221,11 @@ const ProfileInfo: React.FC<ProfileInfoProps> = () => {
             <TextField
               id="bio"
               label="Bio"
-              value={userData?.account.bio ? userData.account.bio : "There is no bio yet"}
+              value={
+                userData?.account.bio
+                  ? userData.account.bio
+                  : "There is no bio yet"
+              }
               variant="outlined"
               fullWidth
               margin="normal"
@@ -233,7 +236,11 @@ const ProfileInfo: React.FC<ProfileInfoProps> = () => {
             <TextField
               id="location"
               label="Location"
-              value={userData?.account.location ? userData.account.location : "There is no location yet"}
+              value={
+                userData?.account.location
+                  ? userData.account.location
+                  : "There is no location yet"
+              }
               variant="outlined"
               fullWidth
               margin="normal"
@@ -250,56 +257,24 @@ const ProfileInfo: React.FC<ProfileInfoProps> = () => {
               InputProps={{
                 readOnly: true,
               }}
-              value={userData?.account.last_login ? userData.account.last_login : "There is no last login yet"}
+              value={
+                userData?.account.last_login
+                  ? userData.account.last_login
+                  : "There is no last login yet"
+              }
             />
             <div className="px-2 py-2">
               <button className="text-white bg-[#00ff00] px-4 py-3 rounded border-2 border-[#00ff00] hover:bg-white hover:text-[#00ff00] transition duration-300">
-                Edit profile informations
+                Edit profile information
               </button>
             </div>
           </div>
-          <h1 className="text-xl font-bold px-2 mt-12 mb-4">Social Links</h1>
-          <hr className="border-t-2 pb-4 ml-2 mr-64" />
-          {userData?.account.social_links.length === 0 ? (
-            <h5 className="ml-2 mb-4 font-sans">
-              There is no social media link
-            </h5>
-          ) : (
-            userData?.account.social_links?.map((link) => (
-              <div key={link.name} className="flex items-center gap-2">
-                <TextField
-                  id={link.name}
-                  label={link.name}
-                  value={link.link}
-                  variant="outlined"
-                  fullWidth
-                  margin="normal"
-                  InputProps={{
-                    readOnly: true,
-                  }}
-                />
-                <Tooltip title="Copy link" placement="top">
-                  <InsertLinkIcon
-                    className="cursor-pointer"
-                    style={{ fontSize: "30px" }}
-                    onClick={() => copy_soical_link(link.link)}
-                  />
-                </Tooltip>
-                <Tooltip title="Open link in new tab" placement="top">
-                  <OpenInNewIcon
-                    className="cursor-pointer"
-                    style={{ fontSize: "24px" }}
-                    onClick={() => window.open(link.link, "_blank")}
-                  />
-                </Tooltip>
-              </div>
-            ))
-          )}
-          <div>
-            <button className="border-2 text-sm border-[#00ff00] text-[#00ff00] px-3 py-2 rounded ml-2">
-              + Add Social Link
-            </button>
-          </div>
+
+          {/* Social Links Section */}
+          <SocialLink
+            socialLinks={userData?.account.social_links || []}
+            copy_soical_link={copy_soical_link}
+          />
         </Box>
 
         {/* Modals*/}

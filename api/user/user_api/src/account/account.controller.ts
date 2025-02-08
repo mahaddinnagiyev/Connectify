@@ -3,6 +3,7 @@ import {
   Controller,
   Delete,
   Get,
+  Post,
   HttpException,
   Patch,
   Req,
@@ -47,7 +48,7 @@ export class AccountController {
   @Throttle({
     default: { limit: 60, ttl: 60 * 1000, blockDuration: 60 * 1000 },
   })
-  @Patch('/social-link')
+  @Post('/social-link')
   async add_social_link(
     @Body() socialLinkDTO: SocialLinkDTO,
     @Req() req: Request,

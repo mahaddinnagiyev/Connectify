@@ -1,5 +1,5 @@
 import { getTokenFromStorage } from "../auth/token-service";
-import { Account } from "./dto/account-dto";
+import { Account } from "../account/dto/account-dto";
 import { User } from "./dto/user-dto";
 
 const SERVER_USER_URL = process.env.SERVER_USER_URL || "http://localhost:3535";
