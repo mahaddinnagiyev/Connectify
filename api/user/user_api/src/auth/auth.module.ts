@@ -8,8 +8,9 @@ import { JwtStrategy } from 'src/jwt/jwt-strategy';
 import { PassportModule } from '@nestjs/passport';
 import { TokenBlackList } from 'src/entities/token-black-list.entity';
 import { LoggerModule } from 'src/logger/logger.module';
-import { GoogleStrategy } from './strategy/google.strategy';
+// import { GoogleStrategy } from './strategy/google.strategy';
 import { HttpModule } from '@nestjs/axios';
+import { JwtAuthGuard } from 'src/jwt/jwt-auth-guard';
 
 @Module({
   imports: [
@@ -18,8 +19,8 @@ import { HttpModule } from '@nestjs/axios';
     LoggerModule,
     HttpModule
   ],
-  providers: [AuthService, JwtStrategy, GoogleStrategy],
+  providers: [AuthService, JwtStrategy, JwtAuthGuard], // Add the google strategy to here
   controllers: [AuthController],
-  exports: [TypeOrmModule]
+  exports: [TypeOrmModule, JwtAuthGuard]
 })
 export class AuthModule {}

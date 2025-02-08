@@ -9,7 +9,11 @@ dotenv.config();
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  app.useGlobalPipes(new ValidationPipe());
+  app.useGlobalPipes(new ValidationPipe({
+    whitelist: true,
+    forbidNonWhitelisted: true,
+    transform: true
+  }));
   app.enableCors({
     origin: 'http://localhost:5173', // Allow your frontend URL
     credentials: true, // Allow cookies & sessions

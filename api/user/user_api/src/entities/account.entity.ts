@@ -21,8 +21,8 @@ export class Account {
     @Column({ nullable: true })
     profile_picture: string;
 
-    @Column("text", { nullable: true, array: true, default: [] })
-    social_links: string[];
+    @Column({ type: "json", nullable: true })
+    social_links: { id: string, name: string, link: string }[];
 
     @Column({ type: "timestamp", nullable: true })
     last_login: Date;
