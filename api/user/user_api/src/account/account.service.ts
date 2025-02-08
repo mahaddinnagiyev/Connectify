@@ -46,7 +46,7 @@ export class AccountService {
   // Get Social Link By Id
   async get_social_by_id(
     id: string,
-    user: User
+    user: User,
   ): Promise<
     | {
         success: boolean;
@@ -55,29 +55,25 @@ export class AccountService {
     | HttpException
   > {
     try {
+      const account = (await this.get_account_by_user(user)) as Account;
 
-        const account = await this.get_account_by_user(user) as Account;
+      const social_link = account.social_links.find((link) => link.id === id);
 
-        const social_link = account.social_links.find(
-          (link) => link.id === id
-        )
+      if (!social_link) {
+        return new NotFoundException({
+          success: false,
+          error: 'Social link not found',
+        });
+      }
 
-        if (!social_link) {
-          return new NotFoundException({
-            success: false,
-            error: 'Social link not found',
-          });
-        }
-
-        return {
-          success: true,
-          social_link: {
-            id: social_link.id,
-            name: social_link.name,
-            link: social_link.link,
-          },
-        }
-
+      return {
+        success: true,
+        social_link: {
+          id: social_link.id,
+          name: social_link.name,
+          link: social_link.link,
+        },
+      };
     } catch (error) {
       await this.logger.error(
         error.message,
@@ -189,6 +185,27 @@ export class AccountService {
         return new BadRequestException({
           success: false,
           error: 'Social link not found in your account',
+        });
+      }
+
+      let isLinkExist = false;
+      account.social_links.forEach((linkObj) => {
+        if (linkObj.name === name || linkObj.id !== id) {
+          isLinkExist = true;
+        }
+      });
+
+      if (isLinkExist) {
+        await this.logger.warn(
+          `Link or its name already exist in your account: ${JSON.stringify(
+            socialLinkDTO,
+          )}`,
+          'account',
+          `User: ${user.username}`,
+        );
+        return new BadRequestException({
+          success: false,
+          error: 'Link or its name already exist in your account',
         });
       }
 
