@@ -105,9 +105,9 @@ const ProfilePage = () => {
           <Box
             sx={{
               marginLeft: isVertical ? "250px" : "0",
-              flexGrow: 1, // Tam ekranı tutsun
+              flexGrow: 1,
               padding: 0,
-              minWidth: 0, // Overflow problemini həll edir
+              minWidth: 0,
               paddingLeft: 0
             }}
           >

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Modal,
   Box,
@@ -23,6 +23,7 @@ interface ProfileEditModalProps {
   }[];
   title: string;
   onSubmit: (data: { [key: string]: string }) => void;
+  allowEmpty?: boolean; // Yeni prop: inputların boş qalmasına icazə verilsin ya yox
 }
 
 const ProfileEditModal = ({
@@ -31,8 +32,17 @@ const ProfileEditModal = ({
   fields,
   title,
   onSubmit,
+  allowEmpty = false,
 }: ProfileEditModalProps) => {
   const [formData, setFormData] = useState<{ [key: string]: string }>({});
+
+  useEffect(() => {
+    const initialData: { [key: string]: string } = {};
+    fields.forEach((field) => {
+      initialData[field.key] = field.value || "";
+    });
+    setFormData(initialData);
+  }, [fields, open]);
 
   const handleChange = (key: string, value: string) => {
     setFormData((prev) => ({ ...prev, [key]: value }));
@@ -67,7 +77,7 @@ const ProfileEditModal = ({
               <FormControl fullWidth sx={{ mt: 2 }}>
                 <InputLabel>{field.label}</InputLabel>
                 <Select
-                  value={formData[field.key] || field.value}
+                  value={formData[field.key] || ""}
                   onChange={(e) =>
                     handleChange(field.key, e.target.value as string)
                   }
@@ -83,10 +93,11 @@ const ProfileEditModal = ({
             ) : (
               <TextField
                 label={field.label}
-                value={formData[field.key] || field.value}
+                value={formData[field.key] || ""}
                 onChange={(e) => handleChange(field.key, e.target.value)}
                 fullWidth
                 margin="normal"
+                required={allowEmpty ? false : true}
               />
             )}
           </Box>

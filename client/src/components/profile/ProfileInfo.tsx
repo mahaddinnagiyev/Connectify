@@ -11,6 +11,7 @@ import ProfileEditModal from "../modals/profile/ProfileEditModal";
 import { Gender } from "../../services/auth/dto/singup-dto";
 import PersonalInfo from "./PersonalInfo";
 import AccountInfo from "./AccountInfo";
+import { edit_account } from "../../services/account/account-service";
 
 interface UserProfile {
   user: User;
@@ -37,6 +38,14 @@ const ProfileInfo = () => {
     }
   };
 
+  const handleImageClick = () => {
+    setModalOpen(true);
+  };
+
+  const handleModalClose = () => {
+    setModalOpen(false);
+  };
+
   const handleEditPersonalInfoSubmit = async (data: {
     [key: string]: string;
   }) => {
@@ -49,20 +58,24 @@ const ProfileInfo = () => {
       };
 
       const response = await edit_user(body);
-      
+
       if (response.success) {
-        setSuccessMessage("Personal information updated successfully!");
-        const updatedUserData = await getUserById();
-        if (updatedUserData.success) {
-          setUserData({
-            user: updatedUserData.user,
-            account: updatedUserData.account,
-          });
-        }
-      } else {
-        setErrorMessage(
-          response.response?.error || "Failed to update personal information"
+        localStorage.setItem(
+          "successMessage",
+          response.message ?? "Personal information updated successfully!"
         );
+        window.location.reload();
+      } else {
+        if (Array.isArray(response.message)) {
+          setErrorMessage(response.message[0]);
+        } else {
+          setErrorMessage(
+            response.response?.error ||
+              response.message ||
+              response.error ||
+              "Invalid personal information"
+          );
+        }
       }
     } catch (error) {
       console.error(error);
@@ -70,17 +83,39 @@ const ProfileInfo = () => {
     }
   };
 
-  const handleEditProfileInfoSubmit = (data: { [key: string]: string }) => {
-    console.log("Updated Profile Info:", data);
-    // Handle profile information update here
-  };
+  const handleEditProfileInfoSubmit = async (data: {
+    [key: string]: string;
+  }) => {
+    try {
+      const body = {
+        bio: data.bio,
+        location: data.location,
+      };
 
-  const handleImageClick = () => {
-    setModalOpen(true);
-  };
+      const response = await edit_account(body);
 
-  const handleModalClose = () => {
-    setModalOpen(false);
+      if (response.success) {
+        localStorage.setItem(
+          "successMessage",
+          response.message ?? "Account updated successfully!"
+        );
+        window.location.reload();
+      } else {
+        if (Array.isArray(response.message)) {
+          setErrorMessage(response.message[0]);
+        } else {
+          setErrorMessage(
+            response.response?.error ||
+              response.message ||
+              response.error ||
+              "Invalid account information"
+          );
+        }
+      }
+    } catch (error) {
+      console.log(error);
+      setErrorMessage("Something went wrong - Please try again later");
+    }
   };
 
   useEffect(() => {
@@ -114,6 +149,14 @@ const ProfileInfo = () => {
       }
     });
   }, []);
+
+  useEffect(() => {
+    const successMessage = localStorage.getItem("successMessage");
+    if (successMessage) {
+      setSuccessMessage(successMessage);
+      localStorage.removeItem("successMessage");
+    }
+  }, [userData]);
 
   return (
     <>
@@ -176,20 +219,17 @@ const ProfileInfo = () => {
             </button>
           </Typography>
         </Box>
-
         {/* Personal Information Section */}
         <PersonalInfo
           userData={userData}
           onEdit={() => setEditPersonalInfoModalOpen(true)}
         />
-
         {/* Account Information Section */}
         <AccountInfo
           userData={userData}
           onEdit={() => setEditProfileInfoModalOpen(true)}
           copySocialLink={copy_soical_link}
         />
-
         {/* Modals*/}
         <ImageModal
           open={modalOpen}
@@ -234,8 +274,8 @@ const ProfileInfo = () => {
             },
           ]}
           onSubmit={handleEditPersonalInfoSubmit}
+          allowEmpty={false}
         />
-
         {/* Edit Profile Information Modal */}
         <ProfileEditModal
           open={editProfileInfoModalOpen}
@@ -250,6 +290,7 @@ const ProfileInfo = () => {
             },
           ]}
           onSubmit={handleEditProfileInfoSubmit}
+          allowEmpty={true}
         />
       </Box>
     </>
