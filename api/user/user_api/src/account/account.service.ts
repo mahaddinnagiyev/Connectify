@@ -12,6 +12,7 @@ import { Repository } from 'typeorm';
 import { EditSocialLinkDTO, SocialLinkDTO } from './dto/social-link-dto';
 import { User } from 'src/entities/user.entity';
 import { v4 as uuid } from 'uuid';
+import { EditAccountDTO } from './dto/account-info-dto';
 
 @Injectable()
 export class AccountService {
@@ -39,6 +40,40 @@ export class AccountService {
     } catch (error) {
       return new InternalServerErrorException(
         'Account could not find - Due To Internal Server Error',
+      );
+    }
+  }
+
+  // Edit Account
+  async edit_account(
+    accountDTO: EditAccountDTO,
+    user: User,
+  ): Promise<{ success: boolean; message: string } | HttpException> {
+    try {
+      const account = (await this.get_account_by_user(user)) as Account;
+
+      if (account instanceof HttpException) {
+        return new NotFoundException({
+          success: false,
+          error: 'Account not found',
+        });
+      }
+
+      await this.accountRepository.update(account.id, accountDTO);
+
+      return {
+        success: true,
+        message: 'Personal information updated successfully',
+      };
+    } catch (error) {
+      await this.logger.error(
+        error.message,
+        'account',
+        'There is an error editing account',
+        error.stack,
+      );
+      return new InternalServerErrorException(
+        'Failed to edit personal information - Due To Internal Server Error',
       );
     }
   }

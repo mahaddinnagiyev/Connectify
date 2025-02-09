@@ -15,21 +15,32 @@ import { Throttle } from '@nestjs/throttler';
 import { EditSocialLinkDTO, SocialLinkDTO } from './dto/social-link-dto';
 import { Request } from 'express';
 import { User } from 'src/entities/user.entity';
+import { EditAccountDTO } from './dto/account-info-dto';
 
 @Controller('account')
 export class AccountController {
   constructor(private readonly accountService: AccountService) {}
 
-  
+  // Edit Account
+  @UseGuards(JwtAuthGuard)
+  @Throttle({
+    default: { limit: 60, ttl: 60 * 1000, blockDuration: 60 * 1000 },
+  })
+  @Patch('/my-info')
+  async edit_account(
+    @Body() userDTO: EditAccountDTO,
+    @Req() req: Request,
+  ): Promise<{ success: boolean; message: string } | HttpException> {
+    return await this.accountService.edit_account(userDTO, req.user as User);
+  }
+
   // Get Social Link By Id
   @UseGuards(JwtAuthGuard)
   @Throttle({
     default: { limit: 60, ttl: 60 * 1000, blockDuration: 60 * 1000 },
   })
   @Get('/social-link/:id')
-  async get_social_by_id(
-    @Req() req: Request,
-  ): Promise<
+  async get_social_by_id(@Req() req: Request): Promise<
     | {
         success: boolean;
         social_link: { id: string; name: string; link: string };
@@ -41,7 +52,6 @@ export class AccountController {
       req.user as User,
     );
   }
-
 
   // Add New Social Link
   @UseGuards(JwtAuthGuard)
@@ -59,7 +69,6 @@ export class AccountController {
     );
   }
 
-
   // Edit Social Link
   @UseGuards(JwtAuthGuard)
   @Throttle({
@@ -76,7 +85,6 @@ export class AccountController {
       req.user as User,
     );
   }
-  
 
   // Delte Social Link
   @UseGuards(JwtAuthGuard)
