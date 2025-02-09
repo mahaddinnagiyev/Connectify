@@ -14,16 +14,25 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   ) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
-      ignoreExpiration: false,
       secretOrKey: process.env.JWT_ACCESS_SECRET_KEY,
     });
   }
 
   async validate(payload: JwtPayload) {
-    const user = await this.userRepository.findOne({
-      where: { id: payload.id, username: payload.username },
-    });
 
+    const { id } = payload;
+
+    if (!id) {
+      return new UnauthorizedException({
+        success: false,
+        error: 'User not found or invalid token',
+      });
+    }
+
+    const user = await this.userRepository.findOne({
+      where: { id: payload.id },
+    });
+    
     if (!user) {
       return new UnauthorizedException({
         success: false,
@@ -31,6 +40,8 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       });
     }
 
-    return user;
+    const { password, ...safeUser } = user;
+
+    return safeUser;
   }
 }

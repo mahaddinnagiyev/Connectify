@@ -1,9 +1,10 @@
-import { Controller, Get, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Patch, Req, UseGuards } from '@nestjs/common';
 import { UserService } from './user.service';
 import { JwtAuthGuard } from 'src/jwt/jwt-auth-guard';
 import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
 import { Request } from 'express';
 import { User } from 'src/entities/user.entity';
+import { EditUserInfoDTO } from './dto/user-info-dto';
 
 @Controller('user')
 export class UserController {
@@ -22,7 +23,18 @@ export class UserController {
         query.username.toString(),
       );
     }
+    return await this.userService.get_user_by_id((req.user as User).id) ;
+  }
 
-    return await this.userService.get_user_by_id((req.user as User).id);
+  @UseGuards(JwtAuthGuard)
+  @Throttle({
+    default: { limit: 60, ttl: 60 * 1000, blockDuration: 60 * 1000 },
+  })
+  @Patch('/my-profile')
+  async edit_user_info(@Body() userDTO: EditUserInfoDTO, @Req() req: Request) {
+    return await this.userService.edit_user_informations(
+      userDTO,
+      req.user as User,
+    );
   }
 }

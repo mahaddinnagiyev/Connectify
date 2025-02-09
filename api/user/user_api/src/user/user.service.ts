@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   HttpException,
   Injectable,
   InternalServerErrorException,
@@ -9,6 +10,7 @@ import { Account } from 'src/entities/account.entity';
 import { User } from 'src/entities/user.entity';
 import { LoggerService } from 'src/logger/logger.service';
 import { Repository } from 'typeorm';
+import { EditUserInfoDTO } from './dto/user-info-dto';
 
 @Injectable()
 export class UserService {
@@ -109,6 +111,63 @@ export class UserService {
       );
       return new InternalServerErrorException(
         'Failed to find user - Due To Internal Server Error',
+      );
+    }
+  }
+
+  async edit_user_informations(
+    userDTO: EditUserInfoDTO,
+    req_user: User,
+  ): Promise<{ success: boolean; message: string } | HttpException> {
+    try {
+      const { username } = userDTO;
+
+      const userResponse = await this.get_user_by_id(req_user.id);
+      if (userResponse instanceof HttpException) {
+        return userResponse;
+      }
+      const user: User = userResponse.user;
+
+      if (username) {
+        const usernameResponse = await this.get_user_by_username(username);
+        if (
+          !(usernameResponse instanceof HttpException) &&
+          user.id !== usernameResponse.user.id
+        ) {
+          await this.logger.warn(
+            `Username already taken: ${username}`,
+            'user',
+            `User: ${req_user.username}`,
+          );
+          return new BadRequestException({
+            success: false,
+            error: 'Username already taken',
+          });
+        }
+      }
+
+      await this.userRepository.update(user.id, userDTO);
+
+      await this.logger.info(
+        `User informations edited: ${JSON.stringify(userDTO)}`,
+        'user',
+        `User: ${req_user.username}`,
+      );
+
+      return {
+        success: true,
+        message: 'Informations edited successfully',
+      };
+    } catch (error) {
+      console.log(error);
+      await this.logger.error(
+        `Error editing user informations\nError: ${error}`,
+        'user',
+        `User: ${req_user.username}`,
+        error.stack,
+      );
+      return new InternalServerErrorException(
+        'Failed to edit informations - Due To Internal Server Error',
       );
     }
   }

@@ -165,6 +165,12 @@ export class AccountService {
       const { name, link } = socialLinkDTO;
 
       const account = (await this.get_account_by_user(user)) as Account;
+      if (!account) {
+        return new NotFoundException({
+          success: false,
+          error: 'Account not found',
+        });
+      }
 
       if (!Array.isArray(account.social_links)) {
         account.social_links = [];
@@ -173,12 +179,9 @@ export class AccountService {
       const socialLinkIndex = account.social_links.findIndex(
         (linkObj) => linkObj.id === id,
       );
-
       if (socialLinkIndex === -1) {
         await this.logger.warn(
-          `Social link not found in your account: ${JSON.stringify(
-            socialLinkDTO,
-          )}`,
+          `Social link not found in your account: ${JSON.stringify(socialLinkDTO)}`,
           'account',
           `User: ${user.username}`,
         );
@@ -188,35 +191,31 @@ export class AccountService {
         });
       }
 
-      let isLinkExist = false;
-      account.social_links.forEach((linkObj) => {
-        if (linkObj.name === name || linkObj.id !== id) {
-          isLinkExist = true;
-        }
+      const duplicate = account.social_links.find((linkObj) => {
+        return (
+          linkObj.id !== id && (linkObj.name === name || linkObj.link === link)
+        );
       });
-
-      if (isLinkExist) {
+      if (duplicate) {
         await this.logger.warn(
-          `Link or its name already exist in your account: ${JSON.stringify(
-            socialLinkDTO,
-          )}`,
+          `Social link with same name or link already exists: ${JSON.stringify(socialLinkDTO)}`,
           'account',
           `User: ${user.username}`,
         );
         return new BadRequestException({
           success: false,
-          error: 'Link or its name already exist in your account',
+          error: 'Link or its name already exists in your account',
         });
       }
 
-      account.social_links[socialLinkIndex].name = name
-        ? name
-        : account.social_links[socialLinkIndex].name;
-      account.social_links[socialLinkIndex].link = link
-        ? link
-        : account.social_links[socialLinkIndex].link;
+      account.social_links[socialLinkIndex] = {
+        ...account.social_links[socialLinkIndex],
+        name,
+        link,
+      };
 
       await this.accountRepository.save(account);
+
       await this.logger.info(
         `Social link edited: ${JSON.stringify(socialLinkDTO)} by user: ${user.username}`,
         'account',

@@ -16,6 +16,15 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest();
+
+    const authHeader = request.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      throw new UnauthorizedException({
+        success: false,
+        message: 'Token is missing or invalid',
+      });
+    }
+
     const token = request.headers.authorization?.split(' ')[1];
 
     if (token) {
@@ -31,6 +40,7 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
       }
     }
 
-    return super.canActivate(context) as Promise<boolean>;
+    const isAuthorized = (await super.canActivate(context)) as boolean;
+    return isAuthorized;
   }
 }

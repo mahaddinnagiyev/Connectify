@@ -11,11 +11,16 @@ import { LoggerModule } from 'src/logger/logger.module';
 // import { GoogleStrategy } from './strategy/google.strategy';
 import { HttpModule } from '@nestjs/axios';
 import { JwtAuthGuard } from 'src/jwt/jwt-auth-guard';
+import { JwtModule } from '@nestjs/jwt';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([User, Account, TokenBlackList]),
     PassportModule.register({ defaultStrategy: 'jwt' }),
+    JwtModule.register({
+      secret: process.env.JWT_ACCESS_SECRET_KEY,
+      signOptions: { expiresIn: '5d' },
+    }),
     LoggerModule,
     HttpModule
   ],
