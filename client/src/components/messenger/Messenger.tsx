@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import "../../colors.css";
 import "./style.css";
 import Chat from "./Chat";
-import SearchModal from "../modals/SearchModal";
+import SearchModal from "../modals/search/SearchModal";
 
 import no_profile_photo from "../../assets/no-profile-photo.png";
 import MoreVertIcon from "@mui/icons-material/MoreVert";

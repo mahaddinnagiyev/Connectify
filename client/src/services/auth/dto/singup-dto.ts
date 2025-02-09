@@ -1,7 +1,8 @@
 export enum Gender {
     male = "male",
     female = "female",
-    other = "other"
+    other = "other",
+    preferNotToSay = "prefer not to say"
 }
 
 export interface SignupDTO {

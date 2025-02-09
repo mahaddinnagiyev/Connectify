@@ -7,7 +7,7 @@ import DialogTitle from "@mui/material/DialogTitle";
 import { Tooltip } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import "./searchModal.css";
-import no_profile_photo from "../../assets/no-profile-photo.png";
+import no_profile_photo from "../../../assets/no-profile-photo.png";
 
 export default function SearchModal() {
   const [open, setOpen] = React.useState(false);

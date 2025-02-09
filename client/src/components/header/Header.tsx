@@ -15,7 +15,7 @@ import AccountBoxIcon from "@mui/icons-material/AccountBox";
 import LogoutIcon from "@mui/icons-material/Logout";
 import { logout } from "../../services/auth/auth-service";
 import ErrorMessage from "../messages/ErrorMessage";
-import CheckModal from "../modals/CheckModal";
+import CheckModal from "../modals/spinner/CheckModal";
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);

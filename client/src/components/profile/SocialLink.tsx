@@ -12,7 +12,7 @@ import InsertLinkIcon from "@mui/icons-material/InsertLink";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import HighlightOffIcon from "@mui/icons-material/HighlightOff";
 import EditIcon from "@mui/icons-material/Edit";
-import SocialModal from "../modals/SocialModal";
+import SocialModal from "../modals/profile/SocialModal";
 import {
   add_social_link,
   delete_social_link,

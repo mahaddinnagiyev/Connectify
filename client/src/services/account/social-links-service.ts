@@ -100,6 +100,7 @@ export const delete_social_link = async (
         "Content-Type": "application/json; charset=utf-8",
         Authorization: `Bearer ${getTokenFromStorage()}`,
       },
+      credentials: "include",
     }
   );
 

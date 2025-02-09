@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 import { login, logout } from "../../services/auth/auth-service";
 import ErrorMessage from "../../components/messages/ErrorMessage";
 import SuccessMessage from "../../components/messages/SuccessMessage";
-import CheckModal from "../../components/modals/CheckModal";
+import CheckModal from "../../components/modals/spinner/CheckModal";
 import {
   getTokenFromStorage,
   setTokenToStorage,

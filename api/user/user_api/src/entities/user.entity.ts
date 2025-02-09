@@ -21,7 +21,7 @@ export class User {
     @Column({ nullable: false, unique: true })
     email: string;
 
-    @Column({ nullable: false, enum: Gender, type: "enum", default: Gender.notProvided })
+    @Column({ nullable: false, enum: Gender, type: "enum", default: Gender.preferNotToSay })
     gender: Gender;
 
     @Column({ nullable: false, default: false })

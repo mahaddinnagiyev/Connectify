@@ -1,13 +1,16 @@
 import { useEffect, useState } from "react";
-import { Box, Typography, TextField, Avatar } from "@mui/material";
+import { Box, Typography, Avatar } from "@mui/material";
 import ErrorMessage from "../messages/ErrorMessage";
 import SuccessMessage from "../messages/SuccessMessage";
-import ImageModal from "../modals/ImageModal";
-import { getUserById } from "../../services/user/user-service";
+import ImageModal from "../modals/profile/ImageModal";
+import { getUserById, edit_user } from "../../services/user/user-service"; // Import edit_user
 import { User } from "../../services/user/dto/user-dto";
 import { Account } from "../../services/account/dto/account-dto";
 import no_profile_photo from "../../assets/no-profile-photo.png";
-import SocialLink from "./SocialLink";
+import ProfileEditModal from "../modals/profile/ProfileEditModal";
+import { Gender } from "../../services/auth/dto/singup-dto";
+import PersonalInfo from "./PersonalInfo";
+import AccountInfo from "./AccountInfo";
 
 interface UserProfile {
   user: User;
@@ -19,6 +22,10 @@ const ProfileInfo = () => {
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [userData, setUserData] = useState<UserProfile | null>(null);
+  const [editPersonalInfoModalOpen, setEditPersonalInfoModalOpen] =
+    useState(false);
+  const [editProfileInfoModalOpen, setEditProfileInfoModalOpen] =
+    useState(false);
 
   const copy_soical_link = (link: string) => {
     try {
@@ -28,6 +35,44 @@ const ProfileInfo = () => {
       console.log(error);
       setErrorMessage("Something went wrong - Link copy failed");
     }
+  };
+
+  const handleEditPersonalInfoSubmit = async (data: {
+    [key: string]: string;
+  }) => {
+    try {
+      const body = {
+        first_name: data.first_name,
+        last_name: data.last_name,
+        username: data.username,
+        gender: data.gender as Gender,
+      };
+
+      const response = await edit_user(body);
+      
+      if (response.success) {
+        setSuccessMessage("Personal information updated successfully!");
+        const updatedUserData = await getUserById();
+        if (updatedUserData.success) {
+          setUserData({
+            user: updatedUserData.user,
+            account: updatedUserData.account,
+          });
+        }
+      } else {
+        setErrorMessage(
+          response.response?.error || "Failed to update personal information"
+        );
+      }
+    } catch (error) {
+      console.error(error);
+      setErrorMessage("Something went wrong - Please try again later");
+    }
+  };
+
+  const handleEditProfileInfoSubmit = (data: { [key: string]: string }) => {
+    console.log("Updated Profile Info:", data);
+    // Handle profile information update here
   };
 
   const handleImageClick = () => {
@@ -86,7 +131,16 @@ const ProfileInfo = () => {
       )}
 
       <Box sx={{ width: "100%", padding: 0 }}>
-        <Typography variant="h4" gutterBottom sx={{ display: { xs: "flex", md: "block" }, justifyContent: "center", textAlign: { xs: "center", sm: "left" }, paddingLeft: { md: "20px" } }}>
+        <Typography
+          variant="h4"
+          gutterBottom
+          sx={{
+            display: { xs: "flex", md: "block" },
+            justifyContent: "center",
+            textAlign: { xs: "center", sm: "left" },
+            paddingLeft: { md: "20px" },
+          }}
+        >
           My Profile
         </Typography>
         <Box
@@ -122,162 +176,19 @@ const ProfileInfo = () => {
             </button>
           </Typography>
         </Box>
-        <h1 className="text-2xl font-bold sm:px-2 px-6 mt-5 mb-4">
-          Personal Information
-        </h1>
-        <hr className="border-t-2 pb-4 sm:ml-2 ml-6 sm:mr-64 mr-0" />
-        <Box
-          component="form"
-          sx={{
-            "& .MuiTextField-root": { m: 1, width: "50ch" },
-            
-          }}
-          noValidate
-          autoComplete="off"
-        >
-          <div>
-            <TextField
-              id="firstName"
-              label="First Name"
-              value={userData?.user.first_name || ""}
-              variant="outlined"
-              fullWidth
-              margin="normal"
-              InputProps={{
-                readOnly: true,
-              }}
-              sx={{ maxWidth: { xs: "100%", sm: "50%", md: "50%" } }}
-            />
-            <TextField
-              id="lastName"
-              label="Last Name"
-              value={userData?.user.last_name || ""}
-              variant="outlined"
-              fullWidth
-              margin="normal"
-              InputProps={{
-                readOnly: true,
-              }}
-              sx={{ maxWidth: { xs: "100%", sm: "50%" } }}
-            />
-            <TextField
-              id="username"
-              label="Username"
-              value={userData?.user.username || ""}
-              variant="outlined"
-              fullWidth
-              margin="normal"
-              InputProps={{
-                readOnly: true,
-              }}
-              sx={{ maxWidth: { xs: "100%", sm: "50%" } }}
-            />
-            <TextField
-              id="email"
-              label="Email"
-              value={userData?.user.email || ""}
-              variant="outlined"
-              fullWidth
-              margin="normal"
-              InputProps={{
-                readOnly: true,
-              }}
-              sx={{ maxWidth: { xs: "100%", sm: "50%" } }}
-            />
-            <TextField
-              id="gender"
-              label="Gender"
-              value={userData?.user.gender || ""}
-              variant="outlined"
-              fullWidth
-              margin="normal"
-              InputProps={{
-                readOnly: true,
-              }}
-              sx={{ maxWidth: { xs: "100%", sm: "50%" } }}
-            />
-          </div>
-          <div className="px-2 py-2">
-            <button className="text-white bg-[#00ff00] px-4 py-3 rounded border-2 border-[#00ff00] hover:bg-white hover:text-[#00ff00] transition duration-300">
-              Edit personal information
-            </button>
-          </div>
-        </Box>
 
-        <h1 className="text-2xl font-bold sm:px-2 px-6 mt-12 mb-4">
-          Profile Information
-        </h1>
-        <hr className="border-t-2 pb-4 sm:ml-2 ml-6 sm:mr-64 mr-0" />
-        <Box
-          component="form"
-          sx={{
-            "& .MuiTextField-root": { m: 1, width: "50ch" },
-          }}
-          noValidate
-          autoComplete="off"
-        >
-          <div>
-            <TextField
-              id="bio"
-              label="Bio"
-              value={
-                userData?.account.bio
-                  ? userData.account.bio
-                  : "There is no bio yet"
-              }
-              variant="outlined"
-              fullWidth
-              margin="normal"
-              InputProps={{
-                readOnly: true,
-              }}
-              sx={{ maxWidth: { xs: "100%", sm: "50%" } }}
-            />
-            <TextField
-              id="location"
-              label="Location"
-              value={
-                userData?.account.location
-                  ? userData.account.location
-                  : "There is no location yet"
-              }
-              sx={{ maxWidth: { xs: "100%", sm: "50%" } }}
-              variant="outlined"
-              fullWidth
-              margin="normal"
-              InputProps={{
-                readOnly: true,
-              }}
-            />
-            <TextField
-              id="last_login"
-              label="Last login"
-              variant="outlined"
-              fullWidth
-              margin="normal"
-              InputProps={{
-                readOnly: true,
-              }}
-              value={
-                userData?.account.last_login
-                  ? userData.account.last_login
-                  : "There is no last login yet"
-              }
-              sx={{ maxWidth: { xs: "100%", sm: "50%" } }}
-            />
-            <div className="px-2 py-2">
-              <button className="text-white bg-[#00ff00] px-4 py-3 rounded border-2 border-[#00ff00] hover:bg-white hover:text-[#00ff00] transition duration-300">
-                Edit profile information
-              </button>
-            </div>
-          </div>
+        {/* Personal Information Section */}
+        <PersonalInfo
+          userData={userData}
+          onEdit={() => setEditPersonalInfoModalOpen(true)}
+        />
 
-          {/* Social Links Section */}
-          <SocialLink
-            socialLinks={userData?.account.social_links || []}
-            copy_soical_link={copy_soical_link}
-          />
-        </Box>
+        {/* Account Information Section */}
+        <AccountInfo
+          userData={userData}
+          onEdit={() => setEditProfileInfoModalOpen(true)}
+          copySocialLink={copy_soical_link}
+        />
 
         {/* Modals*/}
         <ImageModal
@@ -288,6 +199,57 @@ const ProfileInfo = () => {
               ? userData.account.profile_picture
               : no_profile_photo
           }
+        />
+        {/* Edit Personal Information Modal */}
+        <ProfileEditModal
+          open={editPersonalInfoModalOpen}
+          onClose={() => setEditPersonalInfoModalOpen(false)}
+          title="Edit Personal Information"
+          fields={[
+            {
+              label: "First Name",
+              value: userData?.user.first_name || "",
+              key: "first_name",
+            },
+            {
+              label: "Last Name",
+              value: userData?.user.last_name || "",
+              key: "last_name",
+            },
+            {
+              label: "Username",
+              value: userData?.user.username || "",
+              key: "username",
+            },
+            {
+              label: "Gender",
+              value: userData?.user.gender || "",
+              key: "gender",
+              type: "select",
+              options: [
+                { value: "male", label: "Male" },
+                { value: "female", label: "Female" },
+                { value: "other", label: "Other" },
+              ],
+            },
+          ]}
+          onSubmit={handleEditPersonalInfoSubmit}
+        />
+
+        {/* Edit Profile Information Modal */}
+        <ProfileEditModal
+          open={editProfileInfoModalOpen}
+          onClose={() => setEditProfileInfoModalOpen(false)}
+          title="Edit Profile Information"
+          fields={[
+            { label: "Bio", value: userData?.account.bio || "", key: "bio" },
+            {
+              label: "Location",
+              value: userData?.account.location || "",
+              key: "location",
+            },
+          ]}
+          onSubmit={handleEditProfileInfoSubmit}
         />
       </Box>
     </>

@@ -4,7 +4,7 @@ import ConfirmAccount from "../../components/forms/ConfirmAccount";
 import { signup } from "../../services/auth/auth-service";
 import { Gender, SignupDTO } from "../../services/auth/dto/singup-dto";
 import SignupForm from "../../components/forms/SignupForm";
-import CheckModal from "../../components/modals/CheckModal";
+import CheckModal from "../../components/modals/spinner/CheckModal";
 import SuccessMessage from "../../components/messages/SuccessMessage";
 import ErrorMessage from "../../components/messages/ErrorMessage";
 
