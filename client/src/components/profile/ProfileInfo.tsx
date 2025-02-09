@@ -86,7 +86,7 @@ const ProfileInfo = () => {
       )}
 
       <Box sx={{ width: "100%", padding: 0 }}>
-        <Typography variant="h4" gutterBottom sx={{ display: { xs: "flex", md: "block" }, justifyContent: "center" }}>
+        <Typography variant="h4" gutterBottom sx={{ display: { xs: "flex", md: "block" }, justifyContent: "center", textAlign: { xs: "center", sm: "left" }, paddingLeft: { md: "20px" } }}>
           My Profile
         </Typography>
         <Box

@@ -1,5 +1,13 @@
 import React, { useEffect, useState } from "react";
-import { TextField, Tooltip } from "@mui/material";
+import {
+  TextField,
+  Tooltip,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Button,
+} from "@mui/material";
 import InsertLinkIcon from "@mui/icons-material/InsertLink";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import HighlightOffIcon from "@mui/icons-material/HighlightOff";
@@ -31,6 +39,8 @@ const SocialLink: React.FC<SocialLinkProps> = ({
   } | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [openConfirmDialog, setOpenConfirmDialog] = useState(false); // New state for confirm dialog
+  const [linkToDelete, setLinkToDelete] = useState<string | null>(null); // To store the link ID to delete
 
   const handleOpenModal = () => {
     setEditMode(false);
@@ -78,26 +88,39 @@ const SocialLink: React.FC<SocialLinkProps> = ({
     }
   };
 
-  const handleDelete = async (id: string) => {
-    const response = await delete_social_link(id);
-    if (response.success) {
-      localStorage.setItem(
-        "successMessage",
-        "Social link deleted successfully!"
-      );
-      window.location.reload();
-    } else {
-      if (Array.isArray(response.message)) {
-        setErrorMessage(response.message[0]);
-      } else {
-        setErrorMessage(
-          response.response?.error ??
-            response.message ??
-            response.error ??
-            "Invalid social link"
+  const handleDelete = async () => {
+    if (linkToDelete) {
+      const response = await delete_social_link(linkToDelete);
+      if (response.success) {
+        localStorage.setItem(
+          "successMessage",
+          "Social link deleted successfully!"
         );
+        window.location.reload();
+      } else {
+        if (Array.isArray(response.message)) {
+          setErrorMessage(response.message[0]);
+        } else {
+          setErrorMessage(
+            response.response?.error ??
+              response.message ??
+              response.error ??
+              "Invalid social link"
+          );
+        }
       }
+      setOpenConfirmDialog(false); // Close the confirm dialog after deleting
     }
+  };
+
+  const handleOpenConfirmDialog = (id: string) => {
+    setLinkToDelete(id);
+    setOpenConfirmDialog(true); // Open the confirmation dialog
+  };
+
+  const handleCloseConfirmDialog = () => {
+    setOpenConfirmDialog(false); // Close the confirmation dialog
+    setLinkToDelete(null); // Reset the link to delete
   };
 
   useEffect(() => {
@@ -164,7 +187,7 @@ const SocialLink: React.FC<SocialLinkProps> = ({
             </Tooltip>
             <Tooltip title="Remove Link" placement="top">
               <HighlightOffIcon
-                onClick={() => handleDelete(link.id)}
+                onClick={() => handleOpenConfirmDialog(link.id)}
                 className="cursor-pointer hover:text-red-600 transition-all duration-300"
               />
             </Tooltip>
@@ -180,6 +203,7 @@ const SocialLink: React.FC<SocialLinkProps> = ({
         </p>
       </div>
 
+      {/* Social Modal */}
       <SocialModal
         open={openModal}
         onClose={handleCloseModal}
@@ -187,6 +211,22 @@ const SocialLink: React.FC<SocialLinkProps> = ({
         editMode={editMode}
         currentLink={currentLink}
       />
+
+      {/* Confirmation Dialog */}
+      <Dialog open={openConfirmDialog} onClose={handleCloseConfirmDialog}>
+        <DialogTitle>Are you sure?</DialogTitle>
+        <DialogContent>
+          <p>Are you sure you want to delete this social link?</p>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseConfirmDialog} color="primary">
+            Cancel
+          </Button>
+          <Button onClick={handleDelete} sx={{ color: "red" }}>
+            Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
     </>
   );
 };
