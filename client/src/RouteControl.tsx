@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
 import { getToken } from "./services/auth/token-service";
+import CheckModal from "./components/modals/spinner/CheckModal";
 
 export const RouteControl = ({ children }: { children: React.ReactNode }) => {
   const [token, setToken] = useState<string | null>(null);
@@ -9,15 +10,26 @@ export const RouteControl = ({ children }: { children: React.ReactNode }) => {
 
   useEffect(() => {
     const fetchToken = async () => {
-      const accessToken = await getToken(); // `getToken()` await ilə çağırılır
-      setToken(accessToken);
-      setLoading(false);
+      try {
+        const accessToken = await getToken();
+
+        if (!accessToken) {
+          setLoading(false);
+          return;
+        }
+
+        setToken(accessToken);
+      } catch (error) {
+        console.error("Error fetching token:", error);
+      } finally {
+        setLoading(false);
+      }
     };
 
     fetchToken();
   }, []);
 
-  if (loading) return <div>Loading...</div>; // Token gələnə qədər gözləmə effekti
+  if (loading) return <CheckModal />;
 
   if (!token) {
     return <Navigate to="/auth/login" />;

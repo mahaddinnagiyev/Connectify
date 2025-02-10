@@ -3,13 +3,10 @@ import google_logo from "../../assets/google.png";
 
 import { Link, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { login, logout } from "../../services/auth/auth-service";
+import { login } from "../../services/auth/auth-service";
 import ErrorMessage from "../../components/messages/ErrorMessage";
 import SuccessMessage from "../../components/messages/SuccessMessage";
 import CheckModal from "../../components/modals/spinner/CheckModal";
-import {
-  getToken,
-} from "../../services/auth/token-service";
 
 const Login = () => {
   const getUrl = (params: string) => {
@@ -26,26 +23,24 @@ const Login = () => {
 
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
-    const accessToken = urlParams.get('access_token');
-    const error = urlParams.get('error');
-  
+    const accessToken = urlParams.get("access_token");
+    const error = urlParams.get("error");
+
     if (accessToken) {
       setIsLoading(true);
-  
+
       setTimeout(() => {
         setIsLoading(false);
-        navigate('/chat');
+        navigate("/chat");
       }, 2000);
     } else if (error) {
       setErrorMessage("This email already registered with normal way of login");
     }
   }, [navigate]);
-  
+
   const handleGoogleLogin = () => {
-    window.location.replace(
-      `${process.env.GOOGLE_CLIENT_REDIRECT_URL}`
-    );
-  }
+    window.location.replace(`${process.env.GOOGLE_CLIENT_REDIRECT_URL}`);
+  };
 
   const [formData, setFormdata] = useState({
     username_or_email: "",
@@ -64,10 +59,6 @@ const Login = () => {
 
     setIsLoading(true);
     setTimeout(async () => {
-      if (await getToken()) {
-        await logout();
-      }
-
       const response = await login(formData);
 
       if (response.success) {
