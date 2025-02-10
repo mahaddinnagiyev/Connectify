@@ -23,6 +23,7 @@ import { TokenBlackList } from 'src/entities/token-black-list.entity';
 import { LoggerService } from 'src/logger/logger.service';
 import { HttpService } from '@nestjs/axios';
 import { Gender } from 'src/enums/gender.enum';
+import { Provider } from 'src/enums/provider.enum';
 
 @Injectable()
 export class AuthService {
@@ -300,6 +301,7 @@ export class AuthService {
       const payload: JwtPayload = {
         id: user.id,
         username: user.username,
+        is_banned: user.is_banned,
       };
 
       const access_token = jwt.sign(
@@ -381,96 +383,85 @@ export class AuthService {
     }
   }
 
-  // // Google User Authentication
-  // async validateGoogleUser(user: any): Promise<any> {
-  //   try {
-  //     console.log("User: ", user);
-  //     let existingUser = await this.userRepository.findOne({
-  //       where: { email: user.email },
-  //       lock: { mode: "pessimistic_write" },
-  //     });
-  //     console.log("User: ", user);
-  //     console.log("Existing user: ", existingUser);
-  //     console.log("Existing user password: ", existingUser.password);
-  //     console.log("Existing boolean: ", existingUser.password && existingUser.password !== 'signed_up_with_google');
-  //     if (existingUser && existingUser.password !== 'signed_up_with_google') {
-  //       return new BadRequestException({
-  //         success: false,
-  //         error: 'This user already registered with normal credentials',
-  //       });
-  //     }
+  // Google User Authentication
+  async validateGoogleUser(
+    user: any,
+  ): Promise<{ success: boolean; access_token?: string } | HttpException> {
+    try {
+      let existUser = await this.userRepository.findOne({
+        where: { email: user.email },
+      });
 
-  //     console.log('Existing user', existingUser);
+      if (!existUser) {
+        existUser = this.userRepository.create({
+          first_name: user.firstName,
+          last_name: user.lastName,
+          username: this.generateUsername(user.email),
+          email: user.email,
+          gender: Gender.notProvided,
+          provider: Provider.google,
+          password: 'signed_up_with_google',
+        });
 
-  //     if (!existingUser) {
-  //       existingUser = this.userRepository.create({
-  //         first_name: user.firstName,
-  //         last_name: user.lastName,
-  //         email: user.email,
-  //         username: this.generateUsername(user.email),
-  //         password: 'signed_up_with_google',
-  //       });
+        await this.userRepository.save(existUser);
 
-  //       await this.userRepository.save(existingUser);
+        const newAccount = this.accountRepository.create({
+          user: existUser,
+        });
+        await this.accountRepository.save(newAccount);
 
-  //       const newAccount = this.accountRepository.create({
-  //         user: existingUser,
-  //         profile_picture: user.profile_picture,
-  //       });
+        await this.logger.info(
+          `New user created:\nFull name: ${existUser.first_name} ${existUser.last_name},\nusername: ${existUser.username},\nemail: ${existUser.email}`,
+          'auth',
+        );
+      }
 
-  //       await this.accountRepository.save(newAccount);
-  //       await this.logger.info(
-  //         `User created successfully:\nFull name: ${existingUser.first_name} ${existingUser.last_name},\nusername: ${existingUser.username},\nemail: ${existingUser.email}`,
-  //         'auth',
-  //       );
-  //     }
+      if (existUser.provider !== Provider.google) {
+        return new BadRequestException({
+          success: false,
+          message: 'This email is already registered with normal way',
+        });
+      }
 
-  //     if (existingUser === null) {
-  //       return new BadRequestException({
-  //         success: false,
-  //         error: 'User not found',
-  //       });
-  //     }
+      if (existUser.is_banned) {
+        return new ForbiddenException({
+          success: false,
+          message: 'Your account has been banned',
+        });
+      }
 
-  //     const payload = { id: existingUser.id, username: existingUser.username };
-  //     const access_token = jwt.sign(
-  //       payload,
-  //       process.env.JWT_ACCESS_SECRET_KEY,
-  //       {
-  //         expiresIn: '5d',
-  //       },
-  //     );
-  //     await this.logger.info(
-  //       `Google user authentication successfully:\nFull name: ${existingUser.first_name} ${existingUser.last_name},\nusername: ${existingUser.username},\nemail: ${existingUser.email}`,
-  //       'auth',
-  //     );
+      const payload: JwtPayload = { id: existUser.id, username: existUser.username, is_banned: existUser.is_banned };
+      const access_token = jwt.sign(
+        payload,
+        process.env.JWT_ACCESS_SECRET_KEY,
+        { expiresIn: '5d' },
+      );
 
-  //     return {
-  //       success: true,
-  //       access_token,
-  //     };
-  //   } catch (error) {
-  //     console.log(error);
-  //     await this.logger.error(
-  //       error.message,
-  //       'auth',
-  //       'There is an error - in the google user authentication process',
-  //       error.stack,
-  //     );
-  //     return new InternalServerErrorException(
-  //       'Google user authentication failed - Due to Internal Server Error',
-  //     );
-  //   }
-  // }
+      await this.logger.info(
+        `Login successfully:\nFull name: ${existUser.first_name} ${existUser.last_name},\nusername: ${existUser.username},\nemail: ${existUser.email}`,
+        'auth',
+      );
 
-  // private generateUsername(email: string): string {
-  //   const split_email = email.split('@')[0];
-  //   let username: string;
-  //   if (split_email.includes('.')) {
-  //     username = `${split_email.split('.')[0]}_${uuid().slice(0, 5)}`;
-  //     return username;
-  //   }
-  //   username = `${email.split('@')[0]}_${uuid().slice(0, 5)}`;
-  //   return username;
-  // }
+      return { success: true, access_token };
+    } catch (error) {
+      console.log(error);
+      await this.logger.error(
+        error.message,
+        'auth',
+        'Error in google user authentication process',
+        error.stack,
+      );
+      return new InternalServerErrorException(
+        'Google user authentication failed - Due to Internal Server Error',
+      );
+    }
+  }
+
+  private generateUsername(email: string): string {
+    const split_email = email.split('@')[0];
+    if (split_email.includes('.')) {
+      return `${split_email.split('.')[0]}_${uuid().slice(0, 5)}`;
+    }
+    return `${email.split('@')[0]}_${uuid().slice(0, 5)}`;
+  }
 }

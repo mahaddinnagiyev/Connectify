@@ -8,7 +8,7 @@ import { JwtStrategy } from 'src/jwt/jwt-strategy';
 import { PassportModule } from '@nestjs/passport';
 import { TokenBlackList } from 'src/entities/token-black-list.entity';
 import { LoggerModule } from 'src/logger/logger.module';
-// import { GoogleStrategy } from './strategy/google.strategy';
+import { GoogleStrategy } from './strategy/google.strategy';
 import { HttpModule } from '@nestjs/axios';
 import { JwtAuthGuard } from 'src/jwt/jwt-auth-guard';
 import { JwtModule } from '@nestjs/jwt';
@@ -24,7 +24,7 @@ import { JwtModule } from '@nestjs/jwt';
     LoggerModule,
     HttpModule
   ],
-  providers: [AuthService, JwtStrategy, JwtAuthGuard], // Add the google strategy to here
+  providers: [AuthService, JwtStrategy, JwtAuthGuard, GoogleStrategy], // Add the google strategy to here
   controllers: [AuthController],
   exports: [TypeOrmModule, JwtAuthGuard]
 })

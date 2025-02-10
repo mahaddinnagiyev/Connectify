@@ -38,7 +38,7 @@ export class EditUserInfoDTO {
   @IsOptional()
   @IsEnum(Gender, {
     message:
-      "Gender must be one of the following: 'male', 'female', 'other', or 'prefer not to say'",
+      "Gender must be one of the following: 'male', 'female', 'other'",
   })
   gender?: Gender;
 }

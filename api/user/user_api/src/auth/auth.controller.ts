@@ -89,31 +89,37 @@ export class AuthController {
   }
 
   // Google Login
-  // @Get('google')
-  // @UseGuards(AuthGuard('google'))
-  // async googleAuth() {}
+  @Get('google')
+  @UseGuards(AuthGuard('google'))
+  async googleAuth() {}
 
-  // @Get('google/callback')
-  // @UseGuards(AuthGuard('google'))
-  // async googleCallback(@Res() res: any, @Req() req: any) {
-  //   try {
-  //     const { access_token } = await this.authService.validateGoogleUser(
-  //       req.user,
-  //     );
+  @Get('google/callback')
+  @UseGuards(AuthGuard('google'))
+  async googleCallback(
+    @Res() res: any,
+    @Req() req: any,
+    @Session() session: Record<string, any>,
+  ) {
+    try {
+      const userData = req.user;
+      if (!userData || !userData.access_token) {
+        return res.redirect(
+          `${process.env.GOOGLE_CLIENT_REDIRECT_URL}/auth/login/?error=true`,
+        );
+      }
 
-  //     if (!access_token) {
-  //       return res.redirect(
-  //         `${process.env.GOOGLE_CLIENT_REDIRECT_URL}/auth/login/?error=true`,
-  //       );
-  //     }
+      session.access_token = userData.access_token;
+      session.cookie.maxAge = 5 * 24 * 60 * 60 * 1000;
+      session.save();
 
-  //     res.redirect(
-  //       `${process.env.GOOGLE_CLIENT_REDIRECT_URL}/auth/login?access_token=${access_token}`,
-  //     );
-  //   } catch (error) {
-  //     res.redirect(
-  //       `${process.env.GOOGLE_CLIENT_REDIRECT_URL}/auth/login/?error=true`,
-  //     );
-  //   }
-  // }
+      return res.redirect(
+        `${process.env.GOOGLE_CLIENT_REDIRECT_URL}/auth/login?access_token=${userData.access_token}`,
+      );
+    } catch (error) {
+      console.log(error);
+      return res.redirect(
+        `${process.env.GOOGLE_CLIENT_REDIRECT_URL}/auth/login/?error=true`,
+      );
+    }
+  }
 }

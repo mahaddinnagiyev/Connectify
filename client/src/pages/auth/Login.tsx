@@ -28,7 +28,7 @@ const Login = () => {
 
     if (accessToken) {
       setIsLoading(true);
-
+      localStorage.setItem("successMessage", "Login successfull!");
       setTimeout(() => {
         setIsLoading(false);
         navigate("/chat");
