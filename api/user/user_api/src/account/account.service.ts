@@ -13,6 +13,7 @@ import { EditSocialLinkDTO, SocialLinkDTO } from './dto/social-link-dto';
 import { User } from 'src/entities/user.entity';
 import { v4 as uuid } from 'uuid';
 import { EditAccountDTO } from './dto/account-info-dto';
+import { SupabaseService } from 'src/supabase/supabase.service';
 
 @Injectable()
 export class AccountService {
@@ -20,6 +21,7 @@ export class AccountService {
     @InjectRepository(Account)
     private accountRepository: Repository<Account>,
     private readonly logger: LoggerService,
+    private readonly supabase: SupabaseService,
   ) {}
 
   // Find Account By User
@@ -326,6 +328,118 @@ export class AccountService {
       );
       return new InternalServerErrorException(
         'Deleting social link failed - Due To Internal Server Error',
+      );
+    }
+  }
+
+  // Upload Image
+  async upload_image(file: Express.Multer.File) {
+    try {
+      const fileName = `${uuid()}-${Date.now()}-${file.originalname}`;
+
+      const { data, error } = await this.supabase
+        .getClient()
+        .storage.from('profile_pictures')
+        .upload(fileName, file.buffer, {
+          contentType: file.mimetype,
+        });
+
+      if (error) {
+        await this.logger.error(
+          error.message,
+          'account',
+          'There is an error uploading image',
+          error.stack,
+        );
+        return new BadRequestException({
+          success: false,
+          error: error.message,
+        });
+      }
+
+      const publicUrl = this.supabase
+        .getClient()
+        .storage.from('profile_pictures')
+        .getPublicUrl(fileName);
+
+      return publicUrl.data.publicUrl;
+    } catch (error) {
+      await this.logger.error(
+        error.message,
+        'account',
+        'There is an error uploading image',
+        error.stack,
+      );
+      return new InternalServerErrorException(
+        'Uploading image failed - Due To Internal Server Error',
+      );
+    }
+  }
+
+  // Update Profile Photo
+  async update_profile_pic(
+    req_user: User,
+    file: Express.Multer.File,
+  ): Promise<{ success: boolean; message: string } | HttpException> {
+    try {
+      const account = (await this.get_account_by_user(req_user)) as Account;
+
+      if (account instanceof HttpException) {
+        await this.logger.warn(
+          'Account not found',
+          'account',
+          `User: ${req_user.username}`,
+        );
+        return new NotFoundException({
+          success: false,
+          error: 'Account not found',
+        });
+      }
+
+      const imageUrl = await this.upload_image(file);
+
+      if (imageUrl instanceof HttpException) {
+        await this.logger.error(
+          'Image upload failed',
+          'account',
+          `User: ${req_user.username}`,
+        );
+        return new BadRequestException({
+          success: false,
+          error: 'Image upload failed',
+        });
+      }
+
+      if (account.profile_picture) {
+        await this.supabase
+          .getClient()
+          .storage.from('profile_pictures')
+          .remove([account.profile_picture]);
+      }
+
+      await this.accountRepository.update(account.id, {
+        profile_picture: imageUrl,
+      });
+
+      await this.logger.info(
+        `Profile photo updated by user: ${req_user.username}`,
+        'account',
+        `User: ${req_user.username}`,
+      );
+
+      return {
+        success: true,
+        message: 'Profile photo updated successfully',
+      };
+    } catch (error) {
+      await this.logger.error(
+        error.message,
+        'account',
+        'There is an error updating profile photo',
+        error.stack,
+      );
+      return new InternalServerErrorException(
+        'Updating profile photo failed - Due To Internal Server Error',
       );
     }
   }

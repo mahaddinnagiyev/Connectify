@@ -8,15 +8,17 @@ import { JwtStrategy } from 'src/jwt/jwt-strategy';
 import { LoggerModule } from 'src/logger/logger.module';
 import { User } from 'src/entities/user.entity';
 import { AuthModule } from 'src/auth/auth.module';
+import { SupabaseModule } from 'src/supabase/supabase.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([User, Account]),
     PassportModule.register({ defaultStrategy: 'jwt' }),
     LoggerModule,
-    AuthModule
+    AuthModule,
+    SupabaseModule,
   ],
   providers: [AccountService, JwtStrategy],
-  controllers: [AccountController]
+  controllers: [AccountController],
 })
 export class AccountModule {}

@@ -8,6 +8,8 @@ import {
   Patch,
   Req,
   UseGuards,
+  UseInterceptors,
+  UploadedFile,
 } from '@nestjs/common';
 import { AccountService } from './account.service';
 import { JwtAuthGuard } from 'src/jwt/jwt-auth-guard';
@@ -16,6 +18,7 @@ import { EditSocialLinkDTO, SocialLinkDTO } from './dto/social-link-dto';
 import { Request } from 'express';
 import { User } from 'src/entities/user.entity';
 import { EditAccountDTO } from './dto/account-info-dto';
+import { FileInterceptor } from '@nestjs/platform-express';
 
 @Controller('account')
 export class AccountController {
@@ -99,5 +102,16 @@ export class AccountController {
       String(req.params.id),
       req.user as User,
     );
+  }
+
+  // Update Profile Photo
+  @Patch('/profile-pic')
+  @UseGuards(JwtAuthGuard)
+  @UseInterceptors(FileInterceptor('file'))
+  async update_profile_pic(
+    @Req() req: Request,
+    @UploadedFile() file: Express.Multer.File,
+  ): Promise<{ success: boolean; message: string } | HttpException> {
+    return await this.accountService.update_profile_pic((req.user as User), file)
   }
 }

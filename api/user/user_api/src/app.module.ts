@@ -10,6 +10,7 @@ import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
 import { LoggerModule } from './logger/logger.module';
 import { AccountModule } from './account/account.module';
+import { SupabaseModule } from './supabase/supabase.module';
 
 @Module({
   imports: [
@@ -35,6 +36,7 @@ import { AccountModule } from './account/account.module';
     ]),
     LoggerModule,
     AccountModule,
+    SupabaseModule,
   ],
   controllers: [AppController],
   providers: [
