@@ -11,7 +11,11 @@ import ProfileEditModal from "../modals/profile/ProfileEditModal";
 import { Gender } from "../../services/auth/dto/singup-dto";
 import PersonalInfo from "./PersonalInfo";
 import AccountInfo from "./AccountInfo";
-import { edit_account } from "../../services/account/account-service";
+import {
+  edit_account,
+  update_profile_pic,
+} from "../../services/account/account-service";
+import ProfilePictureModal from "../modals/profile/ProfilePictureModal";
 
 interface UserProfile {
   user: User;
@@ -26,6 +30,8 @@ const ProfileInfo = () => {
   const [editPersonalInfoModalOpen, setEditPersonalInfoModalOpen] =
     useState(false);
   const [editProfileInfoModalOpen, setEditProfileInfoModalOpen] =
+    useState(false);
+  const [isProfilePictureModalOpen, setIsProfilePictureModalOpen] =
     useState(false);
 
   const copy_soical_link = (link: string) => {
@@ -44,6 +50,37 @@ const ProfileInfo = () => {
 
   const handleModalClose = () => {
     setModalOpen(false);
+  };
+
+  const handleProfilePictureChange = async (file: File) => {
+    try {
+      const response = await update_profile_pic(file);
+      console.log(response);
+      if (response.success) {
+        localStorage.setItem(
+          "successMessage",
+          response.message || "Profile picture updated successfully!"
+        );
+        window.location.reload();
+      } else {
+        if (Array.isArray(response.message)) {
+          setErrorMessage(response.message[0]);
+        } else {
+          setErrorMessage(
+            response.response?.error &&
+              response.response?.error === "Image upload failed"
+              ? "Image upload failed please check is image type correct or not"
+              : response.response?.error ||
+                  response.message ||
+                  response.error ||
+                  "Invalid personal information"
+          );
+        }
+      }
+    } catch (error) {
+      console.log(error);
+      setErrorMessage("Something went wrong - Please try again later");
+    }
   };
 
   const handleEditPersonalInfoSubmit = async (data: {
@@ -214,7 +251,11 @@ const ProfileInfo = () => {
             onClick={handleImageClick}
           />
           <Typography variant="h6">
-            <button className="text-white text-sm bg-[#00ff00] px-2 py-1 rounded border-2 border-[#00ff00] hover:bg-white hover:text-[#00ff00] transition duration-300">
+            <button
+              type="button"
+              className="text-white text-sm bg-[#00ff00] px-2 py-1 rounded border-2 border-[#00ff00] hover:bg-white hover:text-[#00ff00] transition duration-300 cursor-pointer"
+              onClick={() => setIsProfilePictureModalOpen(true)}
+            >
               Change profile photo
             </button>
           </Typography>
@@ -291,6 +332,12 @@ const ProfileInfo = () => {
           ]}
           onSubmit={handleEditProfileInfoSubmit}
           allowEmpty={true}
+        />
+        {/* ProfilePictureModal */}
+        <ProfilePictureModal
+          open={isProfilePictureModalOpen}
+          onClose={() => setIsProfilePictureModalOpen(false)}
+          onSubmit={handleProfilePictureChange}
         />
       </Box>
     </>

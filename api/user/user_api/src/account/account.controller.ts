@@ -107,11 +107,11 @@ export class AccountController {
   // Update Profile Photo
   @Patch('/profile-pic')
   @UseGuards(JwtAuthGuard)
-  @UseInterceptors(FileInterceptor('file'))
+  @UseInterceptors(FileInterceptor('profile_picture'))
   async update_profile_pic(
     @Req() req: Request,
     @UploadedFile() file: Express.Multer.File,
   ): Promise<{ success: boolean; message: string } | HttpException> {
-    return await this.accountService.update_profile_pic((req.user as User), file)
+    return await this.accountService.update_profile_pic(req.user as User, file);
   }
 }

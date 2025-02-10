@@ -335,7 +335,13 @@ export class AccountService {
   // Upload Image
   async upload_image(file: Express.Multer.File) {
     try {
-      const fileName = `${uuid()}-${Date.now()}-${file.originalname}`;
+      let fileOriginalName: string;
+
+      if (file.originalname.includes(' ')) {
+        fileOriginalName = file.originalname.replace(' ', '-');
+      }
+
+      const fileName = `${uuid()}-${Date.now()}-${fileOriginalName}`;
 
       const { data, error } = await this.supabase
         .getClient()
@@ -411,10 +417,22 @@ export class AccountService {
       }
 
       if (account.profile_picture) {
-        await this.supabase
+        const url = account.profile_picture;
+        const photoName = url.substring(url.lastIndexOf('/') + 1);
+        const { data, error } = await this.supabase
           .getClient()
           .storage.from('profile_pictures')
-          .remove([account.profile_picture]);
+          .remove([photoName]);
+
+        if (error) {
+          console.log(error);
+          await this.logger.error(
+            'Error deleting old profile picture',
+            'account',
+            error.message,
+            error.stack,
+          );
+        }
       }
 
       await this.accountRepository.update(account.id, {
