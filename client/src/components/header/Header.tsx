@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import logo from "../../assets/app-logo.png";
-import profile_photo from "../../assets/no-profile-photo.png";
+import no_profile_photo from "../../assets/no-profile-photo.png";
 
 import "../../colors.css";
 import "./style.css";
@@ -16,11 +16,14 @@ import LogoutIcon from "@mui/icons-material/Logout";
 import { logout } from "../../services/auth/auth-service";
 import ErrorMessage from "../messages/ErrorMessage";
 import CheckModal from "../modals/spinner/CheckModal";
+import SettingsIcon from "@mui/icons-material/Settings";
+import { getUserById } from "../../services/user/user-service";
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [profilePicture, setProfilePicture] = useState<string | null>(null);
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
@@ -49,6 +52,14 @@ const Header = () => {
     }
     setIsLoading(false);
   };
+
+  useEffect(() => {
+    getUserById().then((response) => {
+      if (response.success) {
+        setProfilePicture(response.account.profile_picture);
+      }
+    });
+  }, []);
 
   return (
     <>
@@ -93,6 +104,9 @@ const Header = () => {
               <a href="/user/my-profile">
                 <AccountBoxIcon /> View Profile
               </a>
+              <a href="/settings">
+                <SettingsIcon /> Settings
+              </a>
               <a onClick={handleLogout} className="text-center cursor-pointer">
                 <LogoutIcon /> Logout
               </a>
@@ -110,13 +124,16 @@ const Header = () => {
         {/* Profile (hidden for mobile unless burger menu is open) */}
         <div className="profile-container flex gap-5 mr-3 items-center">
           <img
-            src={profile_photo}
+            src={profilePicture ?? no_profile_photo}
             alt=""
             className="w-10 h-10 rounded-full cursor-pointer profile-img"
           />
           <div className="profile-actions">
             <a href="/user/my-profile">
               <AccountBoxIcon /> View Profile
+            </a>
+            <a href="/settings">
+              <SettingsIcon /> Settings
             </a>
             <a onClick={handleLogout} className="cursor-pointer">
               <LogoutIcon /> Logout

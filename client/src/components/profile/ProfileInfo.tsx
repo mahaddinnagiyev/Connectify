@@ -55,7 +55,7 @@ const ProfileInfo = () => {
   const handleProfilePictureChange = async (file: File) => {
     try {
       const response = await update_profile_pic(file);
-      console.log(response);
+
       if (response.success) {
         localStorage.setItem(
           "successMessage",
