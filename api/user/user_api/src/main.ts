@@ -15,10 +15,10 @@ async function bootstrap() {
     transform: true
   }));
   app.enableCors({
-    origin: 'http://localhost:5173', // Allow your frontend URL
-    credentials: true, // Allow cookies & sessions
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'], // Allowed HTTP methods
-    allowedHeaders: ['Content-Type', 'Authorization'], // Specify allowed headers
+    origin: 'http://localhost:5173',
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
   });
 
   app.use(

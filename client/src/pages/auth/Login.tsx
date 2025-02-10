@@ -8,8 +8,7 @@ import ErrorMessage from "../../components/messages/ErrorMessage";
 import SuccessMessage from "../../components/messages/SuccessMessage";
 import CheckModal from "../../components/modals/spinner/CheckModal";
 import {
-  getTokenFromStorage,
-  setTokenToStorage,
+  getToken,
 } from "../../services/auth/token-service";
 
 const Login = () => {
@@ -31,7 +30,6 @@ const Login = () => {
     const error = urlParams.get('error');
   
     if (accessToken) {
-      setTokenToStorage(accessToken);
       setIsLoading(true);
   
       setTimeout(() => {
@@ -66,7 +64,7 @@ const Login = () => {
 
     setIsLoading(true);
     setTimeout(async () => {
-      if (getTokenFromStorage()) {
+      if (await getToken()) {
         await logout();
       }
 
@@ -74,7 +72,6 @@ const Login = () => {
 
       if (response.success) {
         setSuccessMessage("Login successfull!");
-        setTokenToStorage(response.access_token);
         setTimeout(() => {
           window.location.replace("/");
         }, 1500);

@@ -432,6 +432,11 @@ export class AccountService {
             error.message,
             error.stack,
           );
+
+          return new BadRequestException({
+            success: false,
+            error: error.message,
+          })
         }
       }
 

@@ -1,4 +1,4 @@
-import { getTokenFromStorage } from "../auth/token-service";
+import { getToken } from "../auth/token-service";
 import {
   EditSocialDTO,
   SocialLink,
@@ -21,7 +21,7 @@ export const get_social_links = async (
       method: "GET",
       headers: {
         "Content-Type": "application/json; charset=utf-8",
-        Authorization: `Bearer ${getTokenFromStorage()}`,
+        Authorization: `Bearer ${await getToken()}`,
       },
       credentials: "include",
     }
@@ -45,7 +45,7 @@ export const add_social_link = async (
       method: "POST",
       headers: {
         "Content-Type": "application/json; charset=utf-8",
-        Authorization: `Bearer ${getTokenFromStorage()}`,
+        Authorization: `Bearer ${await getToken()}`,
       },
       body: JSON.stringify(body),
       credentials: "include",
@@ -72,7 +72,7 @@ export const edit_social_link = async (
       method: "PATCH",
       headers: {
         "Content-Type": "application/json; charset=utf-8",
-        Authorization: `Bearer ${getTokenFromStorage()}`,
+        Authorization: `Bearer ${await getToken()}`,
       },
       body: JSON.stringify(body),
       credentials: "include",
@@ -98,7 +98,7 @@ export const delete_social_link = async (
       method: "DELETE",
       headers: {
         "Content-Type": "application/json; charset=utf-8",
-        Authorization: `Bearer ${getTokenFromStorage()}`,
+        Authorization: `Bearer ${await getToken()}`,
       },
       credentials: "include",
     }

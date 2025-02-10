@@ -55,8 +55,24 @@ export class AuthController {
   @Post('login')
   async login(
     @Body() body: LoginDTO,
-  ): Promise<{ success: boolean; access_token: string } | HttpException> {
-    return await this.authService.login(body);
+    @Session() session: Record<string, any>,
+  ): Promise<{ success: boolean } | HttpException> {
+    return await this.authService.login(body, session);
+  }
+
+  // Get Token From Session
+  @UseGuards(ThrottlerGuard)
+  @Throttle({
+    default: { limit: 100, ttl: 60 * 1000, blockDuration: 60 * 1000 },
+  })
+  @Get('session/token')
+  async getTokenFromSession(
+    @Session() session: Record<string, any>,
+  ): Promise<{ access_token: string } | null> {
+    if (session.access_token) {
+      return { access_token: session.access_token };
+    }
+    return null;
   }
 
   // Logout

@@ -1,7 +1,7 @@
 import { ConfirmAccountDTO } from "./dto/confirm-account-dto";
 import { LoginDTO } from "./dto/login-dto";
 import { SignupDTO } from "./dto/singup-dto";
-import { getTokenFromStorage } from "./token-service";
+import { getToken } from "./token-service";
 
 const SERVER_USER_URL = process.env.SERVER_USER_URL || "http://localhost:3535";
 
@@ -54,7 +54,6 @@ export const login = async (
   user: LoginDTO
 ): Promise<{
   success?: boolean;
-  access_token: string;
   message?: string;
   error?: string;
   response: { success: boolean; message?: string; error?: string };
@@ -84,7 +83,7 @@ export const logout = async (): Promise<{
     credentials: "include",
     headers: {
       "Content-Type": "application/json; charset=utf-8",
-      Authorization: `Bearer ${getTokenFromStorage()}`,
+      Authorization: `Bearer ${await getToken()}`,
     },
   });
 

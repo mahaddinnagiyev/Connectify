@@ -1,4 +1,4 @@
-import { getTokenFromStorage } from "../auth/token-service";
+import { getToken } from "../auth/token-service";
 import { Account } from "../account/dto/account-dto";
 import { EditUser, User } from "./dto/user-dto";
 
@@ -22,7 +22,7 @@ export const getUserById = async (): Promise<{
     method: "GET",
     headers: {
       "Content-Type": "application/json; charset=utf-8",
-      Authorization: `Bearer ${getTokenFromStorage()}`,
+      Authorization: `Bearer ${await getToken()}`,
     },
     credentials: "include",
   });
@@ -43,7 +43,7 @@ export const edit_user = async (body: EditUser): Promise<{
     method: "PATCH",
     headers: {
       "Content-Type": "application/json; charset=utf-8",
-      Authorization: `Bearer ${getTokenFromStorage()}`,
+      Authorization: `Bearer ${await getToken()}`,
     },
     credentials: "include",
     body: JSON.stringify(body),

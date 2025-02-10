@@ -58,7 +58,6 @@ export class UserService {
         account,
       };
     } catch (error) {
-      console.log(error);
       await this.logger.error(
         `Error getting user by id: ${id}\nError: ${error}`,
         'user',
@@ -159,7 +158,6 @@ export class UserService {
         message: 'Informations edited successfully',
       };
     } catch (error) {
-      console.log(error);
       await this.logger.error(
         `Error editing user informations\nError: ${error}`,
         'user',

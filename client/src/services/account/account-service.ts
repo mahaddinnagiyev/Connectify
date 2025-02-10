@@ -1,4 +1,4 @@
-import { getTokenFromStorage } from "../auth/token-service";
+import { getToken } from "../auth/token-service";
 import { EditAccountDTO } from "./dto/account-dto";
 
 // Edit Account's Personal Informations
@@ -16,7 +16,7 @@ export const edit_account = async (
       method: "PATCH",
       headers: {
         "Content-Type": "application/json; charset=utf-8",
-        Authorization: `Bearer ${getTokenFromStorage()}`,
+        Authorization: `Bearer ${await getToken()}`,
       },
       credentials: "include",
       body: JSON.stringify(body),
@@ -44,7 +44,7 @@ export const update_profile_pic = async (
     {
       method: "PATCH",
       headers: {
-        Authorization: `Bearer ${getTokenFromStorage()}`,
+        Authorization: `Bearer ${await getToken()}`,
       },
       credentials: "include",
       body: formData,

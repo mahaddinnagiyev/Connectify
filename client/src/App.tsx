@@ -1,12 +1,11 @@
 import "./App.css";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
-import { jwtDecode } from "jwt-decode";
 
 import ChatPage from "./pages/ChatPage";
 import Login from "./pages/auth/Login";
 import Signup from "./pages/auth/Signup";
-import { getTokenFromStorage } from "./services/auth/token-service";
 import ProfilePage from "./pages/profile/ProfilePage";
+import { RouteControl } from "./RouteControl"; // İndi artıq error verməyəcək
 
 function App() {
   return (
@@ -37,32 +36,3 @@ function App() {
 }
 
 export default App;
-
-export const RouteControl = ({ children }: { children: React.ReactNode }) => {
-  const token = getTokenFromStorage();
-
-  if (!token) {
-    return <Navigate to="/auth/login" />;
-  }
-
-  try {
-    const decodedToken: {
-      exp: number;
-      iat: number;
-      id: string;
-      username: string;
-    } = jwtDecode(token);
-
-    if (!decodedToken || !decodedToken.id || !decodedToken.username) {
-      return <Navigate to="/auth/login" />;
-    }
-
-    if (decodedToken.exp * 1000 < Date.now()) {
-      return <Navigate to="/auth/login" />;
-    }
-
-    return children;
-  } catch (error) {
-    return <Navigate to="/auth/login" />;
-  }
-};

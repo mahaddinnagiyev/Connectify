@@ -251,7 +251,8 @@ export class AuthService {
   // Login
   async login(
     loginDTO: LoginDTO,
-  ): Promise<{ success: boolean; access_token: string } | HttpException> {
+    session: Record<string, any>,
+  ): Promise<{ success: boolean } | HttpException> {
     try {
       const { username_or_email, password } = loginDTO;
 
@@ -314,9 +315,13 @@ export class AuthService {
         'auth',
       );
 
+      session.access_token = access_token;
+      session.cookie.maxAge = 5 * 24 * 60 * 60 * 1000;
+
+      await session.save();
+
       return {
         success: true,
-        access_token: access_token,
       };
     } catch (error) {
       await this.logger.error(
