@@ -1,9 +1,12 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Get,
   HttpException,
+  Patch,
   Post,
+  Query,
   Req,
   Res,
   Session,
@@ -16,6 +19,10 @@ import { LoginDTO } from './dto/login-dto';
 import { JwtAuthGuard } from '../jwt/jwt-auth-guard';
 import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
 import { AuthGuard } from '@nestjs/passport';
+import {
+  ForgotPasswordDTO,
+  SetNewPasswordDTO,
+} from './dto/forgot-passsword-dto';
 
 @Controller('auth')
 export class AuthController {
@@ -30,7 +37,7 @@ export class AuthController {
   async signup(
     @Body() signupDTO: SignupDTO,
     @Session() session: Record<string, any>,
-  ): Promise<{ success: boolean; message: string } | HttpException> {
+  ) {
     return this.authService.signup(signupDTO, session);
   }
 
@@ -43,7 +50,7 @@ export class AuthController {
   async confirmAccount(
     @Body() confirmDTO: ConfirmAccountDTO,
     @Session() session: Record<string, any>,
-  ): Promise<{ success: boolean; message: string; user: any } | HttpException> {
+  ) {
     return this.authService.confirmAccount(confirmDTO, session);
   }
 
@@ -53,10 +60,7 @@ export class AuthController {
     default: { limit: 24, ttl: 60 * 1000, blockDuration: 60 * 1000 },
   })
   @Post('login')
-  async login(
-    @Body() body: LoginDTO,
-    @Session() session: Record<string, any>,
-  ): Promise<{ success: boolean } | HttpException> {
+  async login(@Body() body: LoginDTO, @Session() session: Record<string, any>) {
     return await this.authService.login(body, session);
   }
 
@@ -66,9 +70,7 @@ export class AuthController {
     default: { limit: 100, ttl: 60 * 1000, blockDuration: 60 * 1000 },
   })
   @Get('session/token')
-  async getTokenFromSession(
-    @Session() session: Record<string, any>,
-  ): Promise<{ access_token: string } | null> {
+  async getTokenFromSession(@Session() session: Record<string, any>) {
     if (session.access_token) {
       return { access_token: session.access_token };
     }
@@ -82,10 +84,47 @@ export class AuthController {
     default: { limit: 40, ttl: 60 * 1000, blockDuration: 60 * 1000 },
   })
   @Post('logout')
-  async logout(
-    @Req() req,
-  ): Promise<{ success: boolean; message: string } | HttpException> {
+  async logout(@Req() req) {
     return this.authService.logout(req);
+  }
+
+  // Forgot Password\
+  @UseGuards(ThrottlerGuard)
+  @Throttle({
+    default: { limit: 40, ttl: 60 * 1000, blockDuration: 60 * 1000 },
+  })
+  @Post('forgot-password')
+  async forgotPassword(@Body() forgotPasswordDTO: ForgotPasswordDTO) {
+    return this.authService.forgotPasssword(forgotPasswordDTO);
+  }
+
+  // reset Password
+  @UseGuards(ThrottlerGuard)
+  @Throttle({
+    default: { limit: 40, ttl: 60 * 1000, blockDuration: 60 * 1000 },
+  })
+  @Patch('reset-password')
+  async resetPassword(
+    @Body() setNewPassordDTO: SetNewPasswordDTO,
+    @Query('token') token: string,
+  ) {
+    if (!token) {
+      return new BadRequestException({
+        success: false,
+        message: 'Token is required',
+      });
+    }
+
+    return this.authService.resetPassword(token, setNewPassordDTO);
+  }
+
+  @UseGuards(ThrottlerGuard)
+  @Throttle({
+    default: { limit: 40, ttl: 60 * 1000, blockDuration: 60 * 1000 },
+  })
+  @Patch('check')
+  async isTokenValid(@Query('token') token: string) {
+    return await this.authService.isResetTokenValid(token);
   }
 
   // Google Login

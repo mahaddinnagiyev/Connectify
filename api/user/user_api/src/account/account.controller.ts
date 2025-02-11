@@ -30,10 +30,7 @@ export class AccountController {
     default: { limit: 60, ttl: 60 * 1000, blockDuration: 60 * 1000 },
   })
   @Patch('/my-info')
-  async edit_account(
-    @Body() userDTO: EditAccountDTO,
-    @Req() req: Request,
-  ): Promise<{ success: boolean; message: string } | HttpException> {
+  async edit_account(@Body() userDTO: EditAccountDTO, @Req() req: Request) {
     return await this.accountService.edit_account(userDTO, req.user as User);
   }
 
@@ -43,13 +40,7 @@ export class AccountController {
     default: { limit: 60, ttl: 60 * 1000, blockDuration: 60 * 1000 },
   })
   @Get('/social-link/:id')
-  async get_social_by_id(@Req() req: Request): Promise<
-    | {
-        success: boolean;
-        social_link: { id: string; name: string; link: string };
-      }
-    | HttpException
-  > {
+  async get_social_by_id(@Req() req: Request) {
     return await this.accountService.get_social_by_id(
       String(req.params.id),
       req.user as User,
@@ -65,7 +56,7 @@ export class AccountController {
   async add_social_link(
     @Body() socialLinkDTO: SocialLinkDTO,
     @Req() req: Request,
-  ): Promise<{ success: boolean; message: string } | HttpException> {
+  ) {
     return await this.accountService.add_social_link(
       socialLinkDTO,
       req.user as User,
@@ -81,7 +72,7 @@ export class AccountController {
   async edit_social_link(
     @Body() socialLinkDTO: EditSocialLinkDTO,
     @Req() req: Request,
-  ): Promise<{ success: boolean; message: string } | HttpException> {
+  ) {
     return await this.accountService.edit_social_link(
       socialLinkDTO,
       String(req.params.id),
@@ -95,9 +86,7 @@ export class AccountController {
     default: { limit: 60, ttl: 60 * 1000, blockDuration: 60 * 1000 },
   })
   @Delete('/social-link/:id')
-  async delete_social_link(
-    @Req() req: Request,
-  ): Promise<{ success: boolean; message: string } | HttpException> {
+  async delete_social_link(@Req() req: Request) {
     return await this.accountService.delete_social_link(
       String(req.params.id),
       req.user as User,
@@ -111,7 +100,7 @@ export class AccountController {
   async update_profile_pic(
     @Req() req: Request,
     @UploadedFile() file: Express.Multer.File,
-  ): Promise<{ success: boolean; message: string } | HttpException> {
+  ) {
     return await this.accountService.update_profile_pic(req.user as User, file);
   }
 }

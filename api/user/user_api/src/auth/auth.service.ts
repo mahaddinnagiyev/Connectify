@@ -1,12 +1,15 @@
 import {
   BadRequestException,
+  ConflictException,
   ForbiddenException,
   HttpException,
   Injectable,
   InternalServerErrorException,
+  NotFoundException,
 } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import * as jwt from 'jsonwebtoken';
+import * as crypto from 'crypto';
 import { v4 as uuid } from 'uuid';
 import { User } from 'src/entities/user.entity';
 import { SignupDTO } from './dto/signup-dto';
@@ -24,6 +27,14 @@ import { LoggerService } from 'src/logger/logger.service';
 import { HttpService } from '@nestjs/axios';
 import { Gender } from 'src/enums/gender.enum';
 import { Provider } from 'src/enums/provider.enum';
+import {
+  ForgotPasswordDTO,
+  SetNewPasswordDTO,
+} from './dto/forgot-passsword-dto';
+import {
+  emailNotFoundMessage,
+  forgotPasswordMessage,
+} from './utils/messages/forgot-password-message';
 
 @Injectable()
 export class AuthService {
@@ -383,6 +394,148 @@ export class AuthService {
     }
   }
 
+  // Forgot Password
+  async forgotPasssword(
+    forgotPasswordDTO: ForgotPasswordDTO,
+  ): Promise<{ success: boolean; message: string } | HttpException> {
+    try {
+      const { email } = forgotPasswordDTO;
+
+      const existUser = await this.userRepository.findOne({
+        where: { email: email },
+      });
+
+      if (!existUser) {
+        await this.mailService.sendMail({
+          from: process.env.EMAIL_USER,
+          to: email,
+          subject: 'Password Reset - Account could not be found',
+          text: emailNotFoundMessage(email),
+        });
+
+        return {
+          success: false,
+          message: 'Check your email to reset your password',
+        };
+      }
+
+      const reset_token = crypto.randomBytes(32).toString('hex');
+      const reset_token_expiration = new Date(Date.now() + 3600000);
+
+      existUser.reset_token = reset_token;
+      existUser.reset_token_expiration = reset_token_expiration;
+
+      await this.userRepository.save(existUser);
+
+      await this.mailService.sendMail({
+        from: process.env.EMAIL_USER,
+        to: email,
+        subject: 'Password reset - Connectify',
+        text: forgotPasswordMessage(reset_token),
+      });
+
+      await this.logger.info(
+        `Password reset email sent successfully to: ${email}`,
+        'auth',
+      );
+
+      return {
+        success: true,
+        message: 'Check your email to reset your password',
+      };
+    } catch (error) {
+      await this.logger.error(
+        error.message,
+        'auth',
+        'There is an error - in the forgot password process',
+        error.stack,
+      );
+      return new InternalServerErrorException(
+        'Forgot password failed - Due to Internal Server Error',
+      );
+    }
+  }
+
+  // Reset Password
+  async resetPassword(
+    token: string,
+    resetTokenDTO: SetNewPasswordDTO,
+  ): Promise<{ success: boolean; message: string } | HttpException> {
+    try {
+      const { password } = resetTokenDTO;
+
+      const user = await this.userRepository.findOne({
+        where: { reset_token: token },
+      });
+
+      if (!user || user.reset_token_expiration < new Date()) {
+        return new NotFoundException({
+          success: false,
+          error: 'User not found or token expired',
+        });
+      }
+
+      const isPasswordSame = await bcrypt.compare(password, user.password);
+
+      if (isPasswordSame) {
+        return new ConflictException({
+          success: false,
+          message: 'New passord can not be same as old password',
+        });
+      }
+
+      const salt = await bcrypt.genSalt();
+      const hashedPassword = await bcrypt.hash(password, salt);
+
+      user.password = hashedPassword;
+      user.reset_token = null;
+      user.reset_token_expiration = null;
+
+      await this.userRepository.save(user);
+
+      await this.logger.info(
+        `Password reset successfully for user: ${user.username}`,
+        'auth',
+      );
+
+      return {
+        success: true,
+        message: 'Password reset successfully',
+      };
+    } catch (error) {
+      await this.logger.error(
+        error.message,
+        'auth',
+        'There is an error - in the reset password process',
+        error.stack,
+      );
+      return new InternalServerErrorException(
+        'Reset password failed - Due to Internal Server Error',
+      );
+    }
+  }
+
+  // Check is Reset Token valid
+  async isResetTokenValid(token: string): Promise<{ success: boolean }> {
+    if (!token) {
+      return {
+        success: false,
+      };
+    }
+
+    const user = await this.userRepository.findOne({
+      where: { reset_token: token },
+    });
+
+    if (!user || user.reset_token_expiration < new Date()) {
+      return {
+        success: false,
+      };
+    }
+
+    return { success: true };
+  }
+
   // Google User Authentication
   async validateGoogleUser(
     user: any,
@@ -430,7 +583,11 @@ export class AuthService {
         });
       }
 
-      const payload: JwtPayload = { id: existUser.id, username: existUser.username, is_banned: existUser.is_banned };
+      const payload: JwtPayload = {
+        id: existUser.id,
+        username: existUser.username,
+        is_banned: existUser.is_banned,
+      };
       const access_token = jwt.sign(
         payload,
         process.env.JWT_ACCESS_SECRET_KEY,
