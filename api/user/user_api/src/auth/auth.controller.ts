@@ -122,7 +122,7 @@ export class AuthController {
   @Throttle({
     default: { limit: 40, ttl: 60 * 1000, blockDuration: 60 * 1000 },
   })
-  @Patch('check')
+  @Get('check')
   async isTokenValid(@Query('token') token: string) {
     return await this.authService.isResetTokenValid(token);
   }

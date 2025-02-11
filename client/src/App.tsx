@@ -5,7 +5,9 @@ import ChatPage from "./pages/ChatPage";
 import Login from "./pages/auth/Login";
 import Signup from "./pages/auth/Signup";
 import ProfilePage from "./pages/profile/ProfilePage";
-import { RouteControl } from "./RouteControl"; // İndi artıq error verməyəcək
+import { RouteControl } from "./RouteControl";
+import ForgotPassword from "./pages/auth/ForgotPassword";
+import ResetPassword from "./pages/auth/ResetPassword";
 
 function App() {
   return (
@@ -30,6 +32,8 @@ function App() {
         />
         <Route path="/auth/login" element={<Login />} />
         <Route path="/auth/signup" element={<Signup />} />
+        <Route path="/auth/forgot-password" element={<ForgotPassword />} />
+        <Route path="/auth/reset-password" element={<ResetPassword />} />
       </Routes>
     </BrowserRouter>
   );

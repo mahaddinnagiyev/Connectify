@@ -82,6 +82,19 @@ const Login = () => {
     }, 1000);
   };
 
+  useEffect(() => {
+    const message = localStorage.getItem("successMessage");
+    const errorMessage = localStorage.getItem("errorMessage");
+
+    if (errorMessage) {
+      setErrorMessage(errorMessage);
+      localStorage.removeItem("errorMessage");
+    } else if (message) {
+      setSuccessMessage(message);
+      localStorage.removeItem("successMessage");
+    }
+  }, []);
+
   return (
     <>
       {errorMessage && (
@@ -156,6 +169,15 @@ const Login = () => {
                 required
                 onChange={handleChange}
               />
+              <p className="text-start pt-2 text-xs">
+                Forgot password?{" "}
+                <Link
+                  to="/auth/forgot-password"
+                  className="font-serif underline hover:text-[#00ff00] transition duration-300"
+                >
+                  Click here
+                </Link>
+              </p>
             </div>
 
             <div className="login-form-group">

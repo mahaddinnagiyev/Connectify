@@ -90,3 +90,52 @@ export const logout = async (): Promise<{
   const data = response.json();
   return data;
 };
+
+// Forgot Password
+export const forgot_password = async (
+  email: string
+): Promise<{
+  success: boolean;
+  message?: string;
+  response: { success: boolean; message?: string; error?: string };
+}> => {
+  const response = await fetch(`${SERVER_USER_URL}/auth/forgot-password`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json; charset=utf-8",
+    },
+    credentials: "include",
+    body: JSON.stringify({ email }),
+  });
+  const data = await response.json();
+  return data;
+};
+
+// Check is Reset Token valid
+export const isResetTokenValid = async (
+  token: string
+): Promise<{ success: boolean }> => {
+  const response = await fetch(`${SERVER_USER_URL}/auth/check?token=${token}`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json; charset=utf-8",
+    },
+    credentials: "include",
+  });
+  const data = await response.json();
+  return data;
+};
+
+// Reset Password
+export const resetPassword = async (password: string, token: string) => {
+  const response = await fetch(`${SERVER_USER_URL}/auth/reset-password?token=${token}`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json; charset=utf-8",
+    },
+    credentials: "include",
+    body: JSON.stringify({ password }),
+  });
+  const data = await response.json();
+  return data;
+}

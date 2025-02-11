@@ -29,8 +29,6 @@ export const RouteControl = ({ children }: { children: React.ReactNode }) => {
     fetchToken();
   }, []);
 
-  console.log(token);
-
   if (loading) return <CheckModal />;
 
   if (!token) {
