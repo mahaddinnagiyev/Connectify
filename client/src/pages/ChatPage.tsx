@@ -22,6 +22,7 @@ const ChatPage = () => {
 
     if (message) {
       setSuccessMessage(message);
+      localStorage.removeItem("successMessage");
     }
   }, []);
 
