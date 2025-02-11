@@ -23,7 +23,7 @@ const ForgotPassword = () => {
     try {
       const response = await forgot_password(email);
       if (response.success) {
-        setSuccessMessage("A reset link has been sent to your email!");
+        setSuccessMessage(response.message);
       } else {
         setErrorMessage(
           response.response.error ||

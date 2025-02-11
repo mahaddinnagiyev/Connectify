@@ -414,7 +414,21 @@ export class AuthService {
         });
 
         return {
-          success: false,
+          success: true,
+          message: 'Check your email to reset your password',
+        };
+      }
+
+      if (existUser.provider === Provider.google) {
+        await this.mailService.sendMail({
+          from: process.env.EMAIL_USER,
+          to: email,
+          subject: 'Password Reset - Account provided by Google',
+          text: emailNotFoundMessage(email),
+        });
+
+        return {
+          success: true,
           message: 'Check your email to reset your password',
         };
       }

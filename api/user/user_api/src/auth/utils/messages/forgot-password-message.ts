@@ -42,3 +42,26 @@ export const emailNotFoundMessage = (email: string) => {
       </html>
     `;
 };
+
+export const googleSignInMessage = (email: string) => {
+  return `
+      <html>
+        <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; background-color: #f9f9f9; padding: 20px;">
+          <div style="max-width: 600px; margin: 0 auto; background: #ffffff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);">
+            <h2 style="text-align: center; color: #FF9800;">Google Sign-In Detected</h2>
+            <p>Dear User,</p>
+            <p>The email address <strong>${email}</strong> is associated with a Google Sign-In account.</p>
+            <p>If you want to access your account, please use the <strong>"Sign in with Google"</strong> option on the login page.</p>
+            <div style="text-align: center; margin: 20px 0;">
+              <a href="http://localhost:5173/auth/login" 
+                 style="display: inline-block; font-size: 18px; font-weight: bold; color: #ffffff; background-color: #FF9800; padding: 12px 24px; text-decoration: none; border-radius: 4px;">Go to Login Page</a>
+            </div>
+            <p>If you did not try to reset your password and believe this is a mistake, you can ignore this email.</p>
+            <p>If you have any questions or need help, feel free to contact our support team at <a href="mailto:support@yourapp.com" style="color: #4CAF50; text-decoration: none;">support@connectify.com</a>.</p>
+            <p>Thank you,</p>
+            <p style="text-align: center; font-weight: bold;">Connectify Team</p>
+          </div>
+        </body>
+      </html>
+    `;
+};

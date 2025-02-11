@@ -96,7 +96,8 @@ export const forgot_password = async (
   email: string
 ): Promise<{
   success: boolean;
-  message?: string;
+  message: string;
+  error?: string;
   response: { success: boolean; message?: string; error?: string };
 }> => {
   const response = await fetch(`${SERVER_USER_URL}/auth/forgot-password`, {
