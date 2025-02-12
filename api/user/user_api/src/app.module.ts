@@ -11,12 +11,11 @@ import { APP_GUARD } from '@nestjs/core';
 import { LoggerModule } from './logger/logger.module';
 import { AccountModule } from './account/account.module';
 import { SupabaseModule } from './supabase/supabase.module';
+import { FriendshipModule } from './friendship/friendship.module';
 
 @Module({
   imports: [
     TypeOrmModule.forRoot(config),
-    UserModule,
-    AuthModule,
     MailerModule.forRoot({
       transport: {
         host: process.env.EMAIL_HOST,
@@ -34,9 +33,12 @@ import { SupabaseModule } from './supabase/supabase.module';
         blockDuration: 60 * 1000,
       },
     ]),
+    UserModule,
+    AuthModule,
     LoggerModule,
     AccountModule,
     SupabaseModule,
+    FriendshipModule,
   ],
   controllers: [AppController],
   providers: [

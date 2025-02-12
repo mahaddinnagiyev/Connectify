@@ -5,10 +5,13 @@ import {
   UpdateDateColumn,
   OneToOne,
   PrimaryGeneratedColumn,
+  OneToMany,
 } from 'typeorm';
 import { Gender } from 'src/enums/gender.enum';
 import { Account } from './account.entity';
 import { Provider } from 'src/enums/provider.enum';
+import { Friendship } from './friendship.entity';
+import { Exclude } from 'class-transformer';
 
 @Entity('users')
 export class User {
@@ -42,10 +45,17 @@ export class User {
   is_banned: boolean;
 
   @Column({ nullable: true })
+  @Exclude()
   password: string;
 
   @OneToOne(() => Account, (account) => account.user)
   account: Account;
+
+  @OneToMany(() => Friendship, (friendship) => friendship.requester)
+  sentFriendRequests: Friendship[];
+
+  @OneToMany(() => Friendship, (friendship) => friendship.requestee)
+  receivedFriendRequests: Friendship[];
 
   @Column({
     nullable: false,

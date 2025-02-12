@@ -1,0 +1,275 @@
+import {
+  BadRequestException,
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+} from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Friendship } from 'src/entities/friendship.entity';
+import { LoggerService } from 'src/logger/logger.service';
+import { Repository } from 'typeorm';
+import { User } from 'src/entities/user.entity';
+import { FriendshipStatus } from 'src/enums/friendship-status';
+
+@Injectable()
+export class FriendshipService {
+  constructor(
+    @InjectRepository(Friendship)
+    private friendshipRepository: Repository<Friendship>,
+    @InjectRepository(User)
+    private userRepository: Repository<User>,
+    private readonly logger: LoggerService,
+  ) {}
+
+  // Get User Friendships Requests
+  async getFriendshipRequests(req_user: User) {
+    try {
+      const friendRequests = await this.friendshipRepository.find({
+        where: [
+          { requester: { id: req_user.id }, status: FriendshipStatus.pending },
+          { requestee: { id: req_user.id }, status: FriendshipStatus.pending },
+        ],
+        relations: ['requester', 'requestee'],
+      });
+
+      if (!friendRequests) {
+        return new NotFoundException({
+          success: false,
+          error: 'Friendship requests not found',
+        });
+      }
+
+      let sentRequest: Friendship[] = [];
+      let receivedRequest: Friendship[] = [];
+
+      friendRequests.forEach((friendship) => {
+        if (friendship.requester.id === req_user.id) {
+          sentRequest.push(friendship);
+        } else if (friendship.requestee.id === req_user.id) {
+          receivedRequest.push(friendship);
+        }
+      });
+
+      const mappedSentRequest = sentRequest.map((friendship) => {
+        return {
+          id: friendship.id,
+          requester: friendship.requester.id,
+          requestee: friendship.requestee.id,
+          status: friendship.status,
+          created_at: friendship.created_at,
+          updated_at: friendship.updated_at,
+        };
+      });
+      const mappedRevievedRequest = receivedRequest.map((friendship) => {
+        return {
+          id: friendship.id,
+          requester: friendship.requester.id,
+          requestee: friendship.requestee.id,
+          status: friendship.status,
+          created_at: friendship.created_at,
+          updated_at: friendship.updated_at,
+        };
+      });
+
+      await this.logger.info(
+        `Friendship requests has been fetched: ${JSON.stringify(friendRequests)}`,
+        'friendship',
+        `User: ${req_user.username}`,
+      );
+
+      return {
+        success: true,
+        sentRequests: mappedSentRequest,
+        receivedRequests: mappedRevievedRequest,
+      };
+    } catch (error) {
+      await this.logger.error(
+        error,
+        'friendship',
+        'There is an error getting friendship requests',
+        error.stack,
+      );
+      return new InternalServerErrorException(
+        'Failed to get friendship requests - Due To Internal Server Error',
+      );
+    }
+  }
+
+  // Create Friendship
+  async createFriendship(requestee: string, req_user: User) {
+    try {
+      if (req_user.id === requestee) {
+        return new BadRequestException({
+          success: false,
+          error: 'You cannot send a friendship request to yourself',
+        });
+      }
+
+      const requesteeUser = await this.userRepository.findOne({
+        where: { id: requestee },
+      });
+
+      if (!requesteeUser) {
+        throw new NotFoundException('Requestee user not found');
+      }
+
+      const isFriendshipExists = await this.friendshipRepository.findOne({
+        where: [
+          { requester: { id: req_user.id }, requestee: { id: requestee } },
+          { requester: { id: requestee }, requestee: { id: req_user.id } },
+        ],
+      });
+
+      if (isFriendshipExists) {
+        return new BadRequestException({
+          success: false,
+          error: 'Friendship already exists',
+        });
+      }
+
+      const newFriendship = this.friendshipRepository.create({
+        requester: req_user,
+        requestee: requesteeUser,
+      });
+
+      await this.friendshipRepository.save(newFriendship);
+
+      await this.logger.info(
+        `Friendship has been created: ${JSON.stringify(newFriendship)}`,
+        'friendship',
+        `${req_user.username} sent a friendship request to ${requesteeUser.username}`,
+      );
+
+      return {
+        success: true,
+        message: 'Friendship request send',
+      };
+    } catch (error) {
+      await this.logger.error(
+        error,
+        'friendship',
+        `There is an error creating friendship`,
+        error.stack,
+      );
+      return new InternalServerErrorException(
+        'Failed to create friendship - Due To Internal Server Error',
+      );
+    }
+  }
+
+  // Accept Friendship Request
+  async acceptFriendship(id: string, req_user: User) {
+    try {
+      const friendship = await this.friendshipRepository.findOne({
+        where: [{ id: id, requestee: { id: req_user.id } }],
+        relations: ['requester', 'requestee'],
+      });
+
+      if (!friendship) {
+        return new NotFoundException({
+          success: false,
+          error: 'Friendship not found',
+        });
+      }
+
+      if (friendship.status !== FriendshipStatus.pending) {
+        if (friendship.status === FriendshipStatus.accepted) {
+          return {
+            success: true,
+            message: 'Friendship request already accepted',
+          };
+        } else if (friendship.status === FriendshipStatus.rejected) {
+          return new BadRequestException({
+            success: false,
+            error: 'Friendship request already rejected',
+          });
+        } else {
+          return new BadRequestException({
+            success: false,
+            error: 'Friendship request already blocked',
+          });
+        }
+      }
+
+      await this.friendshipRepository.update(id, {
+        status: FriendshipStatus.accepted,
+      });
+
+      await this.logger.info(
+        `Friendship has been accepted: ${JSON.stringify(friendship)}`,
+        'friendship',
+        `${friendship.requestee.username} accepted a friendship request from ${friendship.requester.username}`,
+      );
+
+      return {
+        success: true,
+        message: 'Friendship request accepted',
+      };
+    } catch (error) {
+      console.log(error);
+      await this.logger.error(
+        error,
+        'friendship',
+        `There is an error accepting friendship`,
+        error.stack,
+      );
+      return new InternalServerErrorException(
+        'Failed to accept friendship - Due To Internal Server Error',
+      );
+    }
+  }
+
+  // Reject Friendship Request
+  async rejectFriendship(id: string, req_user: User) {
+    try {
+      const friendship = await this.friendshipRepository.findOne({
+        where: [{ id: id, requestee: { id: req_user.id } }],
+        relations: ['requester', 'requestee'],
+      });
+
+      if (!friendship) {
+        return new NotFoundException({
+          success: false,
+          error: 'Friendship not found',
+        });
+      }
+
+      if (friendship.status !== FriendshipStatus.pending) {
+        if (friendship.status === FriendshipStatus.accepted) {
+          return {
+            success: true,
+            message: 'Friendship request already accepted',
+          };
+        } else if (friendship.status === FriendshipStatus.blocked) {
+          return new BadRequestException({
+            success: false,
+            error: 'Friendship request already blocked',
+          });
+        }
+      }
+
+      await this.friendshipRepository.remove(friendship);
+
+      await this.logger.info(
+        `Friendship has been rejected: ${JSON.stringify(friendship)}`,
+        'friendship',
+        `${friendship.requestee.username} rejected a friendship request from ${friendship.requester.username}`,
+      );
+
+      return {
+        success: true,
+        message: 'Friendship request rejected',
+      };
+    } catch (error) {
+      await this.logger.error(
+        error,
+        'friendship',
+        `There is an error rejecting friendship`,
+        error.stack,
+      );
+      return new InternalServerErrorException(
+        'Failed to reject friendship - Due To Internal Server Error',
+      );
+    }
+  }
+}
