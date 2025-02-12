@@ -1,4 +1,13 @@
-import { Body, Controller, Get, Patch, Req, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Patch,
+  Post,
+  Query,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
 import { UserService } from './user.service';
 import { JwtAuthGuard } from 'src/jwt/jwt-auth-guard';
 import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
@@ -23,7 +32,7 @@ export class UserController {
         query.username.toString(),
       );
     }
-    return await this.userService.get_user_by_id((req.user as User).id) ;
+    return await this.userService.get_user_by_id((req.user as User).id);
   }
 
   @UseGuards(JwtAuthGuard)
@@ -36,5 +45,31 @@ export class UserController {
       userDTO,
       req.user as User,
     );
+  }
+
+  // Block List Functions
+  @UseGuards(JwtAuthGuard)
+  @Throttle({
+    default: { limit: 120, ttl: 60 * 1000, blockDuration: 60 * 1000 },
+  })
+  @Get('/block-list')
+  async get_block_list(@Req() req: Request) {
+    return await this.userService.get_block_list(req.user as User);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Throttle({
+    default: { limit: 120, ttl: 60 * 1000, blockDuration: 60 * 1000 },
+  })
+  @Post('/block-list')
+  async add_or_remove_from_block_list(
+    @Req() req: Request,
+    @Query('action') action: string,
+    @Query('id') id: string,
+  ) {
+    if (action === 'add')
+      return await this.userService.block_user(id, req.user as User);
+    if (action === 'remove')
+      return await this.userService.unblock_user(id, req.user as User);
   }
 }

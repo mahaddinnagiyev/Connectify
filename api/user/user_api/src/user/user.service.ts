@@ -11,6 +11,7 @@ import { User } from 'src/entities/user.entity';
 import { LoggerService } from 'src/logger/logger.service';
 import { Repository } from 'typeorm';
 import { EditUserInfoDTO } from './dto/user-info-dto';
+import { BlockList } from 'src/entities/blocklist.entity';
 
 @Injectable()
 export class UserService {
@@ -19,9 +20,12 @@ export class UserService {
     private userRepository: Repository<User>,
     @InjectRepository(Account)
     private accountRepository: Repository<Account>,
+    @InjectRepository(BlockList)
+    private blockListRepository: Repository<BlockList>,
     private readonly logger: LoggerService,
   ) {}
 
+  // User Information Functions
   async get_user_by_id(
     id: string,
   ): Promise<
@@ -166,6 +170,153 @@ export class UserService {
       );
       return new InternalServerErrorException(
         'Failed to edit informations - Due To Internal Server Error',
+      );
+    }
+  }
+
+  // Block List Functions
+  async get_block_list(req_user: User) {
+    try {
+      const blockList = await this.blockListRepository.find({
+        where: { blocker: { id: req_user.id } },
+        relations: ['blocked'],
+        select: ['id', 'blocked', 'created_at'],
+      });
+
+      const mappedBLockList = blockList.map((block) => {
+        return {
+          id: block.blocked.id,
+          blocked_user: {
+            id: block.blocked.id,
+            first_name: block.blocked.first_name,
+            last_name: block.blocked.last_name,
+            username: block.blocked.username,
+          },
+          created_at: block.created_at,
+        };
+      });
+
+      return {
+        success: true,
+        blockList: mappedBLockList,
+      };
+    } catch (error) {
+      console.log(error);
+      await this.logger.error(
+        `Error getting block list\nError: ${error}`,
+        'user',
+        `User: ${req_user.id}`,
+        error.stack,
+      );
+      return new InternalServerErrorException(
+        'Failed to get block list - Due To Internal Server Error',
+      );
+    }
+  }
+
+  async block_user(id: string, req_user: User) {
+    try {
+      const userResponse = await this.get_user_by_id(id);
+      if (userResponse instanceof HttpException) {
+        return userResponse;
+      }
+      const user: User = userResponse.user;
+
+      if (user.id === req_user.id) {
+        return new BadRequestException({
+          success: false,
+          error: 'You cannot block yourself',
+        });
+      }
+
+      const isBlocked = await this.blockListRepository.findOne({
+        where: {
+          blocker: { id: req_user.id },
+          blocked: { id: user.id },
+        },
+      });
+
+      if (isBlocked) {
+        return new BadRequestException({
+          success: false,
+          error: 'You are already blocked by this user',
+        });
+      }
+
+      await this.blockListRepository.save({
+        blocker: { id: req_user.id },
+        blocked: { id: user.id },
+      });
+
+      await this.logger.info(
+        `User blocked: ${user.username}`,
+        'user',
+        `User: ${req_user.id}`,
+      );
+
+      return {
+        success: true,
+        message: 'User blocked successfully',
+      };
+    } catch (error) {
+      await this.logger.error(
+        `Error blocking user: ${id}\nError: ${error}`,
+        'user',
+        `User: ${req_user.id}`,
+        error.stack,
+      );
+      return new InternalServerErrorException(
+        'Failed to block user - Due To Internal Server Error',
+      );
+    }
+  }
+
+  async unblock_user(id: string, req_user: User) {
+    try {
+      const userResponse = await this.get_user_by_id(id);
+      if (userResponse instanceof HttpException) {
+        return userResponse;
+      }
+      const user: User = userResponse.user;
+
+      const isBlocked = await this.blockListRepository.findOne({
+        where: {
+          blocker: { id: req_user.id },
+          blocked: { id: user.id },
+        },
+      });
+
+      if (!isBlocked) {
+        return new BadRequestException({
+          success: false,
+          error: 'You are not blocked by this user',
+        });
+      }
+
+      await this.blockListRepository.delete({
+        blocker: { id: req_user.id },
+        blocked: { id: user.id },
+      });
+
+      await this.logger.info(
+        `User unblocked: ${user.username}`,
+        'user',
+        `User: ${req_user.id}`,
+      );
+
+      return {
+        success: true,
+        message: 'User unblocked successfully',
+      };
+    } catch (error) {
+      await this.logger.error(
+        `Error unblocking user: ${id}\nError: ${error}`,
+        'user',
+        `User: ${req_user.id}`,
+        error.stack,
+      );
+      return new InternalServerErrorException(
+        'Failed to unblock user - Due To Internal Server Error',
       );
     }
   }

@@ -1,4 +1,12 @@
-import { Controller, Get, Post, Query, Req, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Patch,
+  Post,
+  Query,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
 import { FriendshipService } from './friendship.service';
 import { Request } from 'express';
 import { User } from 'src/entities/user.entity';
@@ -27,7 +35,7 @@ export class FriendshipController {
   }
 
   @UseGuards(JwtAuthGuard)
-  @Post('/request')
+  @Patch('/request')
   async acceptAndRejectFriendship(
     @Req() req: Request,
     @Query('status') status: string,

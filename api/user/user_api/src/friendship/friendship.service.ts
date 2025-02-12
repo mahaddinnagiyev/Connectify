@@ -10,6 +10,7 @@ import { LoggerService } from 'src/logger/logger.service';
 import { Repository } from 'typeorm';
 import { User } from 'src/entities/user.entity';
 import { FriendshipStatus } from 'src/enums/friendship-status';
+import { BlockList } from 'src/entities/blocklist.entity';
 
 @Injectable()
 export class FriendshipService {
@@ -18,6 +19,8 @@ export class FriendshipService {
     private friendshipRepository: Repository<Friendship>,
     @InjectRepository(User)
     private userRepository: Repository<User>,
+    @InjectRepository(BlockList)
+    private blockListRepository: Repository<BlockList>,
     private readonly logger: LoggerService,
   ) {}
 
@@ -102,6 +105,34 @@ export class FriendshipService {
         return new BadRequestException({
           success: false,
           error: 'You cannot send a friendship request to yourself',
+        });
+      }
+
+      const isRequesteeBlocked = await this.blockListRepository.findOne({
+        where: {
+          blocker: { id: req_user.id },
+          blocked: { id: requestee },
+        },
+      });
+
+      const isRequesterBlocked = await this.blockListRepository.findOne({
+        where: {
+          blocker: { id: requestee },
+          blocked: { id: req_user.id },
+        },
+      });
+
+      if (isRequesteeBlocked) {
+        return new BadRequestException({
+          success: false,
+          error: 'You have blocked this user',
+        });
+      }
+
+      if (isRequesterBlocked) {
+        return new BadRequestException({
+          success: false,
+          error: 'This user has blocked you',
         });
       }
 

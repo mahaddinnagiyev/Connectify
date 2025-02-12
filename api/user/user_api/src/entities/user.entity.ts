@@ -12,6 +12,7 @@ import { Account } from './account.entity';
 import { Provider } from 'src/enums/provider.enum';
 import { Friendship } from './friendship.entity';
 import { Exclude } from 'class-transformer';
+import { BlockList } from './blocklist.entity';
 
 @Entity('users')
 export class User {
@@ -56,6 +57,12 @@ export class User {
 
   @OneToMany(() => Friendship, (friendship) => friendship.requestee)
   receivedFriendRequests: Friendship[];
+
+  @OneToMany(() => BlockList, (block) => block.blocker)
+  outgoingBlocks: BlockList[];
+
+  @OneToMany(() => BlockList, (block) => block.blocked)
+  incomingBlocks: BlockList[];
 
   @Column({
     nullable: false,
