@@ -7,6 +7,7 @@ import Box from "@mui/material/Box";
 import ProfileInfo from "../../components/profile/ProfileInfo";
 import "./style.css";
 import FriendList from "../../components/profile/friends/FriendList";
+import BlockList from "../../components/profile/block-list/BlockList";
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -125,10 +126,7 @@ const ProfilePage = () => {
               <Typography>Friend requests content goes here...</Typography>
             </TabPanel>
             <TabPanel value={value} index={3}>
-              <Typography variant="h4" gutterBottom>
-                Block List
-              </Typography>
-              <Typography>Block list content goes here...</Typography>
+              <BlockList />
             </TabPanel>
           </Box>
         </Box>

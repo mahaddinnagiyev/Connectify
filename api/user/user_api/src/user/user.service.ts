@@ -186,29 +186,29 @@ export class UserService {
         select: ['id', 'blocked', 'created_at'],
       });
 
-      const mappedBLockList = blockList.map(async (block) => {
+      const mappedBlockList = [];
+
+      for (const block of blockList) {
         const account = await this.accountRepository.findOne({
-          where: {
-            user: { id: block.blocked.id },
-          }
+          where: { user: { id: block.blocked.id } },
         });
 
-        return {
+        const blockedUser = {
           id: block.blocked.id,
-          blocked_user: {
-            id: block.blocked.id,
-            first_name: block.blocked.first_name,
-            last_name: block.blocked.last_name,
-            username: block.blocked.username,
-            profile_pic: account.profile_picture
-          },
+          blocked_id: block.blocked.id,
+          first_name: block.blocked.first_name,
+          last_name: block.blocked.last_name,
+          username: block.blocked.username,
+          profile_picture: account ? account.profile_picture : null,
           created_at: block.created_at,
         };
-      });
+
+        mappedBlockList.push(blockedUser);
+      }
 
       return {
         success: true,
-        blockList: mappedBLockList,
+        blockList: mappedBlockList,
       };
     } catch (error) {
       console.log(error);
@@ -262,7 +262,7 @@ export class UserService {
           {
             requester: { id: user.id },
             requestee: { id: req_user.id },
-          }
+          },
         ],
       });
 

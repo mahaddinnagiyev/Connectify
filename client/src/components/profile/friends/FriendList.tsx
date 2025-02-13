@@ -74,7 +74,7 @@ const FriendList = () => {
             display: "flex",
             justifyContent: "center",
             alignItems: "center",
-            minHeight: "200px", // Bu dəyəri ehtiyacınıza görə dəyişə bilərsiniz
+            minHeight: "100px",
           }}
         >
           <Typography
