@@ -12,6 +12,7 @@ import { LoggerService } from 'src/logger/logger.service';
 import { Repository } from 'typeorm';
 import { EditUserInfoDTO } from './dto/user-info-dto';
 import { BlockList } from 'src/entities/blocklist.entity';
+import { Friendship } from 'src/entities/friendship.entity';
 
 @Injectable()
 export class UserService {
@@ -22,6 +23,8 @@ export class UserService {
     private accountRepository: Repository<Account>,
     @InjectRepository(BlockList)
     private blockListRepository: Repository<BlockList>,
+    @InjectRepository(Friendship)
+    private friendshipRepository: Repository<Friendship>,
     private readonly logger: LoggerService,
   ) {}
 
@@ -241,6 +244,23 @@ export class UserService {
           success: false,
           error: 'You are already blocked by this user',
         });
+      }
+
+      const isFriend = await this.friendshipRepository.findOne({
+        where: [
+          {
+            requester: { id: req_user.id },
+            requestee: { id: user.id },
+          },
+          {
+            requester: { id: user.id },
+            requestee: { id: req_user.id },
+          }
+        ],
+      });
+
+      if (isFriend) {
+        await this.friendshipRepository.remove(isFriend);
       }
 
       await this.blockListRepository.save({
