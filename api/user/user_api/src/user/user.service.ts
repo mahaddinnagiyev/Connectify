@@ -186,7 +186,13 @@ export class UserService {
         select: ['id', 'blocked', 'created_at'],
       });
 
-      const mappedBLockList = blockList.map((block) => {
+      const mappedBLockList = blockList.map(async (block) => {
+        const account = await this.accountRepository.findOne({
+          where: {
+            user: { id: block.blocked.id },
+          }
+        });
+
         return {
           id: block.blocked.id,
           blocked_user: {
@@ -194,6 +200,7 @@ export class UserService {
             first_name: block.blocked.first_name,
             last_name: block.blocked.last_name,
             username: block.blocked.username,
+            profile_pic: account.profile_picture
           },
           created_at: block.created_at,
         };
