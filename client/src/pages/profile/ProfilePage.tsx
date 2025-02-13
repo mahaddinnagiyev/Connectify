@@ -6,6 +6,7 @@ import Typography from "@mui/material/Typography";
 import Box from "@mui/material/Box";
 import ProfileInfo from "../../components/profile/ProfileInfo";
 import "./style.css";
+import FriendList from "../../components/profile/friends/FriendList";
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -115,10 +116,7 @@ const ProfilePage = () => {
               <ProfileInfo />
             </TabPanel>
             <TabPanel value={value} index={1}>
-              <Typography variant="h4" gutterBottom>
-                Friend List
-              </Typography>
-              <Typography>Friend list content goes here...</Typography>
+              <FriendList />
             </TabPanel>
             <TabPanel value={value} index={2}>
               <Typography variant="h4" gutterBottom>

@@ -9,10 +9,11 @@ import { PassportModule } from '@nestjs/passport';
 import { LoggerModule } from 'src/logger/logger.module';
 import { AuthModule } from 'src/auth/auth.module';
 import { BlockList } from 'src/entities/blocklist.entity';
+import { Account } from 'src/entities/account.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Friendship, User, BlockList]),
+    TypeOrmModule.forFeature([Friendship, User, Account, BlockList]),
     PassportModule.register({ defaultStrategy: 'jwt' }),
     LoggerModule,
     AuthModule

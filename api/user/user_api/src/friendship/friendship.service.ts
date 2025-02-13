@@ -11,6 +11,7 @@ import { Repository } from 'typeorm';
 import { User } from 'src/entities/user.entity';
 import { FriendshipStatus } from 'src/enums/friendship-status';
 import { BlockList } from 'src/entities/blocklist.entity';
+import { Account } from 'src/entities/account.entity';
 
 @Injectable()
 export class FriendshipService {
@@ -19,6 +20,8 @@ export class FriendshipService {
     private friendshipRepository: Repository<Friendship>,
     @InjectRepository(User)
     private userRepository: Repository<User>,
+    @InjectRepository(Account)
+    private accountRepository: Repository<Account>,
     @InjectRepository(BlockList)
     private blockListRepository: Repository<BlockList>,
     private readonly logger: LoggerService,
@@ -27,30 +30,53 @@ export class FriendshipService {
   // Get User Friends
   async getFriends(req_user: User) {
     try {
-      const friends = await this.friendshipRepository.find({
+      const friendships = await this.friendshipRepository.find({
         where: [
           { requester: { id: req_user.id }, status: FriendshipStatus.accepted },
           { requestee: { id: req_user.id }, status: FriendshipStatus.accepted },
         ],
         relations: ['requester', 'requestee'],
-        select: ['id', 'status', 'requester', 'requestee', 'created_at', 'updated_at'],
+        select: [
+          'id',
+          'status',
+          'requester',
+          'requestee',
+          'created_at',
+          'updated_at',
+        ],
       });
 
-      const mappedFriends = friends.map((friendship) => {
-        return {
+      const mappedFriends = [];
+
+      for (const friendship of friendships) {
+        const friendUser =
+          friendship.requester.id === req_user.id
+            ? friendship.requestee
+            : friendship.requester;
+
+        const account = await this.accountRepository.findOne({
+          where: { user: { id: friendUser.id } },
+        });
+
+        const friend = {
           id: friendship.id,
-          requester: friendship.requester.id,
-          requestee: friendship.requestee.id,
+          friend_id: friendUser.id,
+          first_name: friendUser.first_name,
+          last_name: friendUser.last_name,
+          username: friendUser.username,
+          profile_picture: account ? account.profile_picture : null,
           status: friendship.status,
           created_at: friendship.created_at,
           updated_at: friendship.updated_at,
-        }
-      })
+        };
+
+        mappedFriends.push(friend);
+      }
 
       return {
-        success: false,
-        friends: mappedFriends
-      }
+        success: true,
+        friends: mappedFriends,
+      };
     } catch (error) {
       await this.logger.error(
         error,
@@ -96,8 +122,18 @@ export class FriendshipService {
       const mappedSentRequest = sentRequest.map((friendship) => {
         return {
           id: friendship.id,
-          requester: friendship.requester.id,
-          requestee: friendship.requestee.id,
+          requester: {
+            id: friendship.requester.id,
+            first_name: friendship.requester.first_name,
+            last_name: friendship.requester.last_name,
+            username: friendship.requester.username,
+          },
+          requestee: {
+            id: friendship.requestee.id,
+            first_name: friendship.requestee.first_name,
+            last_name: friendship.requestee.last_name,
+            username: friendship.requestee.username,
+          },
           status: friendship.status,
           created_at: friendship.created_at,
           updated_at: friendship.updated_at,
@@ -106,8 +142,18 @@ export class FriendshipService {
       const mappedRevievedRequest = receivedRequest.map((friendship) => {
         return {
           id: friendship.id,
-          requester: friendship.requester.id,
-          requestee: friendship.requestee.id,
+          requester: {
+            id: friendship.requester.id,
+            first_name: friendship.requester.first_name,
+            last_name: friendship.requester.last_name,
+            username: friendship.requester.username,
+          },
+          requestee: {
+            id: friendship.requestee.id,
+            first_name: friendship.requestee.first_name,
+            last_name: friendship.requestee.last_name,
+            username: friendship.requestee.username,
+          },
           status: friendship.status,
           created_at: friendship.created_at,
           updated_at: friendship.updated_at,
