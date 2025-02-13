@@ -9,11 +9,13 @@ dotenv.config();
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  app.useGlobalPipes(new ValidationPipe({
-    whitelist: true,
-    forbidNonWhitelisted: true,
-    transform: true
-  }));
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      forbidNonWhitelisted: true,
+      transform: true,
+    }),
+  );
   app.enableCors({
     origin: 'http://localhost:5173',
     credentials: true,
@@ -30,7 +32,7 @@ async function bootstrap() {
       cookie: {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
-        maxAge: 5 * 24 * 60 * 60 * 1000,
+        maxAge: 30 * 60 * 1000,
       },
     }),
   );

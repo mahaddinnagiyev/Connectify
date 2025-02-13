@@ -11,18 +11,37 @@ import { FriendshipService } from './friendship.service';
 import { Request } from 'express';
 import { User } from 'src/entities/user.entity';
 import { JwtAuthGuard } from 'src/jwt/jwt-auth-guard';
+import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
 
 @Controller('friendship')
 export class FriendshipController {
   constructor(private readonly friendshipService: FriendshipService) {}
 
   @UseGuards(JwtAuthGuard)
+  @UseGuards(ThrottlerGuard)
+  @Throttle({
+    default: { limit: 120, ttl: 60 * 1000, blockDuration: 60 * 1000 },
+  })
+  @Get('/my-friends')
+  async getFriends(@Req() req: Request) {
+    return await this.friendshipService.getFriends(req.user as User);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @UseGuards(ThrottlerGuard)
+  @Throttle({
+    default: { limit: 120, ttl: 60 * 1000, blockDuration: 60 * 1000 },
+  })
   @Get('/requests')
   async getFriendshipRequests(@Req() req: Request) {
     return await this.friendshipService.getFriendshipRequests(req.user as User);
   }
 
   @UseGuards(JwtAuthGuard)
+  @UseGuards(ThrottlerGuard)
+  @Throttle({
+    default: { limit: 120, ttl: 60 * 1000, blockDuration: 60 * 1000 },
+  })
   @Post('/request/create')
   async createFriendship(
     @Req() req: Request,
@@ -35,6 +54,10 @@ export class FriendshipController {
   }
 
   @UseGuards(JwtAuthGuard)
+  @UseGuards(ThrottlerGuard)
+  @Throttle({
+    default: { limit: 120, ttl: 60 * 1000, blockDuration: 60 * 1000 },
+  })
   @Patch('/request')
   async acceptAndRejectFriendship(
     @Req() req: Request,
