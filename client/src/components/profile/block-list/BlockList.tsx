@@ -11,6 +11,8 @@ import {
   ListItemSecondaryAction,
   Avatar,
   Tooltip,
+  useTheme,
+  useMediaQuery,
 } from "@mui/material";
 import { get_block_list } from "../../../services/user/block-list-service";
 import { BlockListDTO } from "../../../services/user/dto/block-list-dto";
@@ -21,6 +23,10 @@ const BlockList = () => {
   const [blockList, setBlockList] = useState<BlockListDTO[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
+
+  // Responsive üçün media query
+  const theme = useTheme();
+  const isSmallScreen = useMediaQuery(theme.breakpoints.down("sm"));
 
   useEffect(() => {
     const fetchBlockList = async () => {
@@ -45,7 +51,8 @@ const BlockList = () => {
 
   const filteredBlockedUsers = blockList.filter((blockedUser) => {
     const searchTerm = searchQuery.toLowerCase().trim();
-    const fullName = `${blockedUser.first_name} ${blockedUser.last_name}`.toLowerCase();
+    const fullName =
+      `${blockedUser.first_name} ${blockedUser.last_name}`.toLowerCase();
     return (
       blockedUser.username.toLowerCase().includes(searchTerm) ||
       blockedUser.first_name.toLowerCase().includes(searchTerm) ||
@@ -56,7 +63,7 @@ const BlockList = () => {
 
   return (
     <Box sx={{ width: "100%", padding: 2, paddingTop: 0 }}>
-      <Typography variant="h4" gutterBottom>
+      <Typography variant={isSmallScreen ? "h5" : "h4"} gutterBottom>
         Block List
       </Typography>
       <TextField
@@ -66,6 +73,9 @@ const BlockList = () => {
         value={searchQuery}
         onChange={handleSearch}
         sx={{ marginBottom: 2 }}
+        InputLabelProps={{
+          style: { fontSize: isSmallScreen ? "0.875rem" : "1rem" },
+        }}
       />
       {loading ? (
         <Box
@@ -78,7 +88,11 @@ const BlockList = () => {
         >
           <Typography
             variant="body1"
-            sx={{ fontWeight: "bold", textAlign: "center" }}
+            sx={{
+              fontWeight: "bold",
+              textAlign: "center",
+              fontSize: isSmallScreen ? "0.875rem" : "1rem",
+            }}
           >
             Loading blocked users...
           </Typography>
@@ -96,6 +110,12 @@ const BlockList = () => {
               <ListItemText
                 primary={`${blockedUser.first_name} ${blockedUser.last_name}`}
                 secondary={`@${blockedUser.username}`}
+                primaryTypographyProps={{
+                  fontSize: isSmallScreen ? "0.9rem" : "1rem",
+                }}
+                secondaryTypographyProps={{
+                  fontSize: isSmallScreen ? "0.8rem" : "0.875rem",
+                }}
               />
               <ListItemSecondaryAction>
                 <Tooltip title="Unblock User" placement="top">
@@ -108,7 +128,12 @@ const BlockList = () => {
           ))}
         </List>
       ) : (
-        <Typography variant="body1">No blocked users found.</Typography>
+        <Typography
+          variant="body1"
+          sx={{ fontSize: isSmallScreen ? "0.875rem" : "1rem" }}
+        >
+          No blocked users found.
+        </Typography>
       )}
     </Box>
   );
