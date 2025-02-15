@@ -64,7 +64,7 @@ export class FriendshipService {
           first_name: friendUser.first_name,
           last_name: friendUser.last_name,
           username: friendUser.username,
-          profile_picture: account ? account.profile_picture : null,
+          profile_picture: account.profile_picture ? account.profile_picture : null,
           status: friendship.status,
           created_at: friendship.created_at,
           updated_at: friendship.updated_at,
@@ -119,7 +119,11 @@ export class FriendshipService {
         }
       });
 
-      const mappedSentRequest = sentRequest.map((friendship) => {
+      const mappedSentRequest = sentRequest.map(async (friendship) => {
+        const account = await this.accountRepository.findOne({
+          where: { user: { id: friendship.requestee.id } },
+        })
+
         return {
           id: friendship.id,
           requester: {
@@ -133,13 +137,18 @@ export class FriendshipService {
             first_name: friendship.requestee.first_name,
             last_name: friendship.requestee.last_name,
             username: friendship.requestee.username,
+            profile_picture: account.profile_picture ? account.profile_picture : null
           },
           status: friendship.status,
           created_at: friendship.created_at,
           updated_at: friendship.updated_at,
         };
       });
-      const mappedRevievedRequest = receivedRequest.map((friendship) => {
+      const mappedRevievedRequest = receivedRequest.map(async (friendship) => {
+        const account = await this.accountRepository.findOne({
+          where: { user: { id: friendship.requester.id } },
+        })
+
         return {
           id: friendship.id,
           requester: {
@@ -147,6 +156,7 @@ export class FriendshipService {
             first_name: friendship.requester.first_name,
             last_name: friendship.requester.last_name,
             username: friendship.requester.username,
+            profile_picture: account.profile_picture ? account.profile_picture : null
           },
           requestee: {
             id: friendship.requestee.id,
