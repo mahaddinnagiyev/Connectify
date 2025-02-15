@@ -283,7 +283,7 @@ export class UserService {
 
       return {
         success: true,
-        message: 'User blocked successfully',
+        message: `${user.username} blocked`,
       };
     } catch (error) {
       await this.logger.error(
@@ -333,7 +333,7 @@ export class UserService {
 
       return {
         success: true,
-        message: 'User unblocked successfully',
+        message: `${user.username} unblocked: `,
       };
     } catch (error) {
       await this.logger.error(
