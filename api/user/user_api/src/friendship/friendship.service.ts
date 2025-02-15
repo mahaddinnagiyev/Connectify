@@ -183,8 +183,6 @@ export class FriendshipService {
         `User: ${req_user.username}`,
       );
 
-      console.log(mappedSentRequest);
-      console.log(mappedReceivedRequest);
       return {
         success: true,
         sentRequests: mappedSentRequest,
