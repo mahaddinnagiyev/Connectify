@@ -129,13 +129,13 @@ const Header = () => {
             className="w-10 h-10 rounded-full cursor-pointer profile-img"
           />
           <div className="profile-actions">
-            <a href="/user/my-profile">
+            <a href="/user/my-profile" className="rounded-lg">
               <AccountBoxIcon /> View Profile
             </a>
-            <a href="/settings">
+            <a href="/settings" className="rounded-lg">
               <SettingsIcon /> Settings
             </a>
-            <a onClick={handleLogout} className="cursor-pointer">
+            <a onClick={handleLogout} className="cursor-pointer rounded-lg">
               <LogoutIcon /> Logout
             </a>
           </div>

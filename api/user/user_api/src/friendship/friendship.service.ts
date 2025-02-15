@@ -64,7 +64,9 @@ export class FriendshipService {
           first_name: friendUser.first_name,
           last_name: friendUser.last_name,
           username: friendUser.username,
-          profile_picture: account.profile_picture ? account.profile_picture : null,
+          profile_picture: account.profile_picture
+            ? account.profile_picture
+            : null,
           status: friendship.status,
           created_at: friendship.created_at,
           updated_at: friendship.updated_at,
@@ -119,56 +121,61 @@ export class FriendshipService {
         }
       });
 
-      const mappedSentRequest = sentRequest.map(async (friendship) => {
-        const account = await this.accountRepository.findOne({
-          where: { user: { id: friendship.requestee.id } },
-        })
+      const mappedSentRequest = await Promise.all(
+        sentRequest.map(async (friendship) => {
+          const requesteeAccount = await this.accountRepository.findOne({
+            where: { user: { id: friendship.requestee.id } },
+          });
 
-        return {
-          id: friendship.id,
-          requester: {
-            id: friendship.requester.id,
-            first_name: friendship.requester.first_name,
-            last_name: friendship.requester.last_name,
-            username: friendship.requester.username,
-          },
-          requestee: {
-            id: friendship.requestee.id,
-            first_name: friendship.requestee.first_name,
-            last_name: friendship.requestee.last_name,
-            username: friendship.requestee.username,
-            profile_picture: account.profile_picture ? account.profile_picture : null
-          },
-          status: friendship.status,
-          created_at: friendship.created_at,
-          updated_at: friendship.updated_at,
-        };
-      });
-      const mappedRevievedRequest = receivedRequest.map(async (friendship) => {
-        const account = await this.accountRepository.findOne({
-          where: { user: { id: friendship.requester.id } },
-        })
+          return {
+            id: friendship.id,
+            requester: {
+              id: friendship.requester.id,
+              first_name: friendship.requester.first_name,
+              last_name: friendship.requester.last_name,
+              username: friendship.requester.username,
+            },
+            requestee: {
+              id: friendship.requestee.id,
+              first_name: friendship.requestee.first_name,
+              last_name: friendship.requestee.last_name,
+              username: friendship.requestee.username,
+              profile_picture: requesteeAccount?.profile_picture || null,
+            },
+            status: friendship.status,
+            created_at: friendship.created_at,
+            updated_at: friendship.updated_at,
+          };
+        }),
+      );
 
-        return {
-          id: friendship.id,
-          requester: {
-            id: friendship.requester.id,
-            first_name: friendship.requester.first_name,
-            last_name: friendship.requester.last_name,
-            username: friendship.requester.username,
-            profile_picture: account.profile_picture ? account.profile_picture : null
-          },
-          requestee: {
-            id: friendship.requestee.id,
-            first_name: friendship.requestee.first_name,
-            last_name: friendship.requestee.last_name,
-            username: friendship.requestee.username,
-          },
-          status: friendship.status,
-          created_at: friendship.created_at,
-          updated_at: friendship.updated_at,
-        };
-      });
+      const mappedReceivedRequest = await Promise.all(
+        receivedRequest.map(async (friendship) => {
+          const requesterAccount = await this.accountRepository.findOne({
+            where: { user: { id: friendship.requester.id } },
+          });
+
+          return {
+            id: friendship.id,
+            requester: {
+              id: friendship.requester.id,
+              first_name: friendship.requester.first_name,
+              last_name: friendship.requester.last_name,
+              username: friendship.requester.username,
+              profile_picture: requesterAccount?.profile_picture || null,
+            },
+            requestee: {
+              id: friendship.requestee.id,
+              first_name: friendship.requestee.first_name,
+              last_name: friendship.requestee.last_name,
+              username: friendship.requestee.username,
+            },
+            status: friendship.status,
+            created_at: friendship.created_at,
+            updated_at: friendship.updated_at,
+          };
+        }),
+      );
 
       await this.logger.info(
         `Friendship requests has been fetched: ${JSON.stringify(friendRequests)}`,
@@ -176,10 +183,12 @@ export class FriendshipService {
         `User: ${req_user.username}`,
       );
 
+      console.log(mappedSentRequest);
+      console.log(mappedReceivedRequest);
       return {
         success: true,
         sentRequests: mappedSentRequest,
-        receivedRequests: mappedRevievedRequest,
+        receivedRequests: mappedReceivedRequest,
       };
     } catch (error) {
       await this.logger.error(

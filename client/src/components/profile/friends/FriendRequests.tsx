@@ -13,13 +13,18 @@ import {
   CircularProgress,
   useMediaQuery,
   useTheme,
+  Button,
+  Stack,
 } from "@mui/material";
-import { getFriendRequests } from "../../../services/friendship/friendship-service";
+import {
+  getFriendRequests
+} from "../../../services/friendship/friendship-service";
 import {
   FriendshipRecieveRequestDTO,
   FriendshipSentRequestDTO,
 } from "../../../services/friendship/dto/friendship-dto";
 import { styled } from "@mui/material/styles";
+import no_profile_photo from "../../../assets/no-profile-photo.png";
 
 const FilterToggleButton = styled(ToggleButton)(({ theme }) => ({
   "&.MuiToggleButton-root": {
@@ -43,7 +48,7 @@ const FilterToggleButton = styled(ToggleButton)(({ theme }) => ({
     },
     "&.Mui-focusVisible": {
       outline: "2px solid #00ff00",
-    }
+    },
   },
 }));
 
@@ -70,12 +75,7 @@ const FriendRequests: React.FC = () => {
         setReceivedRequests(response.receivedRequests);
         setSentRequests(response.sentRequests);
       } else {
-        setError(
-          response.response?.error ??
-            response.error ??
-            response.message ??
-            "Failed to fetch friend requests."
-        );
+        setError(response.message ?? "Failed to fetch friend requests.");
       }
     } catch (err) {
       console.error(err);
@@ -110,17 +110,33 @@ const FriendRequests: React.FC = () => {
           const fullName = `${req.requester.first_name} ${req.requester.last_name}`;
           return (
             <React.Fragment key={req.id}>
-              <ListItem alignItems="flex-start">
+              <ListItem alignItems="center">
                 <ListItemAvatar>
-                  <Avatar>
-                    {req.requester.first_name.charAt(0)}
-                    {req.requester.last_name.charAt(0)}
-                  </Avatar>
+                  <Avatar
+                    src={req.requester.profile_picture ?? no_profile_photo}
+                    alt="user profile picture"
+                  />
                 </ListItemAvatar>
                 <ListItemText
                   primary={fullName}
                   secondary={`@${req.requester.username}`}
                 />
+                <Stack direction="row" spacing={1}>
+                  <Button
+                    variant="contained"
+                    size="small"
+                    sx={{ backgroundColor: "var(--primary-color)", fontWeight: 600 }}
+                  >
+                    Accept
+                  </Button>
+                  <Button
+                    variant="outlined"
+                    size="small"
+                    sx={{ color: "red", borderColor: "red", fontWeight: 600 }}
+                  >
+                    Reject
+                  </Button>
+                </Stack>
               </ListItem>
               <Divider component="li" />
             </React.Fragment>
@@ -142,10 +158,10 @@ const FriendRequests: React.FC = () => {
             <React.Fragment key={req.id}>
               <ListItem alignItems="flex-start">
                 <ListItemAvatar>
-                  <Avatar>
-                    {req.requestee.first_name.charAt(0)}
-                    {req.requestee.last_name.charAt(0)}
-                  </Avatar>
+                  <Avatar
+                    src={req.requestee.profile_picture ?? no_profile_photo}
+                    alt="user profile picture"
+                  />
                 </ListItemAvatar>
                 <ListItemText
                   primary={fullName}
@@ -171,7 +187,6 @@ const FriendRequests: React.FC = () => {
         Friend Requests
       </Typography>
 
-      {/* Filter toggle buttons */}
       <ToggleButtonGroup
         value={activeFilter}
         exclusive
@@ -194,7 +209,6 @@ const FriendRequests: React.FC = () => {
         </FilterToggleButton>
       </ToggleButtonGroup>
 
-      {/* Content */}
       {loading ? (
         <Box
           sx={{

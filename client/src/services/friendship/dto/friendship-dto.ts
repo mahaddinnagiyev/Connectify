@@ -26,6 +26,7 @@ export interface FriendshipSentRequestDTO {
         first_name: string; 
         last_name: string;
         username: string;
+        profile_picture: string;
     },
     status: FriendshipStatus;
     created_at: Date;
@@ -40,6 +41,7 @@ export interface FriendshipRecieveRequestDTO {
         first_name: string;
         last_name: string;
         username: string;
+        profile_picture: string;
     },
     requestee: {
         id: string;

@@ -213,8 +213,23 @@ export class AuthService {
 
       await this.userRepository.save(newUser);
 
+      let userProfilePicture = '';
+
+      switch (newUser.gender) {
+        case Gender.male:
+          userProfilePicture = `https://avatar.iran.liara.run/public/boy?username=${newUser.username}`;
+          break;
+        case Gender.female:
+          userProfilePicture = `https://avatar.iran.liara.run/public/girl?username=${newUser.username}`;
+          break;
+        default:
+          userProfilePicture = `https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQUy9s7L2aRDadM1KxmVNkNQ9Edar2APzIeHw&s`;
+          break;
+      }
+
       const newAccount: Account = this.accountRepository.create({
         user: newUser,
+        profile_picture: userProfilePicture,
       });
 
       await this.accountRepository.save(newAccount);
@@ -574,6 +589,7 @@ export class AuthService {
 
         const newAccount = this.accountRepository.create({
           user: existUser,
+          profile_picture: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQUy9s7L2aRDadM1KxmVNkNQ9Edar2APzIeHw&s",
         });
         await this.accountRepository.save(newAccount);
 
