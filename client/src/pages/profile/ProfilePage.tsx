@@ -8,6 +8,8 @@ import ProfileInfo from "../../components/profile/ProfileInfo";
 import "./style.css";
 import FriendList from "../../components/profile/friends/FriendList";
 import BlockList from "../../components/profile/block-list/BlockList";
+import ErrorMessage from "../../components/messages/ErrorMessage";
+import SuccessMessage from "../../components/messages/SuccessMessage";
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -45,6 +47,10 @@ function a11yProps(index: number) {
 const ProfilePage = () => {
   const [value, setValue] = React.useState(0);
   const [isVertical, setIsVertical] = React.useState(window.innerWidth >= 886);
+  const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = React.useState<string | null>(
+    null
+  );
 
   React.useEffect(() => {
     const handleResize = () => {
@@ -59,8 +65,34 @@ const ProfilePage = () => {
     setValue(newValue);
   };
 
+  React.useEffect(() => {
+    const success_message = localStorage.getItem("successMessage");
+    const error_message = localStorage.getItem("errorMessage");
+
+    if (success_message) {
+      setSuccessMessage(success_message);
+      localStorage.removeItem("successMessage");
+    } else if (error_message) {
+      setErrorMessage(error_message);
+      localStorage.removeItem("errorMessage");
+    }
+  }, []);
+
   return (
     <>
+      {errorMessage && (
+        <ErrorMessage
+          message={errorMessage}
+          onClose={() => setErrorMessage(null)}
+        />
+      )}
+      {successMessage && (
+        <SuccessMessage
+          message={successMessage}
+          onClose={() => setSuccessMessage(null)}
+        />
+      )}
+
       <Header />
       <div id="profile-container">
         <Box
@@ -94,7 +126,7 @@ const ProfilePage = () => {
               overflowY: "auto",
               zIndex: 10,
               bgcolor: "background.paper",
-              paddingLeft: 0
+              paddingLeft: 0,
             }}
           >
             <Tab label="My Profile" {...a11yProps(0)} />
@@ -110,7 +142,7 @@ const ProfilePage = () => {
               flexGrow: 1,
               padding: 0,
               minWidth: 0,
-              paddingLeft: 0
+              paddingLeft: 0,
             }}
           >
             <TabPanel value={value} index={0}>

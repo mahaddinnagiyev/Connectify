@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Box,
   TextField,
@@ -14,17 +14,25 @@ import {
   useTheme,
   useMediaQuery,
 } from "@mui/material";
-import { get_block_list } from "../../../services/user/block-list-service";
-import { BlockListDTO } from "../../../services/user/dto/block-list-dto";
+import {
+  block_and_unblock_user,
+  get_block_list,
+} from "../../../services/user/block-list-service";
+import { BlockAction, BlockListDTO } from "../../../services/user/dto/block-list-dto";
 import no_profile_photo from "../../../assets/no-profile-photo.png";
 import GppGoodIcon from "@mui/icons-material/GppGood";
+import ConfirmModal from "../../modals/confirm/ConfirmModal";
 
 const BlockList = () => {
+  const [confirmModalOpen, setConfirmModalOpen] = useState(false);
+  const [confirmModalTitle, setConfirmModalTitle] = useState("");
+  const [confirmModalMessage, setConfirmModalMessage] = useState("");
+  const [pendingAction, setPendingAction] = useState<() => void>(() => {});
+
   const [blockList, setBlockList] = useState<BlockListDTO[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
 
-  // Responsive üçün media query
   const theme = useTheme();
   const isSmallScreen = useMediaQuery(theme.breakpoints.down("sm"));
 
@@ -32,12 +40,12 @@ const BlockList = () => {
     const fetchBlockList = async () => {
       try {
         const response = await get_block_list();
-        console.log(response);
         if (response.success) {
           setBlockList(response.blockList);
         }
       } catch (error) {
         console.error("Error fetching block list:", error);
+        localStorage.setItem("errorMessage", "Failed to fetch block list.");
       } finally {
         setLoading(false);
       }
@@ -45,14 +53,39 @@ const BlockList = () => {
     fetchBlockList();
   }, []);
 
+  const unblock_user = async (id: string) => {
+    try {
+      const response = await block_and_unblock_user(id, BlockAction.unblock);
+      if (response.success) {
+        localStorage.setItem("successMessage", response.message);
+        window.location.reload();
+      } else {
+        if (Array.isArray(response.message)) {
+          localStorage.setItem("errorMessage", response.message[0]);
+        } else {
+          localStorage.setItem(
+            "errorMessage",
+            response.response?.error ??
+              response.message ??
+              response.error ??
+              "Failed to unblock user."
+          );
+        }
+        window.location.reload();
+      }
+    } catch (error) {
+      console.log(error);
+      localStorage.setItem("errorMessage", "Failed to unblock user.");
+    }
+  };
+
   const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(event.target.value);
   };
 
   const filteredBlockedUsers = blockList.filter((blockedUser) => {
     const searchTerm = searchQuery.toLowerCase().trim();
-    const fullName =
-      `${blockedUser.first_name} ${blockedUser.last_name}`.toLowerCase();
+    const fullName = `${blockedUser.first_name} ${blockedUser.last_name}`.toLowerCase();
     return (
       blockedUser.username.toLowerCase().includes(searchTerm) ||
       blockedUser.first_name.toLowerCase().includes(searchTerm) ||
@@ -60,6 +93,26 @@ const BlockList = () => {
       fullName.includes(searchTerm)
     );
   });
+
+  const openConfirmModal = (
+    title: string,
+    message: string,
+    action: () => void
+  ) => {
+    setConfirmModalTitle(title);
+    setConfirmModalMessage(message);
+    setPendingAction(() => action);
+    setConfirmModalOpen(true);
+  };
+
+  const handleConfirm = async () => {
+    pendingAction();
+    setConfirmModalOpen(false);
+  };
+
+  const handleCancel = () => {
+    setConfirmModalOpen(false);
+  };
 
   return (
     <Box sx={{ width: "100%", padding: 2, paddingTop: 0 }}>
@@ -119,7 +172,17 @@ const BlockList = () => {
               />
               <ListItemSecondaryAction>
                 <Tooltip title="Unblock User" placement="top">
-                  <Button variant="contained" color="success">
+                  <Button
+                    variant="contained"
+                    color="success"
+                    onClick={() =>
+                      openConfirmModal(
+                        "Confirm Unblock",
+                        `Are you sure you want to unblock ${blockedUser.username}?`,
+                        () => unblock_user(blockedUser.id)
+                      )
+                    }
+                  >
                     <GppGoodIcon />
                   </Button>
                 </Tooltip>
@@ -135,6 +198,16 @@ const BlockList = () => {
           No blocked users found.
         </Typography>
       )}
+
+      <ConfirmModal
+        open={confirmModalOpen}
+        title={confirmModalTitle}
+        message={confirmModalMessage}
+        color="error"
+        confirmText="Unblock"
+        onConfirm={handleConfirm}
+        onCancel={handleCancel}
+      />
     </Box>
   );
 };

@@ -7,3 +7,9 @@ export interface BlockListDTO {
     profile_picture: string;
     created_at: Date;
 }
+
+
+export enum BlockAction {
+    block = "add",
+    unblock = "remove"
+}
