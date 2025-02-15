@@ -10,6 +10,7 @@ import FriendList from "../../components/profile/friends/FriendList";
 import BlockList from "../../components/profile/block-list/BlockList";
 import ErrorMessage from "../../components/messages/ErrorMessage";
 import SuccessMessage from "../../components/messages/SuccessMessage";
+import FriendRequests from "../../components/profile/friends/FriendRequests";
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -17,9 +18,15 @@ interface TabPanelProps {
   value: number;
 }
 
+function a11yProps(index: number) {
+  return {
+    id: `vertical-tab-${index}`,
+    "aria-controls": `vertical-tabpanel-${index}`,
+  };
+}
+
 function TabPanel(props: TabPanelProps) {
   const { children, value, index, ...other } = props;
-
   return (
     <div
       role="tabpanel"
@@ -37,15 +44,11 @@ function TabPanel(props: TabPanelProps) {
   );
 }
 
-function a11yProps(index: number) {
-  return {
-    id: `vertical-tab-${index}`,
-    "aria-controls": `vertical-tabpanel-${index}`,
-  };
-}
-
 const ProfilePage = () => {
-  const [value, setValue] = React.useState(0);
+  const [value, setValue] = React.useState<number>(() => {
+    const savedTab = localStorage.getItem("activeTab");
+    return savedTab ? parseInt(savedTab, 10) : 0;
+  });
   const [isVertical, setIsVertical] = React.useState(window.innerWidth >= 886);
   const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
   const [successMessage, setSuccessMessage] = React.useState<string | null>(
@@ -60,6 +63,10 @@ const ProfilePage = () => {
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
+
+  React.useEffect(() => {
+    localStorage.setItem("activeTab", value.toString());
+  }, [value]);
 
   const handleChange = (event: React.SyntheticEvent, newValue: number) => {
     setValue(newValue);
@@ -152,10 +159,7 @@ const ProfilePage = () => {
               <FriendList />
             </TabPanel>
             <TabPanel value={value} index={2}>
-              <Typography variant="h4" gutterBottom>
-                Friend Requests
-              </Typography>
-              <Typography>Friend requests content goes here...</Typography>
+              <FriendRequests />
             </TabPanel>
             <TabPanel value={value} index={3}>
               <BlockList />

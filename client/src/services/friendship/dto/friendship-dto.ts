@@ -11,3 +11,43 @@ export interface UserFriendsDTO {
     created_at: Date;
     updated_at: Date;
 }
+
+
+export interface FriendshipSentRequestDTO {
+    id: string;
+    requester: {
+        id: string;
+        first_name: string;
+        last_name: string;
+        username: string;
+    },
+    requestee: {
+        id: string;
+        first_name: string; 
+        last_name: string;
+        username: string;
+    },
+    status: FriendshipStatus;
+    created_at: Date;
+    updated_at: Date;
+}
+
+
+export interface FriendshipRecieveRequestDTO {
+    id: string;
+    requester: {
+        id: string;
+        first_name: string;
+        last_name: string;
+        username: string;
+    },
+    requestee: {
+        id: string;
+        first_name: string; 
+        last_name: string;
+        username: string;
+    },
+    status: FriendshipStatus;
+    created_at: Date;
+    updated_at: Date;
+}

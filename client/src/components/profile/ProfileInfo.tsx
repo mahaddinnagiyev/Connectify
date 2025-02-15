@@ -219,6 +219,7 @@ const ProfileInfo = () => {
             justifyContent: "center",
             textAlign: { xs: "center", sm: "left" },
             paddingLeft: { md: "20px" },
+            fontWeight: "bold",
           }}
         >
           My Profile

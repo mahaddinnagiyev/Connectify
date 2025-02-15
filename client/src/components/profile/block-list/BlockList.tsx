@@ -116,7 +116,7 @@ const BlockList = () => {
 
   return (
     <Box sx={{ width: "100%", padding: 2, paddingTop: 0 }}>
-      <Typography variant={isSmallScreen ? "h5" : "h4"} gutterBottom>
+      <Typography variant={isSmallScreen ? "h5" : "h4"} gutterBottom align={isSmallScreen ? "center" : "left"}sx={{ fontWeight: "bold" }}>
         Block List
       </Typography>
       <TextField

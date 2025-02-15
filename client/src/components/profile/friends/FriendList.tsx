@@ -123,7 +123,8 @@ const FriendList = () => {
       <Typography
         variant={isSmallScreen ? "h5" : "h4"}
         gutterBottom
-        align="center"
+        align={isSmallScreen ? "center" : "left"}
+        sx={{ fontWeight: "bold" }}
       >
         Friend List
       </Typography>

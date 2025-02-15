@@ -39,8 +39,8 @@ const SocialLink: React.FC<SocialLinkProps> = ({
   } | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
-  const [openConfirmDialog, setOpenConfirmDialog] = useState(false); // New state for confirm dialog
-  const [linkToDelete, setLinkToDelete] = useState<string | null>(null); // To store the link ID to delete
+  const [openConfirmDialog, setOpenConfirmDialog] = useState(false); 
+  const [linkToDelete, setLinkToDelete] = useState<string | null>(null);
 
   const handleOpenModal = () => {
     setEditMode(false);
@@ -109,18 +109,18 @@ const SocialLink: React.FC<SocialLinkProps> = ({
           );
         }
       }
-      setOpenConfirmDialog(false); // Close the confirm dialog after deleting
+      setOpenConfirmDialog(false);
     }
   };
 
   const handleOpenConfirmDialog = (id: string) => {
     setLinkToDelete(id);
-    setOpenConfirmDialog(true); // Open the confirmation dialog
+    setOpenConfirmDialog(true);
   };
 
   const handleCloseConfirmDialog = () => {
-    setOpenConfirmDialog(false); // Close the confirmation dialog
-    setLinkToDelete(null); // Reset the link to delete
+    setOpenConfirmDialog(false);
+    setLinkToDelete(null);
   };
 
   useEffect(() => {
