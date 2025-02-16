@@ -16,7 +16,10 @@ import {
 import ChatIcon from "@mui/icons-material/Chat";
 import GppBadIcon from "@mui/icons-material/GppBad";
 import PersonRemoveIcon from "@mui/icons-material/PersonRemove";
-import { getFriends } from "../../../services/friendship/friendship-service";
+import {
+  getFriends,
+  removeFriendship,
+} from "../../../services/friendship/friendship-service";
 import { UserFriendsDTO } from "../../../services/friendship/dto/friendship-dto";
 import no_profile_photo from "../../../assets/no-profile-photo.png";
 import { block_and_unblock_user } from "../../../services/user/block-list-service";
@@ -31,6 +34,7 @@ const FriendList = () => {
   const [confirmModalOpen, setConfirmModalOpen] = useState(false);
   const [confirmModalTitle, setConfirmModalTitle] = useState("");
   const [confirmModalMessage, setConfirmModalMessage] = useState("");
+  const [confirmModalText, setConfirmModalText] = useState("");
   const [pendingAction, setPendingAction] = useState<() => void>(() => {});
 
   const theme = useTheme();
@@ -77,6 +81,32 @@ const FriendList = () => {
     }
   };
 
+  const remove_friend = async (id: string) => {
+    try {
+      const response = await removeFriendship(id);
+      if (response.success) {
+        localStorage.setItem("successMessage", response.message);
+      } else {
+        if (Array.isArray(response.message)) {
+          localStorage.setItem("errorMessage", response.message[0]);
+        } else {
+          localStorage.setItem(
+            "errorMessage",
+            response.response?.error ??
+              response.message ??
+              response.error ??
+              "Failed to remove friend."
+          );
+        }
+      }
+      window.location.reload();
+    } catch (error) {
+      console.error(error);
+      localStorage.setItem("errorMessage", "Failed to remove friend.");
+      window.location.reload();
+    }
+  };
+
   const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(event.target.value);
   };
@@ -95,10 +125,12 @@ const FriendList = () => {
   const openConfirmModal = (
     title: string,
     message: string,
+    text: string,
     action: () => void
   ) => {
     setConfirmModalTitle(title);
     setConfirmModalMessage(message);
+    setConfirmModalText(text);
     setPendingAction(() => action);
     setConfirmModalOpen(true);
   };
@@ -203,6 +235,7 @@ const FriendList = () => {
                           openConfirmModal(
                             "Confirm Block",
                             "Are you sure you want to block this user?",
+                            'Block',
                             () => block_user(friend.friend_id)
                           )
                         }
@@ -211,7 +244,19 @@ const FriendList = () => {
                       </Button>
                     </Tooltip>
                     <Tooltip title="Remove Friend" placement="top">
-                      <Button variant="contained" color="warning" size="small">
+                      <Button
+                        variant="contained"
+                        color="warning"
+                        size="small"
+                        onClick={() =>
+                          openConfirmModal(
+                            "Confirm Remove",
+                            "Are you sure you want to remove this friend?",
+                            'Remove',
+                            () => remove_friend(friend.id)
+                          )
+                        }
+                      >
                         <PersonRemoveIcon />
                       </Button>
                     </Tooltip>
@@ -254,6 +299,7 @@ const FriendList = () => {
                           openConfirmModal(
                             "Confirm Block",
                             `Are you sure you want to block ${friend.username}?`,
+                            "Block",
                             () => block_user(friend.friend_id)
                           )
                         }
@@ -262,7 +308,18 @@ const FriendList = () => {
                       </Button>
                     </Tooltip>
                     <Tooltip title="Remove Friend" placement="top">
-                      <Button variant="contained" color="warning">
+                      <Button
+                        variant="contained"
+                        color="warning"
+                        onClick={() =>
+                          openConfirmModal(
+                            "Confirm Remove",
+                            "Are you sure you want to remove this friend?",
+                            "Remove",
+                            () => remove_friend(friend.id)
+                          )
+                        }
+                      >
                         <PersonRemoveIcon />
                       </Button>
                     </Tooltip>
@@ -283,7 +340,7 @@ const FriendList = () => {
         title={confirmModalTitle}
         message={confirmModalMessage}
         color="error"
-        confirmText="Block"
+        confirmText={confirmModalText}
         onConfirm={handleConfirm}
         onCancel={handleCancel}
       />

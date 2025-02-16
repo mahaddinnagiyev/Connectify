@@ -16,7 +16,10 @@ import {
   Button,
   Stack,
 } from "@mui/material";
-import { acceptAndRejectFriendship, getFriendRequests } from "../../../services/friendship/friendship-service";
+import {
+  acceptAndRejectFriendship,
+  getFriendRequests,
+} from "../../../services/friendship/friendship-service";
 import {
   FriendshipRecieveRequestDTO,
   FriendshipSentRequestDTO,
@@ -75,6 +78,35 @@ const FriendRequests: React.FC = () => {
   const theme = useTheme();
   const isSmallScreen = useMediaQuery(theme.breakpoints.down("sm"));
 
+  // Helper function: Hesablayır ki, friend request nə vaxt gəlib.
+  const getRelativeTime = (dateString: string): string => {
+    const createdDate = new Date(dateString);
+    const now = new Date();
+    const diff = now.getTime() - createdDate.getTime();
+
+    const seconds = Math.floor(diff / 1000);
+    if (seconds < 60) return `${seconds} seconds ago`;
+
+    const minutes = Math.floor(seconds / 60);
+    if (minutes < 60) return `${minutes} minutes ago`;
+
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return `${hours} hours ago`;
+
+    const days = Math.floor(hours / 24);
+    if (days < 7) return `${days} days ago`;
+
+    const weeks = Math.floor(days / 7);
+    if (weeks < 4) return `${weeks} weeks ago`;
+
+    if (days >= 365) {
+      return createdDate.toLocaleDateString();
+    }
+
+    const months = Math.floor(days / 30);
+    return `${months} ay əvvəl`;
+  };
+
   const fetchFriendRequests = async () => {
     try {
       const response = await getFriendRequests();
@@ -130,8 +162,10 @@ const FriendRequests: React.FC = () => {
     }
   };
 
-
-  const acceptAndRejectRequest = async (status: FriendshipAction, id: string) => {
+  const acceptAndRejectRequest = async (
+    status: FriendshipAction,
+    id: string
+  ) => {
     try {
       const response = await acceptAndRejectFriendship(status, id);
 
@@ -160,18 +194,28 @@ const FriendRequests: React.FC = () => {
       localStorage.setItem("errorMessage", "Something went wrong.");
       window.location.reload();
     }
-  }
+  };
 
+  // Sıralama: Yeni request-lər yuxarıda olsun.
+  const sortedReceivedRequests = [...receivedRequests].sort(
+    (a, b) =>
+      new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+  );
+
+  const sortedSentRequests = [...sentRequests].sort(
+    (a, b) =>
+      new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+  );
 
   const renderReceivedRequests = () => {
-    if (receivedRequests.length === 0) {
+    if (sortedReceivedRequests.length === 0) {
       return (
         <Typography variant="body1">No received friend requests.</Typography>
       );
     }
     return (
       <List>
-        {receivedRequests.map((req) => {
+        {sortedReceivedRequests.map((req) => {
           const fullName = `${req.requester.first_name} ${req.requester.last_name}`;
           return (
             <React.Fragment key={req.id}>
@@ -203,7 +247,9 @@ const FriendRequests: React.FC = () => {
                   </ListItemAvatar>
                   <ListItemText
                     primary={fullName}
-                    secondary={`@${req.requester.username}`}
+                    secondary={`@${req.requester.username} • ${getRelativeTime(
+                      String(req.created_at)
+                    )}`}
                   />
                 </Box>
 
@@ -223,7 +269,9 @@ const FriendRequests: React.FC = () => {
                         fontWeight: 600,
                         whiteSpace: "nowrap",
                       }}
-                      onClick={() => acceptAndRejectRequest(FriendshipAction.accept, req.id)}
+                      onClick={() =>
+                        acceptAndRejectRequest(FriendshipAction.accept, req.id)
+                      }
                     >
                       Accept
                     </Button>
@@ -236,7 +284,9 @@ const FriendRequests: React.FC = () => {
                         fontWeight: 600,
                         whiteSpace: "nowrap",
                       }}
-                      onClick={() => acceptAndRejectRequest(FriendshipAction.reject, req.id)} 
+                      onClick={() =>
+                        acceptAndRejectRequest(FriendshipAction.reject, req.id)
+                      }
                     >
                       Reject
                     </Button>
@@ -271,12 +321,12 @@ const FriendRequests: React.FC = () => {
   };
 
   const renderSentRequests = () => {
-    if (sentRequests.length === 0) {
+    if (sortedSentRequests.length === 0) {
       return <Typography variant="body1">No sent friend requests.</Typography>;
     }
     return (
       <List>
-        {sentRequests.map((req) => {
+        {sortedSentRequests.map((req) => {
           const fullName = `${req.requestee.first_name} ${req.requestee.last_name}`;
           return (
             <React.Fragment key={req.id}>
@@ -289,7 +339,9 @@ const FriendRequests: React.FC = () => {
                 </ListItemAvatar>
                 <ListItemText
                   primary={fullName}
-                  secondary={`@${req.requestee.username}`}
+                  secondary={`@${req.requestee.username} • ${getRelativeTime(
+                    String(req.created_at)
+                  )}`}
                 />
               </ListItem>
               <Divider component="li" />

@@ -1,5 +1,6 @@
 import {
   Controller,
+  Delete,
   Get,
   Patch,
   Post,
@@ -83,7 +84,7 @@ export class FriendshipController {
   @Throttle({
     default: { limit: 120, ttl: 60 * 1000, blockDuration: 60 * 1000 },
   })
-  @Patch('/request/remove')
+  @Delete('/request/remove')
   async removeFriendship(@Req() req: Request, @Query('request') id: string) {
     return await this.friendshipService.removeFriendship(
       id,

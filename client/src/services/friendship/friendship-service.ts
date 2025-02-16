@@ -78,3 +78,27 @@ export const acceptAndRejectFriendship = async (
   const data = response.json();
   return data;
 };
+
+// Remove Friendship
+export const removeFriendship = async (
+  id: string
+): Promise<{
+  success: boolean;
+  message: string;
+  error?: string;
+  response: { success: boolean; message?: string; error?: string };
+}> => {
+  const response = await fetch(
+    `${process.env.SERVER_USER_URL}/friendship/request/remove?request=${id}`,
+    {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json; charset=utf-8",
+        Authorization: `Bearer ${await getToken()}`,
+      },
+    }
+  );
+
+  const data = response.json();
+  return data;
+};
