@@ -141,40 +141,46 @@ const FriendRequests: React.FC = () => {
           const fullName = `${req.requester.first_name} ${req.requester.last_name}`;
           return (
             <React.Fragment key={req.id}>
-              <ListItem alignItems={isSmallScreen ? "center" : "flex-start"}>
-                <ListItemAvatar sx={{ marginTop: 0 }}>
-                  <Avatar
-                    src={req.requester.profile_picture ?? no_profile_photo}
-                    alt="user profile picture"
-                    sx={{
-                      border: "1px solid #ccc",
-                      borderRadius: "50%",
-                      width: 56,
-                      height: 56,
-                    }}
-                  />
-                </ListItemAvatar>
-
+              <ListItem
+                sx={{
+                  flexDirection: isSmallScreen ? "column" : "row",
+                  alignItems: "center",
+                }}
+              >
                 <Box
                   sx={{
                     display: "flex",
-                    flexDirection: isSmallScreen ? "column" : "row",
-                    alignItems: isSmallScreen ? "flex-start" : "center",
-                    justifyContent: "space-between",
+                    alignItems: "center",
                     width: "100%",
-                    ml: 2,
+                    gap: isSmallScreen ? 2 : 0,
                   }}
                 >
+                  <ListItemAvatar sx={{ mr: isSmallScreen ? 0 : 2 }}>
+                    <Avatar
+                      src={req.requester.profile_picture ?? no_profile_photo}
+                      alt="user profile picture"
+                      sx={{
+                        border: "1px solid #ccc",
+                        borderRadius: "50%",
+                        width: 56,
+                        height: 56,
+                      }}
+                    />
+                  </ListItemAvatar>
                   <ListItemText
                     primary={fullName}
                     secondary={`@${req.requester.username}`}
                   />
+                </Box>
 
-                  <Stack
-                    direction={"row"}
-                    spacing={1}
-                    sx={{ mt: isSmallScreen ? 1 : 0 }}
-                  >
+                <Box
+                  sx={{
+                    width: "100%",
+                    display: "flex",
+                    justifyContent: isSmallScreen ? "center" : "flex-end",
+                  }}
+                >
+                  <Stack direction="row" spacing={1}>
                     <Button
                       variant="contained"
                       size="small"
