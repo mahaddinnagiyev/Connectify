@@ -16,7 +16,7 @@ import {
   Button,
   Stack,
 } from "@mui/material";
-import { getFriendRequests } from "../../../services/friendship/friendship-service";
+import { acceptAndRejectFriendship, getFriendRequests } from "../../../services/friendship/friendship-service";
 import {
   FriendshipRecieveRequestDTO,
   FriendshipSentRequestDTO,
@@ -26,6 +26,7 @@ import no_profile_photo from "../../../assets/no-profile-photo.png";
 import { block_and_unblock_user } from "../../../services/user/block-list-service";
 import { BlockAction } from "../../../services/user/dto/block-list-dto";
 import ConfirmModal from "../../modals/confirm/ConfirmModal";
+import { FriendshipAction } from "../../../services/friendship/enum/friendship-status.enum";
 
 const FilterToggleButton = styled(ToggleButton)(({ theme }) => ({
   "&.MuiToggleButton-root": {
@@ -129,6 +130,39 @@ const FriendRequests: React.FC = () => {
     }
   };
 
+
+  const acceptAndRejectRequest = async (status: FriendshipAction, id: string) => {
+    try {
+      const response = await acceptAndRejectFriendship(status, id);
+
+      if (response.success) {
+        localStorage.setItem(
+          "successMessage",
+          response.message ?? "Friend request accepted."
+        );
+      } else {
+        if (Array.isArray(response.message)) {
+          localStorage.setItem("errorMessage", response.message[0]);
+        } else {
+          localStorage.setItem(
+            "errorMessage",
+            response.response?.error ??
+              response.message ??
+              response.error ??
+              "Failed to accept/reject friend request."
+          );
+        }
+      }
+
+      window.location.reload();
+    } catch (error) {
+      console.log(error);
+      localStorage.setItem("errorMessage", "Something went wrong.");
+      window.location.reload();
+    }
+  }
+
+
   const renderReceivedRequests = () => {
     if (receivedRequests.length === 0) {
       return (
@@ -189,6 +223,7 @@ const FriendRequests: React.FC = () => {
                         fontWeight: 600,
                         whiteSpace: "nowrap",
                       }}
+                      onClick={() => acceptAndRejectRequest(FriendshipAction.accept, req.id)}
                     >
                       Accept
                     </Button>
@@ -201,6 +236,7 @@ const FriendRequests: React.FC = () => {
                         fontWeight: 600,
                         whiteSpace: "nowrap",
                       }}
+                      onClick={() => acceptAndRejectRequest(FriendshipAction.reject, req.id)} 
                     >
                       Reject
                     </Button>

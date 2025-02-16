@@ -1,6 +1,12 @@
 import { getToken } from "../auth/token-service";
-import { FriendshipRecieveRequestDTO, FriendshipSentRequestDTO, UserFriendsDTO } from "./dto/friendship-dto";
+import {
+  FriendshipRecieveRequestDTO,
+  FriendshipSentRequestDTO,
+  UserFriendsDTO,
+} from "./dto/friendship-dto";
+import { FriendshipAction } from "./enum/friendship-status.enum";
 
+// Get All Friends
 export const getFriends = async (): Promise<{
   success: boolean;
   friends: UserFriendsDTO[];
@@ -22,6 +28,7 @@ export const getFriends = async (): Promise<{
   return data;
 };
 
+// Get All Friendship Requests
 export const getFriendRequests = async (): Promise<{
   success: boolean;
   sentRequests: FriendshipSentRequestDTO[];
@@ -34,6 +41,32 @@ export const getFriendRequests = async (): Promise<{
     `${process.env.SERVER_USER_URL}/friendship/requests`,
     {
       method: "GET",
+      headers: {
+        "Content-Type": "application/json; charset=utf-8",
+        Authorization: `Bearer ${await getToken()}`,
+      },
+      credentials: "include",
+    }
+  );
+
+  const data = response.json();
+  return data;
+};
+
+// Accept And Reject Friendship
+export const acceptAndRejectFriendship = async (
+  status: FriendshipAction,
+  id: string
+): Promise<{
+  success: string;
+  message: string;
+  error?: string;
+  response: { success: boolean; message?: string; error?: string };
+}> => {
+  const response = await fetch(
+    `${process.env.SERVER_USER_URL}/friendship/request?status=${status}&request=${id}`,
+    {
+      method: "PATCH",
       headers: {
         "Content-Type": "application/json; charset=utf-8",
         Authorization: `Bearer ${await getToken()}`,
