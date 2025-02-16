@@ -29,6 +29,40 @@ export class UserService {
   ) {}
 
   // User Information Functions
+  async gel_all_users(): Promise<
+    { success: boolean; users: User[] } | HttpException
+  > {
+    try {
+      const users = await this.userRepository.find({
+        select: [
+          'id',
+          'first_name',
+          'last_name',
+          'username',
+          'email',
+          'gender',
+          'created_at',
+        ],
+        relations: ['account'],
+      });
+
+      return {
+        success: true,
+        users,
+      };
+    } catch (error) {
+      await this.logger.error(
+        error.message,
+        'user',
+        'There was an error getting all users',
+        error.stack,
+      );
+      return new InternalServerErrorException(
+        'Failed to get all users - Due To Internal Server Error',
+      );
+    }
+  }
+
   async get_user_by_id(
     id: string,
   ): Promise<

@@ -21,6 +21,15 @@ export class UserController {
 
   @UseGuards(JwtAuthGuard)
   @Throttle({
+    default: { limit: 120, ttl: 60 * 1000, blockDuration: 60 * 1000 },
+  })
+  @Get('/all')
+  async get_all_users() {
+    return await this.userService.gel_all_users();
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Throttle({
     default: { limit: 60, ttl: 60 * 1000, blockDuration: 60 * 1000 },
   })
   @Get('/by')

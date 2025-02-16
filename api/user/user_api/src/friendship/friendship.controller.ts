@@ -69,8 +69,25 @@ export class FriendshipController {
         id,
         req.user as User,
       );
+    } else if (status === 'reject') {
+      return await this.friendshipService.rejectFriendship(
+        id,
+        req.user as User,
+      );
     }
+  }
 
-    return await this.friendshipService.rejectFriendship(id, req.user as User);
+
+  @UseGuards(JwtAuthGuard)
+  @UseGuards(ThrottlerGuard)
+  @Throttle({
+    default: { limit: 120, ttl: 60 * 1000, blockDuration: 60 * 1000 },
+  })
+  @Patch('/request/remove')
+  async removeFriendship(@Req() req: Request, @Query('request') id: string) {
+    return await this.friendshipService.removeFriendship(
+      id,
+      req.user as User,
+    );
   }
 }

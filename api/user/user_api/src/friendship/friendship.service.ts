@@ -331,7 +331,7 @@ export class FriendshipService {
 
       return {
         success: true,
-        message: 'Friendship request accepted',
+        message: `${friendship.requester.username} now is your friend`,
       };
     } catch (error) {
       console.log(error);
@@ -386,7 +386,7 @@ export class FriendshipService {
 
       return {
         success: true,
-        message: 'Friendship request rejected',
+        message: `${friendship.requester.username}'s friend request rejected`,
       };
     } catch (error) {
       await this.logger.error(
@@ -397,6 +397,57 @@ export class FriendshipService {
       );
       return new InternalServerErrorException(
         'Failed to reject friendship - Due To Internal Server Error',
+      );
+    }
+  }
+
+  // Remove Friendship
+  async removeFriendship(id: string, req_user: User) {
+    try {
+      const friendship = await this.friendshipRepository.findOne({
+        where: [
+          {
+            id: id,
+            requester: { id: req_user.id },
+            status: FriendshipStatus.accepted,
+          },
+          {
+            id: id,
+            requestee: { id: req_user.id },
+            status: FriendshipStatus.accepted,
+          },
+        ],
+        relations: ['requester', 'requestee'],
+      });
+
+      if (!friendship) {
+        return new NotFoundException({
+          success: false,
+          error: 'Friendship not found',
+        });
+      }
+
+      await this.friendshipRepository.remove(friendship);
+
+      await this.logger.info(
+        `Friendship has been removed: ${JSON.stringify(friendship)}`,
+        'friendship',
+        `${friendship.requester.username} removed a friendship with ${friendship.requestee.username}`,
+      );
+
+      return {
+        success: true,
+        message: `${friendship.requester.id === req_user.id ? friendship.requestee.username : friendship.requester.username} removed from your friends list`,
+      };
+    } catch (error) {
+      await this.logger.error(
+        error,
+        'friendship',
+        `There is an error removing friendship`,
+        error.stack,
+      );
+      return new InternalServerErrorException(
+        'Failed to remove friendship - Due To Internal Server Error',
       );
     }
   }
