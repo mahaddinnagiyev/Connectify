@@ -177,12 +177,6 @@ export class FriendshipService {
         }),
       );
 
-      await this.logger.info(
-        `Friendship requests has been fetched: ${JSON.stringify(friendRequests)}`,
-        'friendship',
-        `User: ${req_user.username}`,
-      );
-
       return {
         success: true,
         sentRequests: mappedSentRequest,

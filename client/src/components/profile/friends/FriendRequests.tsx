@@ -16,15 +16,16 @@ import {
   Button,
   Stack,
 } from "@mui/material";
-import {
-  getFriendRequests
-} from "../../../services/friendship/friendship-service";
+import { getFriendRequests } from "../../../services/friendship/friendship-service";
 import {
   FriendshipRecieveRequestDTO,
   FriendshipSentRequestDTO,
 } from "../../../services/friendship/dto/friendship-dto";
 import { styled } from "@mui/material/styles";
 import no_profile_photo from "../../../assets/no-profile-photo.png";
+import { block_and_unblock_user } from "../../../services/user/block-list-service";
+import { BlockAction } from "../../../services/user/dto/block-list-dto";
+import ConfirmModal from "../../modals/confirm/ConfirmModal";
 
 const FilterToggleButton = styled(ToggleButton)(({ theme }) => ({
   "&.MuiToggleButton-root": {
@@ -65,6 +66,11 @@ const FriendRequests: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
+  const [confirmModalOpen, setConfirmModalOpen] = useState(false);
+  const [confirmModalTitle, setConfirmModalTitle] = useState("");
+  const [confirmModalMessage, setConfirmModalMessage] = useState("");
+  const [pendingAction, setPendingAction] = useState<() => void>(() => {});
+
   const theme = useTheme();
   const isSmallScreen = useMediaQuery(theme.breakpoints.down("sm"));
 
@@ -82,6 +88,31 @@ const FriendRequests: React.FC = () => {
       setError("Failed to fetch friend requests.");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const block_user = async (id: string) => {
+    try {
+      const response = await block_and_unblock_user(id, BlockAction.block);
+      if (response.success) {
+        localStorage.setItem("successMessage", response.message);
+      } else {
+        if (Array.isArray(response.message)) {
+          localStorage.setItem("errorMessage", response.message[0]);
+        } else {
+          localStorage.setItem(
+            "errorMessage",
+            response.response?.error ??
+              response.message ??
+              response.error ??
+              "Failed to block user."
+          );
+        }
+      }
+      window.location.reload();
+    } catch (error) {
+      console.error(error);
+      localStorage.setItem("errorMessage", "Failed to block user.");
     }
   };
 
@@ -110,33 +141,84 @@ const FriendRequests: React.FC = () => {
           const fullName = `${req.requester.first_name} ${req.requester.last_name}`;
           return (
             <React.Fragment key={req.id}>
-              <ListItem alignItems="center">
-                <ListItemAvatar>
+              <ListItem alignItems={isSmallScreen ? "center" : "flex-start"}>
+                <ListItemAvatar sx={{ marginTop: 0 }}>
                   <Avatar
                     src={req.requester.profile_picture ?? no_profile_photo}
                     alt="user profile picture"
+                    sx={{
+                      border: "1px solid #ccc",
+                      borderRadius: "50%",
+                      width: 56,
+                      height: 56,
+                    }}
                   />
                 </ListItemAvatar>
-                <ListItemText
-                  primary={fullName}
-                  secondary={`@${req.requester.username}`}
-                />
-                <Stack direction="row" spacing={1}>
-                  <Button
-                    variant="contained"
-                    size="small"
-                    sx={{ backgroundColor: "var(--primary-color)", fontWeight: 600 }}
+
+                <Box
+                  sx={{
+                    display: "flex",
+                    flexDirection: isSmallScreen ? "column" : "row",
+                    alignItems: isSmallScreen ? "flex-start" : "center",
+                    justifyContent: "space-between",
+                    width: "100%",
+                    ml: 2,
+                  }}
+                >
+                  <ListItemText
+                    primary={fullName}
+                    secondary={`@${req.requester.username}`}
+                  />
+
+                  <Stack
+                    direction={"row"}
+                    spacing={1}
+                    sx={{ mt: isSmallScreen ? 1 : 0 }}
                   >
-                    Accept
-                  </Button>
-                  <Button
-                    variant="outlined"
-                    size="small"
-                    sx={{ color: "red", borderColor: "red", fontWeight: 600 }}
-                  >
-                    Reject
-                  </Button>
-                </Stack>
+                    <Button
+                      variant="contained"
+                      size="small"
+                      sx={{
+                        backgroundColor: "var(--primary-color)",
+                        fontWeight: 600,
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      Accept
+                    </Button>
+                    <Button
+                      variant="outlined"
+                      size="small"
+                      sx={{
+                        color: "red",
+                        borderColor: "red",
+                        fontWeight: 600,
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      Reject
+                    </Button>
+                    <Button
+                      variant="outlined"
+                      size="small"
+                      sx={{
+                        color: "red",
+                        borderColor: "red",
+                        fontWeight: 600,
+                        whiteSpace: "nowrap",
+                      }}
+                      onClick={() =>
+                        openConfirmModal(
+                          "Confirm Block",
+                          `Are you sure you want to block ${req.requester.username}?`,
+                          () => block_user(req.requester.id)
+                        )
+                      }
+                    >
+                      Block
+                    </Button>
+                  </Stack>
+                </Box>
               </ListItem>
               <Divider component="li" />
             </React.Fragment>
@@ -174,6 +256,26 @@ const FriendRequests: React.FC = () => {
         })}
       </List>
     );
+  };
+
+  const openConfirmModal = (
+    title: string,
+    message: string,
+    action: () => void
+  ) => {
+    setConfirmModalTitle(title);
+    setConfirmModalMessage(message);
+    setPendingAction(() => action);
+    setConfirmModalOpen(true);
+  };
+
+  const handleConfirm = () => {
+    pendingAction();
+    setConfirmModalOpen(false);
+  };
+
+  const handleCancel = () => {
+    setConfirmModalOpen(false);
   };
 
   return (
@@ -229,6 +331,16 @@ const FriendRequests: React.FC = () => {
       ) : (
         renderSentRequests()
       )}
+
+      <ConfirmModal
+        open={confirmModalOpen}
+        title={confirmModalTitle}
+        message={confirmModalMessage}
+        color="error"
+        confirmText="Block"
+        onConfirm={handleConfirm}
+        onCancel={handleCancel}
+      />
     </Box>
   );
 };
