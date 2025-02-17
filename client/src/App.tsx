@@ -8,6 +8,7 @@ import ProfilePage from "./pages/profile/ProfilePage";
 import { RouteControl } from "./RouteControl";
 import ForgotPassword from "./pages/auth/ForgotPassword";
 import ResetPassword from "./pages/auth/ResetPassword";
+import FriendPage from "./pages/friends/FriendPage";
 
 function App() {
   return (
@@ -27,6 +28,14 @@ function App() {
           element={
             <RouteControl>
               <ProfilePage />
+            </RouteControl>
+          }
+        />
+        <Route
+          path="/friends"
+          element={
+            <RouteControl>
+              <FriendPage />
             </RouteControl>
           }
         />

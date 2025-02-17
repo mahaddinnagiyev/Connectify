@@ -1,9 +1,29 @@
 import { getToken } from "../auth/token-service";
 import { Account } from "../account/dto/account-dto";
-import { EditUser, User } from "./dto/user-dto";
+import { EditUser, User, Users } from "./dto/user-dto";
 
 const SERVER_USER_URL = process.env.SERVER_USER_URL || "http://localhost:3535";
 
+// Get All Users
+export const getAllUsers = async (): Promise<{
+  success: boolean;
+  users: Users[];
+  message?: string;
+  error?: string;
+  response: { success: boolean; error?: string; message?: string };
+}> => {
+  const response = await fetch(`${SERVER_USER_URL}/user/all`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json; charset=utf-8",
+      Authorization: `Bearer ${await getToken()}`,
+    },
+    credentials: "include",
+  });
+
+  const data = await response.json();
+  return data;
+};
 
 // Get User By ID
 export const getUserById = async (): Promise<{
@@ -15,8 +35,8 @@ export const getUserById = async (): Promise<{
     message?: string;
     error?: string;
   };
-  message?: string,
-  error?: string
+  message?: string;
+  error?: string;
 }> => {
   const resposne = await fetch(`${SERVER_USER_URL}/user/by`, {
     method: "GET",
@@ -31,9 +51,10 @@ export const getUserById = async (): Promise<{
   return data;
 };
 
-
 // Edit User's Personal Informations
-export const edit_user = async (body: EditUser): Promise<{
+export const edit_user = async (
+  body: EditUser
+): Promise<{
   success?: boolean;
   message?: string;
   error?: string;
@@ -51,4 +72,4 @@ export const edit_user = async (body: EditUser): Promise<{
 
   const data = await response.json();
   return data;
-}
+};
