@@ -13,9 +13,10 @@ import {
 import "./style.css";
 import no_profile_photo from "../../assets/no-profile-photo.png";
 import PersonAddIcon from "@mui/icons-material/PersonAdd";
+import TimerIcon from "@mui/icons-material/Timer";
+import CheckIcon from "@mui/icons-material/Check";
 import ChatIcon from "@mui/icons-material/Chat";
 import GppBadIcon from "@mui/icons-material/GppBad";
-import TimerIcon from "@mui/icons-material/Timer";
 import Header from "../../components/header/Header";
 import ErrorMessage from "../../components/messages/ErrorMessage";
 import SuccessMessage from "../../components/messages/SuccessMessage";
@@ -26,7 +27,13 @@ import { BlockAction } from "../../services/user/dto/block-list-dto";
 import ConfirmModal from "../../components/modals/confirm/ConfirmModal";
 import FriendList from "../../components/profile/friends/FriendList";
 import FriendRequests from "../../components/profile/friends/FriendRequests";
-import { sendFriendshipRequest } from "../../services/friendship/friendship-service";
+import {
+  getAllFriendshipRequests,
+  sendFriendshipRequest,
+} from "../../services/friendship/friendship-service";
+import { FriendshipStatus } from "../../services/friendship/enum/friendship-status.enum";
+import { getToken } from "../../services/auth/token-service";
+import { jwtDecode } from "jwt-decode";
 
 type Section = "allUsers" | "myFriends" | "requests";
 
@@ -38,9 +45,8 @@ const FriendPage: React.FC = () => {
   const [users, setUsers] = useState<Users[]>([]);
   const [loading, setLoading] = useState(false);
 
-  const [pendingFriendRequests, setPendingFriendRequests] = useState<string[]>(
-    []
-  );
+  const [acceptedFriends, setAcceptedFriends] = useState<string[]>([]);
+  const [pendingFriends, setPendingFriends] = useState<string[]>([]);
 
   const [confirmModalOpen, setConfirmModalOpen] = useState(false);
   const [confirmModalTitle, setConfirmModalTitle] = useState("");
@@ -61,6 +67,8 @@ const FriendPage: React.FC = () => {
     if (activeSection === "allUsers") {
       setLoading(true);
       fetchAllUsers();
+      fetchAcceptedFriends();
+      fetchPendingFriends();
     }
   }, [activeSection]);
 
@@ -72,13 +80,55 @@ const FriendPage: React.FC = () => {
   const fetchAllUsers = async (): Promise<void> => {
     const response = await getAllUsers();
     if (response.success) {
-      setUsers(response.users);
+      const token = await getToken();
+
+      if (token) {
+        const decodedToken: {
+          exp: number;
+          iat: number;
+          id: string;
+          username: string;
+        } = jwtDecode(token);
+
+        const users = response.users.filter(
+          (user) => user.id !== decodedToken.id
+        );
+        setUsers(users);
+      }
     } else {
       setErrorMessage(
         response.error || response.message || "Failed to fetch users"
       );
     }
     setLoading(false);
+  };
+
+  const fetchAcceptedFriends = async (): Promise<void> => {
+    try {
+      const response = await getAllFriendshipRequests();
+      if (response.success) {
+        const accepted = response.friends
+          .filter((friend) => friend.status === "accepted")
+          .map((friend) => friend.friend_id);
+        setAcceptedFriends(accepted);
+      }
+    } catch (error) {
+      console.error("Error fetching accepted friends:", error);
+    }
+  };
+
+  const fetchPendingFriends = async (): Promise<void> => {
+    try {
+      const response = await getAllFriendshipRequests();
+      if (response.success) {
+        const pending = response.friends
+          .filter((friend) => friend.status === FriendshipStatus.pending)
+          .map((friend) => friend.friend_id);
+        setPendingFriends(pending);
+      }
+    } catch (error) {
+      console.error("Error fetching pending friends:", error);
+    }
   };
 
   const filterUsers = (items: Users[]) => {
@@ -122,13 +172,11 @@ const FriendPage: React.FC = () => {
       const response = await sendFriendshipRequest(id);
       if (response.success) {
         setSuccessMessage(response.message);
-        setPendingFriendRequests([...pendingFriendRequests, id]);
       } else {
         if (Array.isArray(response.message)) {
-          localStorage.setItem("errorMessage", response.message[0]);
+          setErrorMessage(response.message[0]);
         } else {
-          localStorage.setItem(
-            "errorMessage",
+          setErrorMessage(
             response.response?.error ??
               response.message ??
               response.error ??
@@ -136,10 +184,9 @@ const FriendPage: React.FC = () => {
           );
         }
       }
-      window.location.reload();
     } catch (error) {
       console.error(error);
-      localStorage.setItem("errorMessage", "Failed to send friend request.");
+      setErrorMessage("Failed to send friend request.");
     }
   };
 
@@ -151,20 +198,24 @@ const FriendPage: React.FC = () => {
             {loading ? (
               <div>Loading...</div>
             ) : (
-              <>
-                <section className="pl-4">
-                  <div>
-                    <h1 className="font-bold text-4xl mb-3">All Users</h1>
-                  </div>
-                  <TextField
-                    label="Search"
-                    variant="outlined"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    sx={{ mb: 2, width: "100%" }}
-                  />
-                  <List>
-                    {filterUsers(users).map((user) => (
+              <section className="pl-4">
+                <div>
+                  <h1 className="font-bold text-4xl mb-3">All Users</h1>
+                </div>
+                <TextField
+                  label="Search"
+                  variant="outlined"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  sx={{ mb: 2, width: "100%" }}
+                />
+                <List>
+                  {filterUsers(users).map((user) => {
+                    // Check if friend request is pending or accepted
+                    const isPending = pendingFriends.includes(user.id);
+                    const isAccepted = acceptedFriends.includes(user.id);
+                    console.log(isPending);
+                    return (
                       <ListItem key={user.id} divider>
                         <ListItemAvatar>
                           <Avatar
@@ -195,17 +246,7 @@ const FriendPage: React.FC = () => {
                             </Button>
                           </Tooltip>
                           <Tooltip title="Add Friend" placement="top">
-                            <Button
-                              variant="contained"
-                              color="success"
-                              sx={{ marginRight: 1 }}
-                              onClick={() => send_friend_request(user.id)}
-                            >
-                              <PersonAddIcon />
-                            </Button>
-                          </Tooltip>
-                          {pendingFriendRequests.includes(user.id) ? (
-                            <>
+                            {isPending ? (
                               <Button
                                 variant="contained"
                                 color="success"
@@ -214,33 +255,48 @@ const FriendPage: React.FC = () => {
                               >
                                 <TimerIcon />
                               </Button>
-                            </>
-                          ) : (
-                            <>
-                              <Tooltip title="Block User" placement="top">
-                                <Button
-                                  variant="contained"
-                                  color="warning"
-                                  onClick={() =>
-                                    openConfirmModal(
-                                      "Block User",
-                                      `Are you sure you want to block ${user.username}?`,
-                                      "Block",
-                                      () => block_user(user.id)
-                                    )
-                                  }
-                                >
-                                  <GppBadIcon />
-                                </Button>
-                              </Tooltip>
-                            </>
-                          )}
+                            ) : isAccepted ? (
+                              <Button
+                                variant="contained"
+                                color="success"
+                                sx={{ marginRight: 1 }}
+                                disabled
+                              >
+                                <CheckIcon />
+                              </Button>
+                            ) : (
+                              <Button
+                                variant="contained"
+                                color="success"
+                                sx={{ marginRight: 1 }}
+                                onClick={() => send_friend_request(user.id)}
+                              >
+                                <PersonAddIcon />
+                              </Button>
+                            )}
+                          </Tooltip>
+                          <Tooltip title="Block User" placement="top">
+                            <Button
+                              variant="contained"
+                              color="warning"
+                              onClick={() =>
+                                openConfirmModal(
+                                  "Block User",
+                                  `Are you sure you want to block ${user.username}?`,
+                                  "Block",
+                                  () => block_user(user.id)
+                                )
+                              }
+                            >
+                              <GppBadIcon />
+                            </Button>
+                          </Tooltip>
                         </Box>
                       </ListItem>
-                    ))}
-                  </List>
-                </section>
-              </>
+                    );
+                  })}
+                </List>
+              </section>
             )}
           </>
         );
@@ -322,9 +378,7 @@ const FriendPage: React.FC = () => {
 
           {/* Content Panel */}
           <div className="content-panel">
-            <div className="rendered-content">
-              <div>{renderContent()}</div>
-            </div>
+            <div className="rendered-content">{renderContent()}</div>
           </div>
         </div>
       </section>

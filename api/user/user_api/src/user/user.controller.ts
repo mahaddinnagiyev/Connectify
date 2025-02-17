@@ -21,7 +21,7 @@ export class UserController {
 
   @UseGuards(JwtAuthGuard)
   @Throttle({
-    default: { limit: 120, ttl: 60 * 1000, blockDuration: 60 * 1000 },
+    default: { limit: 240, ttl: 60 * 1000, blockDuration: 60 * 1000 },
   })
   @Get('/all')
   async get_all_users() {
@@ -30,7 +30,7 @@ export class UserController {
 
   @UseGuards(JwtAuthGuard)
   @Throttle({
-    default: { limit: 60, ttl: 60 * 1000, blockDuration: 60 * 1000 },
+    default: { limit: 240, ttl: 60 * 1000, blockDuration: 60 * 1000 },
   })
   @Get('/by')
   async get_user_by_id(@Req() req: Request) {
@@ -46,7 +46,7 @@ export class UserController {
 
   @UseGuards(JwtAuthGuard)
   @Throttle({
-    default: { limit: 60, ttl: 60 * 1000, blockDuration: 60 * 1000 },
+    default: { limit: 240, ttl: 60 * 1000, blockDuration: 60 * 1000 },
   })
   @Patch('/my-profile')
   async edit_user_info(@Body() userDTO: EditUserInfoDTO, @Req() req: Request) {
@@ -59,7 +59,7 @@ export class UserController {
   // Block List Functions
   @UseGuards(JwtAuthGuard)
   @Throttle({
-    default: { limit: 120, ttl: 60 * 1000, blockDuration: 60 * 1000 },
+    default: { limit: 240, ttl: 60 * 1000, blockDuration: 60 * 1000 },
   })
   @Get('/block-list')
   async get_block_list(@Req() req: Request) {
@@ -68,7 +68,7 @@ export class UserController {
 
   @UseGuards(JwtAuthGuard)
   @Throttle({
-    default: { limit: 120, ttl: 60 * 1000, blockDuration: 60 * 1000 },
+    default: { limit: 240, ttl: 60 * 1000, blockDuration: 60 * 1000 },
   })
   @Post('/block-list')
   async add_or_remove_from_block_list(

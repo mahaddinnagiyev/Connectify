@@ -6,7 +6,30 @@ import {
 } from "./dto/friendship-dto";
 import { FriendshipAction } from "./enum/friendship-status.enum";
 
-// Get All Friends
+// Get All User's Friendship Requests
+export const getAllFriendshipRequests = async (): Promise<{
+  success: boolean;
+  friends: UserFriendsDTO[];
+  error?: string;
+  response: { success: boolean; error?: string; message?: string };
+}> => {
+  const response = await fetch(
+    `${process.env.SERVER_USER_URL}/friendship/requests/all`,
+    {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json; charset=utf-8",
+        Authorization: `Bearer ${await getToken()}`,
+      },
+      credentials: "include",
+    }
+  );
+
+  const data = await response.json();
+  return data;
+};
+
+// Get All Friends(Accepted)
 export const getFriends = async (): Promise<{
   success: boolean;
   friends: UserFriendsDTO[];

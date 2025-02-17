@@ -21,7 +21,19 @@ export class FriendshipController {
   @UseGuards(JwtAuthGuard)
   @UseGuards(ThrottlerGuard)
   @Throttle({
-    default: { limit: 120, ttl: 60 * 1000, blockDuration: 60 * 1000 },
+    default: { limit: 240, ttl: 60 * 1000, blockDuration: 60 * 1000 },
+  })
+  @Get('/requests/all')
+  async getAllFriendshipRequests(@Req() req: Request) {
+    return await this.friendshipService.getAllFriendshipRequests(
+      req.user as User,
+    );
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @UseGuards(ThrottlerGuard)
+  @Throttle({
+    default: { limit: 240, ttl: 60 * 1000, blockDuration: 60 * 1000 },
   })
   @Get('/my-friends')
   async getFriends(@Req() req: Request) {
@@ -31,7 +43,7 @@ export class FriendshipController {
   @UseGuards(JwtAuthGuard)
   @UseGuards(ThrottlerGuard)
   @Throttle({
-    default: { limit: 120, ttl: 60 * 1000, blockDuration: 60 * 1000 },
+    default: { limit: 240, ttl: 60 * 1000, blockDuration: 60 * 1000 },
   })
   @Get('/requests')
   async getFriendshipRequests(@Req() req: Request) {
@@ -41,7 +53,7 @@ export class FriendshipController {
   @UseGuards(JwtAuthGuard)
   @UseGuards(ThrottlerGuard)
   @Throttle({
-    default: { limit: 120, ttl: 60 * 1000, blockDuration: 60 * 1000 },
+    default: { limit: 240, ttl: 60 * 1000, blockDuration: 60 * 1000 },
   })
   @Post('/request/create')
   async createFriendship(
@@ -57,7 +69,7 @@ export class FriendshipController {
   @UseGuards(JwtAuthGuard)
   @UseGuards(ThrottlerGuard)
   @Throttle({
-    default: { limit: 120, ttl: 60 * 1000, blockDuration: 60 * 1000 },
+    default: { limit: 240, ttl: 60 * 1000, blockDuration: 60 * 1000 },
   })
   @Patch('/request')
   async acceptAndRejectFriendship(
@@ -78,17 +90,13 @@ export class FriendshipController {
     }
   }
 
-
   @UseGuards(JwtAuthGuard)
   @UseGuards(ThrottlerGuard)
   @Throttle({
-    default: { limit: 120, ttl: 60 * 1000, blockDuration: 60 * 1000 },
+    default: { limit: 240, ttl: 60 * 1000, blockDuration: 60 * 1000 },
   })
   @Delete('/request/remove')
   async removeFriendship(@Req() req: Request, @Query('request') id: string) {
-    return await this.friendshipService.removeFriendship(
-      id,
-      req.user as User,
-    );
+    return await this.friendshipService.removeFriendship(id, req.user as User);
   }
 }

@@ -27,7 +27,7 @@ export class AccountController {
   // Edit Account
   @UseGuards(JwtAuthGuard)
   @Throttle({
-    default: { limit: 60, ttl: 60 * 1000, blockDuration: 60 * 1000 },
+    default: { limit: 240, ttl: 60 * 1000, blockDuration: 60 * 1000 },
   })
   @Patch('/my-info')
   async edit_account(@Body() userDTO: EditAccountDTO, @Req() req: Request) {
@@ -37,7 +37,7 @@ export class AccountController {
   // Get Social Link By Id
   @UseGuards(JwtAuthGuard)
   @Throttle({
-    default: { limit: 60, ttl: 60 * 1000, blockDuration: 60 * 1000 },
+    default: { limit: 240, ttl: 60 * 1000, blockDuration: 60 * 1000 },
   })
   @Get('/social-link/:id')
   async get_social_by_id(@Req() req: Request) {
@@ -50,7 +50,7 @@ export class AccountController {
   // Add New Social Link
   @UseGuards(JwtAuthGuard)
   @Throttle({
-    default: { limit: 60, ttl: 60 * 1000, blockDuration: 60 * 1000 },
+    default: { limit: 240, ttl: 60 * 1000, blockDuration: 60 * 1000 },
   })
   @Post('/social-link')
   async add_social_link(
@@ -66,7 +66,7 @@ export class AccountController {
   // Edit Social Link
   @UseGuards(JwtAuthGuard)
   @Throttle({
-    default: { limit: 60, ttl: 60 * 1000, blockDuration: 60 * 1000 },
+    default: { limit: 240, ttl: 60 * 1000, blockDuration: 60 * 1000 },
   })
   @Patch('/social-link/:id')
   async edit_social_link(
@@ -83,7 +83,7 @@ export class AccountController {
   // Delte Social Link
   @UseGuards(JwtAuthGuard)
   @Throttle({
-    default: { limit: 60, ttl: 60 * 1000, blockDuration: 60 * 1000 },
+    default: { limit: 240, ttl: 60 * 1000, blockDuration: 60 * 1000 },
   })
   @Delete('/social-link/:id')
   async delete_social_link(@Req() req: Request) {

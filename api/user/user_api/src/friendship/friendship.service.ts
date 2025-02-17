@@ -27,6 +27,60 @@ export class FriendshipService {
     private readonly logger: LoggerService,
   ) {}
 
+  // Get All User's Friendship Requests
+  async getAllFriendshipRequests(req_user: User) {
+    try {
+      const friendships = await this.friendshipRepository.find({
+        where: [
+          { requester: { id: req_user.id } },
+          { requestee: { id: req_user.id } },
+        ],
+        relations: ['requester', 'requestee'],
+      });
+
+      let mappedFriendships = [];
+
+      for (const friendship of friendships) {
+        const requestee =
+          friendship.requester.id === req_user.id
+            ? friendship.requestee
+            : friendship.requester;
+        const account = await this.accountRepository.findOne({
+          where: { user: { id: requestee.id } },
+        });
+        const mappedFriendship = {
+          id: friendship.id,
+          friend_id: requestee.id,
+          first_name: requestee.first_name,
+          last_name: requestee.last_name,
+          username: requestee.username,
+          profile_picture: account.profile_picture
+            ? account.profile_picture
+            : null,
+          status: friendship.status,
+          created_at: friendship.created_at,
+          updated_at: friendship.updated_at,
+        };
+        mappedFriendships.push(mappedFriendship);
+      }
+
+      return {
+        success: true,
+        friends: mappedFriendships,
+      };
+    } catch (error) {
+      await this.logger.error(
+        error,
+        'friendship',
+        'There is an error getting all friendship requests',
+        error.stack,
+      );
+      return new InternalServerErrorException(
+        'Failed to load friendship requests - Due To Internal Server Error',
+      );
+    }
+  }
+
   // Get User Friends
   async getFriends(req_user: User) {
     try {
