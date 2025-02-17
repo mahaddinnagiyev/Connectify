@@ -15,6 +15,7 @@ import no_profile_photo from "../../assets/no-profile-photo.png";
 import PersonAddIcon from "@mui/icons-material/PersonAdd";
 import ChatIcon from "@mui/icons-material/Chat";
 import GppBadIcon from "@mui/icons-material/GppBad";
+import TimerIcon from "@mui/icons-material/Timer";
 import Header from "../../components/header/Header";
 import ErrorMessage from "../../components/messages/ErrorMessage";
 import SuccessMessage from "../../components/messages/SuccessMessage";
@@ -25,6 +26,7 @@ import { BlockAction } from "../../services/user/dto/block-list-dto";
 import ConfirmModal from "../../components/modals/confirm/ConfirmModal";
 import FriendList from "../../components/profile/friends/FriendList";
 import FriendRequests from "../../components/profile/friends/FriendRequests";
+import { sendFriendshipRequest } from "../../services/friendship/friendship-service";
 
 type Section = "allUsers" | "myFriends" | "requests";
 
@@ -35,6 +37,10 @@ const FriendPage: React.FC = () => {
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [users, setUsers] = useState<Users[]>([]);
   const [loading, setLoading] = useState(false);
+
+  const [pendingFriendRequests, setPendingFriendRequests] = useState<string[]>(
+    []
+  );
 
   const [confirmModalOpen, setConfirmModalOpen] = useState(false);
   const [confirmModalTitle, setConfirmModalTitle] = useState("");
@@ -111,6 +117,32 @@ const FriendPage: React.FC = () => {
     }
   };
 
+  const send_friend_request = async (id: string) => {
+    try {
+      const response = await sendFriendshipRequest(id);
+      if (response.success) {
+        setSuccessMessage(response.message);
+        setPendingFriendRequests([...pendingFriendRequests, id]);
+      } else {
+        if (Array.isArray(response.message)) {
+          localStorage.setItem("errorMessage", response.message[0]);
+        } else {
+          localStorage.setItem(
+            "errorMessage",
+            response.response?.error ??
+              response.message ??
+              response.error ??
+              "Failed to send friend request."
+          );
+        }
+      }
+      window.location.reload();
+    } catch (error) {
+      console.error(error);
+      localStorage.setItem("errorMessage", "Failed to send friend request.");
+    }
+  };
+
   const renderContent = () => {
     switch (activeSection) {
       case "allUsers":
@@ -167,26 +199,42 @@ const FriendPage: React.FC = () => {
                               variant="contained"
                               color="success"
                               sx={{ marginRight: 1 }}
+                              onClick={() => send_friend_request(user.id)}
                             >
                               <PersonAddIcon />
                             </Button>
                           </Tooltip>
-                          <Tooltip title="Block User" placement="top">
-                            <Button
-                              variant="contained"
-                              color="warning"
-                              onClick={() =>
-                                openConfirmModal(
-                                  "Block User",
-                                  `Are you sure you want to block ${user.username}?`,
-                                  "Block",
-                                  () => block_user(user.id)
-                                )
-                              }
-                            >
-                              <GppBadIcon />
-                            </Button>
-                          </Tooltip>
+                          {pendingFriendRequests.includes(user.id) ? (
+                            <>
+                              <Button
+                                variant="contained"
+                                color="success"
+                                sx={{ marginRight: 1 }}
+                                disabled
+                              >
+                                <TimerIcon />
+                              </Button>
+                            </>
+                          ) : (
+                            <>
+                              <Tooltip title="Block User" placement="top">
+                                <Button
+                                  variant="contained"
+                                  color="warning"
+                                  onClick={() =>
+                                    openConfirmModal(
+                                      "Block User",
+                                      `Are you sure you want to block ${user.username}?`,
+                                      "Block",
+                                      () => block_user(user.id)
+                                    )
+                                  }
+                                >
+                                  <GppBadIcon />
+                                </Button>
+                              </Tooltip>
+                            </>
+                          )}
                         </Box>
                       </ListItem>
                     ))}
@@ -268,7 +316,7 @@ const FriendPage: React.FC = () => {
               onClick={() => handleSectionChange("requests")}
               className={activeSection === "requests" ? "active" : "outlined"}
             >
-              Requests
+              Friend Requests
             </Button>
           </div>
 

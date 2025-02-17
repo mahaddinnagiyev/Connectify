@@ -24,7 +24,7 @@ export const getFriends = async (): Promise<{
     }
   );
 
-  const data = response.json();
+  const data = await response.json();
   return data;
 };
 
@@ -49,7 +49,25 @@ export const getFriendRequests = async (): Promise<{
     }
   );
 
-  const data = response.json();
+  const data = await response.json();
+  return data;
+};
+
+// Send Friendship Request
+export const sendFriendshipRequest = async (id: string) => {
+  const response = await fetch(
+    `${process.env.SERVER_USER_URL}/friendship/request/create?requestee=${id}`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json; charset=utf-8",
+        Authorization: `Bearer ${await getToken()}`,
+      },
+      credentials: "include",
+    }
+  );
+
+  const data = await response.json();
   return data;
 };
 
@@ -75,7 +93,7 @@ export const acceptAndRejectFriendship = async (
     }
   );
 
-  const data = response.json();
+  const data = await response.json();
   return data;
 };
 
@@ -99,6 +117,6 @@ export const removeFriendship = async (
     }
   );
 
-  const data = response.json();
+  const data = await response.json();
   return data;
 };

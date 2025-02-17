@@ -1,44 +1,69 @@
 #friend-page {
-    margin-top: 130px;
-    position: relative;
+  margin-top: 130px;
+  position: relative;
 }
 
 .friend-page-container {
-    padding: 0 20px;
-    display: flex;
+  padding: 0 20px;
+  display: flex;
 }
 
+/* Standart (desktop) görünüş */
 .user-nav {
-    width: 25%;
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
-    align-items: center;
-    gap: 10px;
+  width: 25%;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 10px;
 }
 
 .user-nav button {
-    width: 70%;
-    padding: 15px;
-    border: 3px solid var(--primary-color);
-    color: var(--primary-color);
-    font-weight: 800;
-    transition: all 0.5s ease-in-out;
+  width: 70%;
+  padding: 15px;
+  border: 3px solid var(--primary-color);
+  color: var(--primary-color);
+  font-weight: 800;
+  transition: all 0.5s ease-in-out;
 }
 
 .active {
-    background-color: var(--primary-color) !important;
-    color: #fff !important;
+  background-color: var(--primary-color) !important;
+  color: #fff !important;
 }
 
 /* Content Panel */
 .content-panel {
-    width: 75%;
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
+  width: 75%;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
 }
 
 .rendered-content {
-    width: 93%;
+  width: 93%;
+}
+
+/* Responsive (mobil) görünüş */
+@media (max-width: 600px) {
+  .friend-page-container {
+    flex-direction: column;
+  }
+  .user-nav {
+    width: 100%;
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+  .user-nav button {
+    flex: 1;
+    padding: 10px;
+  }
+  .content-panel {
+    width: 100%;
+  }
+  .rendered-content {
+    width: 100%;
+  }
 }
