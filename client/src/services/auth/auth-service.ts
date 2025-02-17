@@ -129,14 +129,17 @@ export const isResetTokenValid = async (
 
 // Reset Password
 export const resetPassword = async (password: string, token: string) => {
-  const response = await fetch(`${SERVER_USER_URL}/auth/reset-password?token=${token}`, {
-    method: "PATCH",
-    headers: {
-      "Content-Type": "application/json; charset=utf-8",
-    },
-    credentials: "include",
-    body: JSON.stringify({ password }),
-  });
+  const response = await fetch(
+    `${SERVER_USER_URL}/auth/reset-password?token=${token}`,
+    {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json; charset=utf-8",
+      },
+      credentials: "include",
+      body: JSON.stringify({ password }),
+    }
+  );
   const data = await response.json();
   return data;
-}
+};

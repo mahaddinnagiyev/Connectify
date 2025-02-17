@@ -137,6 +137,7 @@ export const removeFriendship = async (
         "Content-Type": "application/json; charset=utf-8",
         Authorization: `Bearer ${await getToken()}`,
       },
+      credentials: "include",
     }
   );
 

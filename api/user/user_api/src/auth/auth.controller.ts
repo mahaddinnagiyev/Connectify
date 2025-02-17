@@ -17,7 +17,7 @@ import { SignupDTO } from './dto/signup-dto';
 import { ConfirmAccountDTO } from './dto/confirm-account-dto';
 import { LoginDTO } from './dto/login-dto';
 import { JwtAuthGuard } from '../jwt/jwt-auth-guard';
-import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
+import { SkipThrottle, Throttle, ThrottlerGuard } from '@nestjs/throttler';
 import { AuthGuard } from '@nestjs/passport';
 import {
   ForgotPasswordDTO,
@@ -98,7 +98,7 @@ export class AuthController {
     return this.authService.forgotPasssword(forgotPasswordDTO);
   }
 
-  // reset Password
+  // Reset Password
   @UseGuards(ThrottlerGuard)
   @Throttle({
     default: { limit: 40, ttl: 60 * 1000, blockDuration: 60 * 1000 },
@@ -119,9 +119,7 @@ export class AuthController {
   }
 
   @UseGuards(ThrottlerGuard)
-  @Throttle({
-    default: { limit: 40, ttl: 60 * 1000, blockDuration: 60 * 1000 },
-  })
+  @SkipThrottle()
   @Get('check')
   async isTokenValid(@Query('token') token: string) {
     return await this.authService.isResetTokenValid(token);
