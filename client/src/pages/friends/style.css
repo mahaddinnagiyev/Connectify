@@ -29,6 +29,7 @@
 
 .active {
   background-color: var(--primary-color) !important;
+  font-weight: 800 !important;
   color: #fff !important;
 }
 
@@ -42,6 +43,23 @@
 
 .rendered-content {
   width: 93%;
+}
+
+.user-nav-btn {
+  border: 2px solid var(--primary-color) !important;
+  color: var(--primary-color) !important;
+  font-weight: 800 !important;
+  transition: all 0.5s ease-in-out !important;
+  width: 100% !important;
+  font-size: 10px !important;
+}
+
+.user-nav-btn-active {
+  background-color: var(--primary-color) !important;
+  font-weight: 800 !important;
+  color: #fff !important;
+  width: 100% !important;
+  font-size: 10px !important;
 }
 
 /* Responsive (mobil) görünüş */
