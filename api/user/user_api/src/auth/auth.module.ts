@@ -24,7 +24,7 @@ import { JwtModule } from '@nestjs/jwt';
     LoggerModule,
     HttpModule
   ],
-  providers: [AuthService, JwtStrategy, JwtAuthGuard, GoogleStrategy], // Add the google strategy to here
+  providers: [AuthService, JwtStrategy, JwtAuthGuard, GoogleStrategy],
   controllers: [AuthController],
   exports: [TypeOrmModule, JwtAuthGuard]
 })

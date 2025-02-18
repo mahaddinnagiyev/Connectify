@@ -214,7 +214,6 @@ const FriendPage: React.FC = () => {
                     // Check if friend request is pending or accepted
                     const isPending = pendingFriends.includes(user.id);
                     const isAccepted = acceptedFriends.includes(user.id);
-                    console.log(isPending);
                     return (
                       <ListItem key={user.id} divider>
                         <ListItemAvatar>

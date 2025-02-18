@@ -23,6 +23,7 @@ import {
   ForgotPasswordDTO,
   SetNewPasswordDTO,
 } from './dto/forgot-passsword-dto';
+import { Request } from 'express';
 
 @Controller('auth')
 export class AuthController {
@@ -65,10 +66,7 @@ export class AuthController {
   }
 
   // Get Token From Session
-  @UseGuards(ThrottlerGuard)
-  @Throttle({
-    default: { limit: 100, ttl: 60 * 1000, blockDuration: 60 * 1000 },
-  })
+  @SkipThrottle()
   @Get('session/token')
   async getTokenFromSession(@Session() session: Record<string, any>) {
     if (session.access_token) {
@@ -84,7 +82,7 @@ export class AuthController {
     default: { limit: 40, ttl: 60 * 1000, blockDuration: 60 * 1000 },
   })
   @Post('logout')
-  async logout(@Req() req) {
+  async logout(@Req() req: Request) {
     return this.authService.logout(req);
   }
 
@@ -119,7 +117,9 @@ export class AuthController {
   }
 
   @UseGuards(ThrottlerGuard)
-  @SkipThrottle()
+  @Throttle({
+    default: { limit: 120, ttl: 60 * 1000, blockDuration: 60 * 1000 },
+  })
   @Get('check')
   async isTokenValid(@Query('token') token: string) {
     return await this.authService.isResetTokenValid(token);
