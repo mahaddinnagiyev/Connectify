@@ -18,16 +18,24 @@ import {
   block_and_unblock_user,
   get_block_list,
 } from "../../../services/user/block-list-service";
-import { BlockAction, BlockListDTO } from "../../../services/user/dto/block-list-dto";
+import {
+  BlockAction,
+  BlockListDTO,
+} from "../../../services/user/dto/block-list-dto";
 import no_profile_photo from "../../../assets/no-profile-photo.png";
 import GppGoodIcon from "@mui/icons-material/GppGood";
 import ConfirmModal from "../../modals/confirm/ConfirmModal";
+import ErrorMessage from "../../messages/ErrorMessage";
+import SuccessMessage from "../../messages/SuccessMessage";
 
 const BlockList = () => {
   const [confirmModalOpen, setConfirmModalOpen] = useState(false);
   const [confirmModalTitle, setConfirmModalTitle] = useState("");
   const [confirmModalMessage, setConfirmModalMessage] = useState("");
   const [pendingAction, setPendingAction] = useState<() => void>(() => {});
+
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   const [blockList, setBlockList] = useState<BlockListDTO[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
@@ -76,6 +84,7 @@ const BlockList = () => {
     } catch (error) {
       console.log(error);
       localStorage.setItem("errorMessage", "Failed to unblock user.");
+      window.location.reload();
     }
   };
 
@@ -85,7 +94,8 @@ const BlockList = () => {
 
   const filteredBlockedUsers = blockList.filter((blockedUser) => {
     const searchTerm = searchQuery.toLowerCase().trim();
-    const fullName = `${blockedUser.first_name} ${blockedUser.last_name}`.toLowerCase();
+    const fullName =
+      `${blockedUser.first_name} ${blockedUser.last_name}`.toLowerCase();
     return (
       blockedUser.username.toLowerCase().includes(searchTerm) ||
       blockedUser.first_name.toLowerCase().includes(searchTerm) ||
@@ -114,101 +124,134 @@ const BlockList = () => {
     setConfirmModalOpen(false);
   };
 
+  useEffect(() => {
+    const successMessage = localStorage.getItem("successMessage");
+    const errorMessage = localStorage.getItem("errorMessage");
+
+    if (successMessage) {
+      setSuccessMessage(successMessage);
+      localStorage.removeItem("successMessage");
+    } else if (errorMessage) {
+      setErrorMessage(errorMessage);
+      localStorage.removeItem("errorMessage");
+    }
+  }, []);
+
   return (
-    <Box sx={{ width: "100%", padding: 2, paddingTop: 0 }}>
-      <Typography variant={isSmallScreen ? "h5" : "h4"} gutterBottom align={isSmallScreen ? "center" : "left"}sx={{ fontWeight: "bold" }}>
-        Block List
-      </Typography>
-      <TextField
-        fullWidth
-        label="Search user"
-        variant="outlined"
-        value={searchQuery}
-        onChange={handleSearch}
-        sx={{ marginBottom: 2 }}
-        InputLabelProps={{
-          style: { fontSize: isSmallScreen ? "0.875rem" : "1rem" },
-        }}
-      />
-      {loading ? (
-        <Box
-          sx={{
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            minHeight: "200px",
-          }}
-        >
-          <Typography
-            variant="body1"
-            sx={{
-              fontWeight: "bold",
-              textAlign: "center",
-              fontSize: isSmallScreen ? "0.875rem" : "1rem",
-            }}
-          >
-            Loading blocked users...
-          </Typography>
-        </Box>
-      ) : filteredBlockedUsers.length > 0 ? (
-        <List>
-          {filteredBlockedUsers.map((blockedUser) => (
-            <ListItem key={blockedUser.id} divider>
-              <ListItemAvatar>
-                <Avatar
-                  src={blockedUser.profile_picture ?? no_profile_photo}
-                  alt={`${blockedUser.first_name} ${blockedUser.last_name}`}
-                />
-              </ListItemAvatar>
-              <ListItemText
-                primary={`${blockedUser.first_name} ${blockedUser.last_name}`}
-                secondary={`@${blockedUser.username}`}
-                primaryTypographyProps={{
-                  fontSize: isSmallScreen ? "0.9rem" : "1rem",
-                }}
-                secondaryTypographyProps={{
-                  fontSize: isSmallScreen ? "0.8rem" : "0.875rem",
-                }}
-              />
-              <ListItemSecondaryAction>
-                <Tooltip title="Unblock User" placement="top">
-                  <Button
-                    variant="contained"
-                    color="success"
-                    onClick={() =>
-                      openConfirmModal(
-                        "Confirm Unblock",
-                        `Are you sure you want to unblock ${blockedUser.username}?`,
-                        () => unblock_user(blockedUser.id)
-                      )
-                    }
-                  >
-                    <GppGoodIcon />
-                  </Button>
-                </Tooltip>
-              </ListItemSecondaryAction>
-            </ListItem>
-          ))}
-        </List>
-      ) : (
-        <Typography
-          variant="body1"
-          sx={{ fontSize: isSmallScreen ? "0.875rem" : "1rem" }}
-        >
-          No blocked users found.
-        </Typography>
+    <>
+      {errorMessage && (
+        <ErrorMessage
+          message={errorMessage}
+          onClose={() => setErrorMessage(null)}
+        />
+      )}
+      {successMessage && (
+        <SuccessMessage
+          message={successMessage}
+          onClose={() => setSuccessMessage(null)}
+        />
       )}
 
-      <ConfirmModal
-        open={confirmModalOpen}
-        title={confirmModalTitle}
-        message={confirmModalMessage}
-        color="error"
-        confirmText="Unblock"
-        onConfirm={handleConfirm}
-        onCancel={handleCancel}
-      />
-    </Box>
+      <Box sx={{ width: "100%", padding: 2, paddingTop: 0 }}>
+        <Typography
+          variant={isSmallScreen ? "h5" : "h4"}
+          gutterBottom
+          align={isSmallScreen ? "center" : "left"}
+          sx={{ fontWeight: "bold" }}
+        >
+          Block List
+        </Typography>
+        <TextField
+          fullWidth
+          label="Search user"
+          variant="outlined"
+          value={searchQuery}
+          onChange={handleSearch}
+          sx={{ marginBottom: 2 }}
+          InputLabelProps={{
+            style: { fontSize: isSmallScreen ? "0.875rem" : "1rem" },
+          }}
+        />
+        {loading ? (
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              minHeight: "200px",
+            }}
+          >
+            <Typography
+              variant="body1"
+              sx={{
+                fontWeight: "bold",
+                textAlign: "center",
+                fontSize: isSmallScreen ? "0.875rem" : "1rem",
+              }}
+            >
+              Loading blocked users...
+            </Typography>
+          </Box>
+        ) : filteredBlockedUsers.length > 0 ? (
+          <List>
+            {filteredBlockedUsers.map((blockedUser) => (
+              <ListItem key={blockedUser.id} divider>
+                <ListItemAvatar>
+                  <Avatar
+                    src={blockedUser.profile_picture ?? no_profile_photo}
+                    alt={`${blockedUser.first_name} ${blockedUser.last_name}`}
+                  />
+                </ListItemAvatar>
+                <ListItemText
+                  primary={`${blockedUser.first_name} ${blockedUser.last_name}`}
+                  secondary={`@${blockedUser.username}`}
+                  primaryTypographyProps={{
+                    fontSize: isSmallScreen ? "0.9rem" : "1rem",
+                  }}
+                  secondaryTypographyProps={{
+                    fontSize: isSmallScreen ? "0.8rem" : "0.875rem",
+                  }}
+                />
+                <ListItemSecondaryAction>
+                  <Tooltip title="Unblock User" placement="top">
+                    <Button
+                      variant="contained"
+                      color="success"
+                      onClick={() =>
+                        openConfirmModal(
+                          "Confirm Unblock",
+                          `Are you sure you want to unblock ${blockedUser.username}?`,
+                          () => unblock_user(blockedUser.id)
+                        )
+                      }
+                    >
+                      <GppGoodIcon />
+                    </Button>
+                  </Tooltip>
+                </ListItemSecondaryAction>
+              </ListItem>
+            ))}
+          </List>
+        ) : (
+          <Typography
+            variant="body1"
+            sx={{ fontSize: isSmallScreen ? "0.875rem" : "1rem" }}
+          >
+            No blocked users found.
+          </Typography>
+        )}
+
+        <ConfirmModal
+          open={confirmModalOpen}
+          title={confirmModalTitle}
+          message={confirmModalMessage}
+          color="error"
+          confirmText="Unblock"
+          onConfirm={handleConfirm}
+          onCancel={handleCancel}
+        />
+      </Box>
+    </>
   );
 };
 

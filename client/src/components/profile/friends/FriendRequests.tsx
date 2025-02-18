@@ -30,6 +30,8 @@ import { block_and_unblock_user } from "../../../services/user/block-list-servic
 import { BlockAction } from "../../../services/user/dto/block-list-dto";
 import ConfirmModal from "../../modals/confirm/ConfirmModal";
 import { FriendshipAction } from "../../../services/friendship/enum/friendship-status.enum";
+import ErrorMessage from "../../messages/ErrorMessage";
+import SuccessMessage from "../../messages/SuccessMessage";
 
 const FilterToggleButton = styled(ToggleButton)(({ theme }) => ({
   "&.MuiToggleButton-root": {
@@ -70,6 +72,9 @@ const FriendRequests: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+
   const [confirmModalOpen, setConfirmModalOpen] = useState(false);
   const [confirmModalTitle, setConfirmModalTitle] = useState("");
   const [confirmModalMessage, setConfirmModalMessage] = useState("");
@@ -78,7 +83,6 @@ const FriendRequests: React.FC = () => {
   const theme = useTheme();
   const isSmallScreen = useMediaQuery(theme.breakpoints.down("sm"));
 
-  // Helper function: Hesablayır ki, friend request nə vaxt gəlib.
   const getRelativeTime = (dateString: string): string => {
     const createdDate = new Date(dateString);
     const now = new Date();
@@ -128,7 +132,7 @@ const FriendRequests: React.FC = () => {
     try {
       const response = await block_and_unblock_user(id, BlockAction.block);
       if (response.success) {
-        localStorage.setItem("successMessage", response.message);
+        setSuccessMessage(response.message);
       } else {
         if (Array.isArray(response.message)) {
           localStorage.setItem("errorMessage", response.message[0]);
@@ -146,6 +150,7 @@ const FriendRequests: React.FC = () => {
     } catch (error) {
       console.error(error);
       localStorage.setItem("errorMessage", "Failed to block user.");
+      window.location.reload();
     }
   };
 
@@ -170,10 +175,7 @@ const FriendRequests: React.FC = () => {
       const response = await acceptAndRejectFriendship(status, id);
 
       if (response.success) {
-        localStorage.setItem(
-          "successMessage",
-          response.message ?? "Friend request accepted."
-        );
+        localStorage.setItem("successMessage", response.message);
       } else {
         if (Array.isArray(response.message)) {
           localStorage.setItem("errorMessage", response.message[0]);
@@ -191,12 +193,14 @@ const FriendRequests: React.FC = () => {
       window.location.reload();
     } catch (error) {
       console.log(error);
-      localStorage.setItem("errorMessage", "Something went wrong.");
+      localStorage.setItem(
+        "errorMessage",
+        "Failed to accept/reject friend request."
+      );
       window.location.reload();
     }
   };
 
-  // Sıralama: Yeni request-lər yuxarıda olsun.
   const sortedReceivedRequests = [...receivedRequests].sort(
     (a, b) =>
       new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
@@ -372,70 +376,99 @@ const FriendRequests: React.FC = () => {
     setConfirmModalOpen(false);
   };
 
+  useEffect(() => {
+    const successMessage = localStorage.getItem("successMessage");
+    const errorMessage = localStorage.getItem("errorMessage");
+
+    if (successMessage) {
+      setSuccessMessage(successMessage);
+      localStorage.removeItem("successMessage");
+    } else if (errorMessage) {
+      setErrorMessage(errorMessage);
+      localStorage.removeItem("errorMessage");
+    }
+  }, []);
+
   return (
-    <Box sx={{ width: "100%", padding: 2, paddingTop: 0 }}>
-      <Typography
-        variant={isSmallScreen ? "h5" : "h4"}
-        gutterBottom
-        sx={{ fontWeight: "bold" }}
-        align={isSmallScreen ? "center" : "left"}
-      >
-        Friend Requests
-      </Typography>
-
-      <ToggleButtonGroup
-        value={activeFilter}
-        exclusive
-        onChange={handleFilterChange}
-        aria-label="friend request filter"
-        sx={{
-          marginBottom: 3,
-          display: "flex",
-          justifyContent: isSmallScreen ? "center" : "flex-start",
-          gap: 1,
-          flexWrap: "wrap",
-        }}
-      >
-        <FilterToggleButton value="received" aria-label="received requests">
-          Received ({receivedRequests.length})
-        </FilterToggleButton>
-
-        <FilterToggleButton value="sent" aria-label="sent requests">
-          Sent ({sentRequests.length})
-        </FilterToggleButton>
-      </ToggleButtonGroup>
-
-      {loading ? (
-        <Box
-          sx={{
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            minHeight: "200px",
-          }}
-        >
-          <CircularProgress />
-        </Box>
-      ) : error ? (
-        <Typography variant="body1" color="error">
-          {error}
-        </Typography>
-      ) : activeFilter === "received" ? (
-        renderReceivedRequests()
-      ) : (
-        renderSentRequests()
+    <>
+      {errorMessage && (
+        <ErrorMessage
+          message={errorMessage}
+          onClose={() => setErrorMessage(null)}
+        />
       )}
 
-      <ConfirmModal
-        open={confirmModalOpen}
-        title={confirmModalTitle}
-        message={confirmModalMessage}
-        color="error"
-        confirmText="Block"
-        onConfirm={handleConfirm}
-        onCancel={handleCancel}
-      />
-    </Box>
+      {successMessage && (
+        <SuccessMessage
+          message={successMessage}
+          onClose={() => setSuccessMessage(null)}
+        />
+      )}
+
+      <Box sx={{ width: "100%", padding: 2, paddingTop: 0 }}>
+        <Typography
+          variant={isSmallScreen ? "h5" : "h4"}
+          gutterBottom
+          sx={{ fontWeight: "bold" }}
+          align={isSmallScreen ? "center" : "left"}
+        >
+          Friend Requests
+        </Typography>
+
+        <ToggleButtonGroup
+          value={activeFilter}
+          exclusive
+          onChange={handleFilterChange}
+          aria-label="friend request filter"
+          sx={{
+            marginBottom: 3,
+            display: "flex",
+            justifyContent: isSmallScreen ? "center" : "flex-start",
+            gap: 1,
+            flexWrap: "wrap",
+          }}
+        >
+          <FilterToggleButton value="received" aria-label="received requests">
+            Received ({receivedRequests.length})
+          </FilterToggleButton>
+
+          <FilterToggleButton value="sent" aria-label="sent requests">
+            Sent ({sentRequests.length})
+          </FilterToggleButton>
+        </ToggleButtonGroup>
+
+        {loading ? (
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              minHeight: "200px",
+            }}
+          >
+            <CircularProgress />
+          </Box>
+        ) : error ? (
+          <Typography variant="body1" color="error">
+            {error}
+          </Typography>
+        ) : activeFilter === "received" ? (
+          renderReceivedRequests()
+        ) : (
+          renderSentRequests()
+        )}
+
+        <ConfirmModal
+          open={confirmModalOpen}
+          title={confirmModalTitle}
+          message={confirmModalMessage}
+          color="error"
+          confirmText="Block"
+          onConfirm={handleConfirm}
+          onCancel={handleCancel}
+        />
+      </Box>
+    </>
   );
 };
 

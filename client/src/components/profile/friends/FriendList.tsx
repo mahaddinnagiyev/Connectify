@@ -25,11 +25,16 @@ import no_profile_photo from "../../../assets/no-profile-photo.png";
 import { block_and_unblock_user } from "../../../services/user/block-list-service";
 import { BlockAction } from "../../../services/user/dto/block-list-dto";
 import ConfirmModal from "../../modals/confirm/ConfirmModal";
+import ErrorMessage from "../../messages/ErrorMessage";
+import SuccessMessage from "../../messages/SuccessMessage";
 
 const FriendList = () => {
   const [friends, setFriends] = useState<UserFriendsDTO[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
+
+  const [errorMessage, setErrorMessage] = useState<string | null>("");
+  const [successMessage, setSuccessMessage] = useState<string | null>("");
 
   const [confirmModalOpen, setConfirmModalOpen] = useState(false);
   const [confirmModalTitle, setConfirmModalTitle] = useState("");
@@ -144,207 +149,235 @@ const FriendList = () => {
     setConfirmModalOpen(false);
   };
 
+  useEffect(() => {
+    const successMessage = localStorage.getItem("successMessage");
+    const errorMessage = localStorage.getItem("errorMessage");
+
+    if (successMessage) {
+      setSuccessMessage(successMessage);
+      localStorage.removeItem("successMessage");
+    } else if (errorMessage) {
+      setErrorMessage(errorMessage);
+      localStorage.removeItem("errorMessage");
+    }
+  }, []);
+
   return (
-    <Box
-      sx={{
-        width: "100%",
-        padding: { xs: 1, sm: 2 },
-        paddingTop: { xs: 1, sm: 0 },
-      }}
-    >
-      <Typography
-        variant={isSmallScreen ? "h5" : "h4"}
-        gutterBottom
-        align={isSmallScreen ? "center" : "left"}
-        sx={{ fontWeight: "bold" }}
+    <>
+      {errorMessage && (
+        <ErrorMessage
+          message={errorMessage}
+          onClose={() => setErrorMessage(null)}
+        />
+      )}
+      {successMessage && (
+        <SuccessMessage
+          message={successMessage}
+          onClose={() => setSuccessMessage(null)}
+        />
+      )}
+
+      <Box
+        sx={{
+          width: "100%",
+          padding: { xs: 1, sm: 2 },
+          paddingTop: { xs: 1, sm: 0 },
+        }}
       >
-        Friend List
-      </Typography>
-      <TextField
-        fullWidth
-        label="Search user"
-        variant="outlined"
-        value={searchQuery}
-        onChange={handleSearch}
-        sx={{ marginBottom: 2 }}
-      />
-      {loading ? (
-        <Box
-          sx={{
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            minHeight: "100px",
-          }}
+        <Typography
+          variant={isSmallScreen ? "h5" : "h4"}
+          gutterBottom
+          align={isSmallScreen ? "center" : "left"}
+          sx={{ fontWeight: "bold" }}
         >
-          <Typography
-            variant="body1"
-            sx={{ fontWeight: "bold", textAlign: "center" }}
+          Friend List
+        </Typography>
+        <TextField
+          fullWidth
+          label="Search user"
+          variant="outlined"
+          value={searchQuery}
+          onChange={handleSearch}
+          sx={{ marginBottom: 2 }}
+        />
+        {loading ? (
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              minHeight: "100px",
+            }}
           >
-            Loading friends...
-          </Typography>
-        </Box>
-      ) : filteredFriends.length > 0 ? (
-        <List>
-          {filteredFriends.map((friend) => (
-            <ListItem key={friend.id} divider>
-              {isSmallScreen ? (
-                <Box
-                  display="flex"
-                  flexDirection="column"
-                  alignItems="center"
-                  width="100%"
-                >
+            <Typography
+              variant="body1"
+              sx={{ fontWeight: "bold", textAlign: "center" }}
+            >
+              Loading friends...
+            </Typography>
+          </Box>
+        ) : filteredFriends.length > 0 ? (
+          <List>
+            {filteredFriends.map((friend) => (
+              <ListItem key={friend.id} divider>
+                {isSmallScreen ? (
                   <Box
                     display="flex"
                     flexDirection="column"
                     alignItems="center"
+                    width="100%"
                   >
+                    <Box
+                      display="flex"
+                      flexDirection="column"
+                      alignItems="center"
+                    >
+                      <ListItemAvatar>
+                        <Avatar
+                          src={friend.profile_picture ?? no_profile_photo}
+                          alt={`${friend.first_name} ${friend.last_name}`}
+                          sx={{ width: 56, height: 56, marginBottom: 1 }}
+                        />
+                      </ListItemAvatar>
+                      <ListItemText
+                        primary={`${friend.first_name} ${friend.last_name}`}
+                        secondary={`@${friend.username}`}
+                        primaryTypographyProps={{ align: "center" }}
+                        secondaryTypographyProps={{ align: "center" }}
+                      />
+                    </Box>
+                    <Box display="flex" justifyContent="center" width="100%">
+                      <Tooltip title="Go Chat" placement="top">
+                        <Button
+                          variant="contained"
+                          size="small"
+                          color="success"
+                          sx={{ marginRight: 1 }}
+                        >
+                          <ChatIcon />
+                        </Button>
+                      </Tooltip>
+                      <Tooltip title="Block User" placement="top">
+                        <Button
+                          variant="contained"
+                          color="warning"
+                          size="small"
+                          sx={{ marginRight: 1 }}
+                          onClick={() =>
+                            openConfirmModal(
+                              "Confirm Block",
+                              "Are you sure you want to block this user?",
+                              "Block",
+                              () => block_user(friend.friend_id)
+                            )
+                          }
+                        >
+                          <GppBadIcon />
+                        </Button>
+                      </Tooltip>
+                      <Tooltip title="Remove Friend" placement="top">
+                        <Button
+                          variant="contained"
+                          color="warning"
+                          size="small"
+                          onClick={() =>
+                            openConfirmModal(
+                              "Confirm Remove",
+                              "Are you sure you want to remove this friend?",
+                              "Remove",
+                              () => remove_friend(friend.id)
+                            )
+                          }
+                        >
+                          <PersonRemoveIcon />
+                        </Button>
+                      </Tooltip>
+                    </Box>
+                  </Box>
+                ) : (
+                  <>
                     <ListItemAvatar>
                       <Avatar
                         src={friend.profile_picture ?? no_profile_photo}
                         alt={`${friend.first_name} ${friend.last_name}`}
-                        sx={{ width: 56, height: 56, marginBottom: 1 }}
+                        sx={{
+                          width: 45,
+                          height: 45,
+                          marginRight: 2,
+                          marginY: 0.5,
+                        }}
                       />
                     </ListItemAvatar>
                     <ListItemText
                       primary={`${friend.first_name} ${friend.last_name}`}
                       secondary={`@${friend.username}`}
-                      primaryTypographyProps={{ align: "center" }}
-                      secondaryTypographyProps={{ align: "center" }}
                     />
-                  </Box>
-                  <Box display="flex" justifyContent="center" width="100%">
-                    <Tooltip title="Go Chat" placement="top">
-                      <Button
-                        variant="contained"
-                        size="small"
-                        color="success"
-                        sx={{ marginRight: 1 }}
-                      >
-                        <ChatIcon />
-                      </Button>
-                    </Tooltip>
-                    <Tooltip title="Block User" placement="top">
-                      <Button
-                        variant="contained"
-                        color="warning"
-                        size="small"
-                        sx={{ marginRight: 1 }}
-                        onClick={() =>
-                          openConfirmModal(
-                            "Confirm Block",
-                            "Are you sure you want to block this user?",
-                            'Block',
-                            () => block_user(friend.friend_id)
-                          )
-                        }
-                      >
-                        <GppBadIcon />
-                      </Button>
-                    </Tooltip>
-                    <Tooltip title="Remove Friend" placement="top">
-                      <Button
-                        variant="contained"
-                        color="warning"
-                        size="small"
-                        onClick={() =>
-                          openConfirmModal(
-                            "Confirm Remove",
-                            "Are you sure you want to remove this friend?",
-                            'Remove',
-                            () => remove_friend(friend.id)
-                          )
-                        }
-                      >
-                        <PersonRemoveIcon />
-                      </Button>
-                    </Tooltip>
-                  </Box>
-                </Box>
-              ) : (
-                <>
-                  <ListItemAvatar>
-                    <Avatar
-                      src={friend.profile_picture ?? no_profile_photo}
-                      alt={`${friend.first_name} ${friend.last_name}`}
-                      sx={{
-                        width: 45,
-                        height: 45,
-                        marginRight: 2,
-                        marginY: 0.5,
-                      }}
-                    />
-                  </ListItemAvatar>
-                  <ListItemText
-                    primary={`${friend.first_name} ${friend.last_name}`}
-                    secondary={`@${friend.username}`}
-                  />
-                  <Box display="flex" alignItems="center">
-                    <Tooltip title="Go Chat" placement="top">
-                      <Button
-                        variant="contained"
-                        color="success"
-                        sx={{ marginRight: 1 }}
-                      >
-                        <ChatIcon />
-                      </Button>
-                    </Tooltip>
-                    <Tooltip title="Block User" placement="top">
-                      <Button
-                        variant="contained"
-                        color="warning"
-                        sx={{ marginRight: 1 }}
-                        onClick={() =>
-                          openConfirmModal(
-                            "Confirm Block",
-                            `Are you sure you want to block ${friend.username}?`,
-                            "Block",
-                            () => block_user(friend.friend_id)
-                          )
-                        }
-                      >
-                        <GppBadIcon />
-                      </Button>
-                    </Tooltip>
-                    <Tooltip title="Remove Friend" placement="top">
-                      <Button
-                        variant="contained"
-                        color="warning"
-                        onClick={() =>
-                          openConfirmModal(
-                            "Confirm Remove",
-                            "Are you sure you want to remove this friend?",
-                            "Remove",
-                            () => remove_friend(friend.id)
-                          )
-                        }
-                      >
-                        <PersonRemoveIcon />
-                      </Button>
-                    </Tooltip>
-                  </Box>
-                </>
-              )}
-            </ListItem>
-          ))}
-        </List>
-      ) : (
-        <Typography variant="body1" align="center">
-          No friends found.
-        </Typography>
-      )}
+                    <Box display="flex" alignItems="center">
+                      <Tooltip title="Go Chat" placement="top">
+                        <Button
+                          variant="contained"
+                          color="success"
+                          sx={{ marginRight: 1 }}
+                        >
+                          <ChatIcon />
+                        </Button>
+                      </Tooltip>
+                      <Tooltip title="Block User" placement="top">
+                        <Button
+                          variant="contained"
+                          color="warning"
+                          sx={{ marginRight: 1 }}
+                          onClick={() =>
+                            openConfirmModal(
+                              "Confirm Block",
+                              `Are you sure you want to block ${friend.username}?`,
+                              "Block",
+                              () => block_user(friend.friend_id)
+                            )
+                          }
+                        >
+                          <GppBadIcon />
+                        </Button>
+                      </Tooltip>
+                      <Tooltip title="Remove Friend" placement="top">
+                        <Button
+                          variant="contained"
+                          color="warning"
+                          onClick={() =>
+                            openConfirmModal(
+                              "Confirm Remove",
+                              "Are you sure you want to remove this friend?",
+                              "Remove",
+                              () => remove_friend(friend.id)
+                            )
+                          }
+                        >
+                          <PersonRemoveIcon />
+                        </Button>
+                      </Tooltip>
+                    </Box>
+                  </>
+                )}
+              </ListItem>
+            ))}
+          </List>
+        ) : (
+          <Typography variant="body1" align="center">
+            No friends found.
+          </Typography>
+        )}
 
-      <ConfirmModal
-        open={confirmModalOpen}
-        title={confirmModalTitle}
-        message={confirmModalMessage}
-        color="error"
-        confirmText={confirmModalText}
-        onConfirm={handleConfirm}
-        onCancel={handleCancel}
-      />
-    </Box>
+        <ConfirmModal
+          open={confirmModalOpen}
+          title={confirmModalTitle}
+          message={confirmModalMessage}
+          color="error"
+          confirmText={confirmModalText}
+          onConfirm={handleConfirm}
+          onCancel={handleCancel}
+        />
+      </Box>
+    </>
   );
 };
 

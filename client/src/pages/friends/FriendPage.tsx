@@ -12,11 +12,15 @@ import AllUsers from "../../components/friends/AllUsers";
 import FriendList from "../../components/profile/friends/FriendList";
 import FriendRequests from "../../components/profile/friends/FriendRequests";
 import "./style.css";
+import ErrorMessage from "../../components/messages/ErrorMessage";
+import SuccessMessage from "../../components/messages/SuccessMessage";
 
 type Section = "allUsers" | "myFriends" | "requests";
 
 const FriendPage: React.FC = () => {
   const [activeSection, setActiveSection] = useState<Section>("allUsers");
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   const theme = useTheme();
   const isSmallScreen = useMediaQuery(theme.breakpoints.down("sm"));
@@ -58,8 +62,35 @@ const FriendPage: React.FC = () => {
     }
   };
 
+  useEffect(() => {
+    const successMessage = localStorage.getItem("successMessage");
+    const errorMessage = localStorage.getItem("errorMessage");
+
+    if (successMessage) {
+      setSuccessMessage(successMessage);
+      localStorage.removeItem("successMessage");
+    } else if (errorMessage) {
+      setErrorMessage(errorMessage);
+      localStorage.removeItem("errorMessage");
+    }
+  }, []);
+
   return (
     <>
+      {errorMessage && (
+        <ErrorMessage
+          message={errorMessage}
+          onClose={() => setErrorMessage(null)}
+        />
+      )}
+
+      {successMessage && (
+        <SuccessMessage
+          message={successMessage}
+          onClose={() => setSuccessMessage(null)}
+        />
+      )}
+
       <Header />
 
       <section id="friend-page">
@@ -85,7 +116,11 @@ const FriendPage: React.FC = () => {
               <ToggleButton
                 value="allUsers"
                 aria-label="all users"
-                className={activeSection === "allUsers" ? "user-nav-btn-active" : "outlined user-nav-btn"}
+                className={
+                  activeSection === "allUsers"
+                    ? "user-nav-btn-active"
+                    : "outlined user-nav-btn"
+                }
                 sx={{ borderRadius: 25 }}
               >
                 All Users
@@ -94,7 +129,9 @@ const FriendPage: React.FC = () => {
                 value="myFriends"
                 aria-label="my friends"
                 className={
-                  activeSection === "myFriends" ? "user-nav-btn-active" : "outlined user-nav-btn"
+                  activeSection === "myFriends"
+                    ? "user-nav-btn-active"
+                    : "outlined user-nav-btn"
                 }
                 sx={{ borderRadius: 25 }}
               >
@@ -103,7 +140,11 @@ const FriendPage: React.FC = () => {
               <ToggleButton
                 value="requests"
                 aria-label="friend requests"
-                className={activeSection === "requests" ? "user-nav-btn-active" : "outlined user-nav-btn"}
+                className={
+                  activeSection === "requests"
+                    ? "user-nav-btn-active"
+                    : "outlined user-nav-btn"
+                }
                 sx={{ borderRadius: 25 }}
               >
                 Friend Requests
