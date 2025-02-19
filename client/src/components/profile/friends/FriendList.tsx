@@ -244,6 +244,10 @@ const FriendList = () => {
                         secondary={`@${friend.username}`}
                         primaryTypographyProps={{ align: "center" }}
                         secondaryTypographyProps={{ align: "center" }}
+                        onClick={() =>
+                          (window.location.href = `/user/@${friend.username}`)
+                        }
+                        className="cursor-pointer"
                       />
                     </Box>
                     <Box display="flex" justifyContent="center" width="100%">
@@ -311,6 +315,10 @@ const FriendList = () => {
                     <ListItemText
                       primary={`${friend.first_name} ${friend.last_name}`}
                       secondary={`@${friend.username}`}
+                      onClick={() =>
+                        (window.location.href = `/user/@${friend.username}`)
+                      }
+                      className="cursor-pointer"
                     />
                     <Box display="flex" alignItems="center">
                       <Tooltip title="Go Chat" placement="top">

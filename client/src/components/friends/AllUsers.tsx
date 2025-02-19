@@ -192,7 +192,13 @@ const AllUsers: React.FC = () => {
             <Typography variant="body1">Loading...</Typography>
           </Box>
         ) : (
-          <Box sx={{ paddingTop: 0, paddingX: { xs: 1, sm: 2 }, paddingBottom: { xs: 1, sm: 2 } }}>
+          <Box
+            sx={{
+              paddingTop: 0,
+              paddingX: { xs: 1, sm: 2 },
+              paddingBottom: { xs: 1, sm: 2 },
+            }}
+          >
             <Typography
               variant={isSmallScreen ? "h5" : "h4"}
               gutterBottom
@@ -231,7 +237,13 @@ const AllUsers: React.FC = () => {
                           alt={`${user.first_name} ${user.last_name}`}
                           sx={{ width: 80, height: 80, mb: 1 }}
                         />
-                        <Typography variant="h6">
+                        <Typography
+                          variant="h6"
+                          onClick={() =>
+                            (window.location.href = `/user/@${user.username}`)
+                          }
+                          className="cursor-pointer"
+                        >
                           {`${user.first_name} ${user.last_name}`}
                         </Typography>
                         <Typography variant="subtitle1" color="text.secondary">
@@ -316,12 +328,18 @@ const AllUsers: React.FC = () => {
                               height: 45,
                               mr: 2,
                               my: 0.5,
+                              border: "1px solid var(--primary-color)",
+                              borderRadius: "50%",
                             }}
                           />
                         </ListItemAvatar>
                         <ListItemText
                           primary={`${user.first_name} ${user.last_name}`}
                           secondary={`@${user.username}`}
+                          onClick={() =>
+                            (window.location.href = `/user/@${user.username}`)
+                          }
+                          className="cursor-pointer"
                         />
                         <Box display="flex" alignItems="center">
                           <Tooltip title="Go Chat" placement="top">

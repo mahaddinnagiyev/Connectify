@@ -254,6 +254,10 @@ const FriendRequests: React.FC = () => {
                     secondary={`@${req.requester.username} • ${getRelativeTime(
                       String(req.created_at)
                     )}`}
+                    onClick={() =>
+                      (window.location.href = `/user/@${req.requester.username}`)
+                    }
+                    className="cursor-pointer"
                   />
                 </Box>
 
@@ -346,6 +350,10 @@ const FriendRequests: React.FC = () => {
                   secondary={`@${req.requestee.username} • ${getRelativeTime(
                     String(req.created_at)
                   )}`}
+                  onClick={() =>
+                    (window.location.href = `/user/@${req.requestee.username}`)
+                  }
+                  className="cursor-pointer"
                 />
               </ListItem>
               <Divider component="li" />

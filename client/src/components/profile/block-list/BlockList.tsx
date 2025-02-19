@@ -211,6 +211,10 @@ const BlockList = () => {
                   secondaryTypographyProps={{
                     fontSize: isSmallScreen ? "0.8rem" : "0.875rem",
                   }}
+                  onClick={() =>
+                    (window.location.href = `/user/@${blockedUser.username}`)
+                  }
+                  className="cursor-pointer"
                 />
                 <ListItemSecondaryAction>
                   <Tooltip title="Unblock User" placement="top">

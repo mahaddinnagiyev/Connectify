@@ -39,8 +39,12 @@ const SocialLink: React.FC<SocialLinkProps> = ({
   } | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
-  const [openConfirmDialog, setOpenConfirmDialog] = useState(false); 
+  const [openConfirmDialog, setOpenConfirmDialog] = useState(false);
   const [linkToDelete, setLinkToDelete] = useState<string | null>(null);
+
+  const getUrl = (params: string): boolean => {
+    return window.location.href.includes(params);
+  };
 
   const handleOpenModal = () => {
     setEditMode(false);
@@ -179,54 +183,64 @@ const SocialLink: React.FC<SocialLinkProps> = ({
                 onClick={() => window.open(link.link, "_blank")}
               />
             </Tooltip>
-            <Tooltip title="Edit Link" placement="top">
-              <EditIcon
-                className="cursor-pointer hover:text-orange-600 transition-all duration-300"
-                onClick={() => handleEdit(link)}
-              />
-            </Tooltip>
-            <Tooltip title="Remove Link" placement="top">
-              <HighlightOffIcon
-                onClick={() => handleOpenConfirmDialog(link.id)}
-                className="cursor-pointer hover:text-red-600 transition-all duration-300"
-              />
-            </Tooltip>
+            {getUrl("my-profile") && (
+              <>
+                <Tooltip title="Edit Link" placement="top">
+                  <EditIcon
+                    className="cursor-pointer hover:text-orange-600 transition-all duration-300"
+                    onClick={() => handleEdit(link)}
+                  />
+                </Tooltip>
+                <Tooltip title="Remove Link" placement="top">
+                  <HighlightOffIcon
+                    onClick={() => handleOpenConfirmDialog(link.id)}
+                    className="cursor-pointer hover:text-red-600 transition-all duration-300"
+                  />
+                </Tooltip>
+              </>
+            )}
           </div>
         ))
       )}
-      <div className="max-w-[146px] cursor-pointer">
-        <p
-          className="border-2 text-sm border-[#00ff00] text-[#00ff00] px-3 py-2 rounded ml-2"
-          onClick={handleOpenModal}
-        >
-          + Add Social Link
-        </p>
-      </div>
+      {getUrl("my-profile") && (
+        <div className="max-w-[146px] cursor-pointer">
+          <p
+            className="border-2 text-sm border-[#00ff00] text-[#00ff00] px-3 py-2 rounded ml-2"
+            onClick={handleOpenModal}
+          >
+            + Add Social Link
+          </p>
+        </div>
+      )}
 
-      {/* Social Modal */}
-      <SocialModal
-        open={openModal}
-        onClose={handleCloseModal}
-        onSubmit={handleSubmit}
-        editMode={editMode}
-        currentLink={currentLink}
-      />
+      {getUrl("my-profile") && (
+        <>
+          {/* Social Modal */}
+          <SocialModal
+            open={openModal}
+            onClose={handleCloseModal}
+            onSubmit={handleSubmit}
+            editMode={editMode}
+            currentLink={currentLink}
+          />
 
-      {/* Confirmation Dialog */}
-      <Dialog open={openConfirmDialog} onClose={handleCloseConfirmDialog}>
-        <DialogTitle>Are you sure?</DialogTitle>
-        <DialogContent>
-          <p>Are you sure you want to delete this social link?</p>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseConfirmDialog} color="primary">
-            Cancel
-          </Button>
-          <Button onClick={handleDelete} sx={{ color: "red" }}>
-            Delete
-          </Button>
-        </DialogActions>
-      </Dialog>
+          {/* Confirmation Dialog */}
+          <Dialog open={openConfirmDialog} onClose={handleCloseConfirmDialog}>
+            <DialogTitle>Are you sure?</DialogTitle>
+            <DialogContent>
+              <p>Are you sure you want to delete this social link?</p>
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={handleCloseConfirmDialog} color="primary">
+                Cancel
+              </Button>
+              <Button onClick={handleDelete} sx={{ color: "red" }}>
+                Delete
+              </Button>
+            </DialogActions>
+          </Dialog>
+        </>
+      )}
     </>
   );
 };

@@ -9,6 +9,7 @@ import { RouteControl } from "./RouteControl";
 import ForgotPassword from "./pages/auth/ForgotPassword";
 import ResetPassword from "./pages/auth/ResetPassword";
 import FriendPage from "./pages/friends/FriendPage";
+import UserProfilePage from "./pages/profile/user/UserProfilePage";
 
 function App() {
   return (
@@ -28,6 +29,14 @@ function App() {
           element={
             <RouteControl>
               <ProfilePage />
+            </RouteControl>
+          }
+        />
+        <Route
+          path="user/:username"
+          element={
+            <RouteControl>
+              <UserProfilePage />
             </RouteControl>
           }
         />

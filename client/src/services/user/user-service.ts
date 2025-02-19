@@ -51,6 +51,32 @@ export const getUserById = async (): Promise<{
   return data;
 };
 
+// Get User By Username
+export const getUserByUsername = async (username: string): Promise<{
+  success: boolean;
+  user: User;
+  account: Account;
+  response: {
+    success: boolean;
+    message?: string;
+    error?: string;
+  };
+  message?: string;
+  error?: string;
+}> => {
+  const resposne = await fetch(`${SERVER_USER_URL}/user/by?username=${username}`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json; charset=utf-8",
+      Authorization: `Bearer ${await getToken()}`,
+    },
+    credentials: "include",
+  });
+
+  const data = await resposne.json();
+  return data;
+};
+
 // Edit User's Personal Informations
 export const edit_user = async (
   body: EditUser

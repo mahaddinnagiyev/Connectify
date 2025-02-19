@@ -1,18 +1,15 @@
-import Header from "../../components/header/Header";
+import Header from "../../../components/header/Header";
 import * as React from "react";
 import Tabs from "@mui/material/Tabs";
 import Tab from "@mui/material/Tab";
 import Typography from "@mui/material/Typography";
 import Box from "@mui/material/Box";
-import ProfileInfo from "../../components/profile/ProfileInfo";
-import FriendList from "../../components/profile/friends/FriendList";
-import BlockList from "../../components/profile/block-list/BlockList";
-import ErrorMessage from "../../components/messages/ErrorMessage";
-import SuccessMessage from "../../components/messages/SuccessMessage";
-import FriendRequests from "../../components/profile/friends/FriendRequests";
-import { getUserById } from "../../services/user/user-service";
-import { User } from "../../services/user/dto/user-dto";
-import { Account } from "../../services/account/dto/account-dto";
+import ProfileInfo from "../../../components/profile/ProfileInfo";
+import ErrorMessage from "../../../components/messages/ErrorMessage";
+import SuccessMessage from "../../../components/messages/SuccessMessage";
+import { getUserByUsername } from "../../../services/user/user-service";
+import { User } from "../../../services/user/dto/user-dto";
+import { Account } from "../../../services/account/dto/account-dto";
 
 interface UserProfile {
   user: User;
@@ -51,7 +48,7 @@ function TabPanel(props: TabPanelProps) {
   );
 }
 
-const ProfilePage = () => {
+const UserProfilePage = () => {
   const [value, setValue] = React.useState<number>(() => {
     const savedTab = localStorage.getItem("activeTab");
     return savedTab ? parseInt(savedTab, 10) : 0;
@@ -94,7 +91,11 @@ const ProfilePage = () => {
   }, []);
 
   React.useEffect(() => {
-    getUserById().then((response) => {
+    const pathParts = window.location.pathname.split("/");
+    const usernameWithAt = pathParts[pathParts.length - 1];
+    const username = usernameWithAt.replace("@", "");
+
+    getUserByUsername(username).then((response) => {
       if (response.success) {
         setUserData({
           user: response.user ?? {
@@ -151,7 +152,7 @@ const ProfilePage = () => {
             paddingLeft: "0",
           }}
         >
-          {/* Tab Menu */}
+          {/* Tab Menyu */}
           <Tabs
             orientation={isVertical ? "vertical" : "horizontal"}
             variant="scrollable"
@@ -176,13 +177,13 @@ const ProfilePage = () => {
               paddingLeft: 0,
             }}
           >
-            <Tab label="My Profile" {...a11yProps(0)} />
-            <Tab label="Friend List" {...a11yProps(1)} />
-            <Tab label="Friend Requests" {...a11yProps(2)} />
-            <Tab label="Block List" {...a11yProps(3)} />
+            <Tab
+              label={`${userData?.user?.username}'s Profile`}
+              {...a11yProps(0)}
+            />
           </Tabs>
 
-          {/* Content */}
+          {/* Məzmun */}
           <Box
             sx={{
               marginLeft: isVertical ? "250px" : "0",
@@ -195,15 +196,6 @@ const ProfilePage = () => {
             <TabPanel value={value} index={0}>
               <ProfileInfo userData={userData} />
             </TabPanel>
-            <TabPanel value={value} index={1}>
-              <FriendList />
-            </TabPanel>
-            <TabPanel value={value} index={2}>
-              <FriendRequests />
-            </TabPanel>
-            <TabPanel value={value} index={3}>
-              <BlockList />
-            </TabPanel>
           </Box>
         </Box>
       </div>
@@ -211,4 +203,4 @@ const ProfilePage = () => {
   );
 };
 
-export default ProfilePage;
+export default UserProfilePage;
