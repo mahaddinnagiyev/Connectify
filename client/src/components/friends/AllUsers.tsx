@@ -192,7 +192,7 @@ const AllUsers: React.FC = () => {
             <Typography variant="body1">Loading...</Typography>
           </Box>
         ) : (
-          <Box sx={{ p: { xs: 1, sm: 2 } }}>
+          <Box sx={{ paddingTop: 0, paddingX: { xs: 1, sm: 2 }, paddingBottom: { xs: 1, sm: 2 } }}>
             <Typography
               variant={isSmallScreen ? "h5" : "h4"}
               gutterBottom
