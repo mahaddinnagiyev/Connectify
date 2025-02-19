@@ -10,6 +10,8 @@ import SuccessMessage from "../../../components/messages/SuccessMessage";
 import { getUserByUsername } from "../../../services/user/user-service";
 import { User } from "../../../services/user/dto/user-dto";
 import { Account } from "../../../services/account/dto/account-dto";
+import { jwtDecode } from "jwt-decode";
+import { getToken } from "../../../services/auth/token-service";
 
 interface UserProfile {
   user: User;
@@ -77,6 +79,15 @@ const UserProfilePage = () => {
     setValue(newValue);
   };
 
+  const decodeTokenAndGetUsername = async () => {
+    const token = await getToken();
+
+    if (token) {
+      const decodedToken: { username: string } = jwtDecode(token);
+      return decodedToken.username;
+    }
+  };
+
   React.useEffect(() => {
     const success_message = localStorage.getItem("successMessage");
     const error_message = localStorage.getItem("errorMessage");
@@ -91,39 +102,48 @@ const UserProfilePage = () => {
   }, []);
 
   React.useEffect(() => {
-    const pathParts = window.location.pathname.split("/");
-    const usernameWithAt = pathParts[pathParts.length - 1];
-    const username = usernameWithAt.replace("@", "");
+    const fetchData = async () => {
+      const pathParts = window.location.pathname.split("/");
+      const usernameWithAt = pathParts[pathParts.length - 1];
+      const username = usernameWithAt.replace("@", "");
 
-    getUserByUsername(username).then((response) => {
-      if (response.success) {
-        setUserData({
-          user: response.user ?? {
-            id: null,
-            first_name: null,
-            last_name: null,
-            email: null,
-            username: null,
-            gender: null,
-          },
-          account: response.account ?? {
-            id: null,
-            bio: null,
-            location: null,
-            profile_picture: null,
-            social_links: [],
-          },
-        });
-      } else {
-        setErrorMessage(
-          response.response?.message ??
-            response.response?.error ??
-            response.message ??
-            response.error ??
-            "Something went wrong"
-        );
+      const tokenUsername = await decodeTokenAndGetUsername();
+      if (tokenUsername === username) {
+        return window.location.replace("/user/my-profile");
       }
-    });
+
+      getUserByUsername(username).then((response) => {
+        if (response.success) {
+          setUserData({
+            user: response.user ?? {
+              id: null,
+              first_name: null,
+              last_name: null,
+              email: null,
+              username: null,
+              gender: null,
+            },
+            account: response.account ?? {
+              id: null,
+              bio: null,
+              location: null,
+              profile_picture: null,
+              social_links: [],
+            },
+          });
+        } else {
+          setErrorMessage(
+            response.response?.message ??
+              response.response?.error ??
+              response.message ??
+              response.error ??
+              "Something went wrong"
+          );
+        }
+      });
+    };
+
+    fetchData();
   }, []);
 
   return (
