@@ -24,7 +24,6 @@ import { LoginDTO } from './dto/login-dto';
 import { JwtPayload } from '../jwt/jwt-payload';
 import { TokenBlackList } from 'src/entities/token-black-list.entity';
 import { LoggerService } from 'src/logger/logger.service';
-import { HttpService } from '@nestjs/axios';
 import { Gender } from 'src/enums/gender.enum';
 import { Provider } from 'src/enums/provider.enum';
 import {
@@ -37,6 +36,7 @@ import {
 } from './utils/messages/forgot-password-message';
 import { PrivacySettings } from 'src/entities/privacy-settings.entity';
 import { deleteAccountMessage } from './utils/messages/delete-account-message';
+import { SupabaseService } from 'src/supabase/supabase.service';
 
 @Injectable()
 export class AuthService {
@@ -52,7 +52,7 @@ export class AuthService {
 
     private readonly mailService: MailerService,
     private readonly logger: LoggerService,
-    private httpService: HttpService,
+    private readonly supabase: SupabaseService,
   ) {}
 
   // Signup
@@ -634,6 +634,7 @@ export class AuthService {
     try {
       const user = await this.userRepository.findOne({
         where: { reset_token: token },
+        relations: ['accounts'],
       });
 
       if (!user || user.reset_token_expiration < new Date()) {
@@ -641,6 +642,32 @@ export class AuthService {
           success: false,
           error: 'User not found or token expired',
         });
+      }
+
+      const profile_picture = user.account.profile_picture;
+
+      if (profile_picture) {
+        const photoName = profile_picture.substring(
+          profile_picture.lastIndexOf('/') + 1,
+        );
+        const { data, error } = await this.supabase
+          .getClient()
+          .storage.from('profile_pictures')
+          .remove([photoName]);
+
+        if (error) {
+          await this.logger.error(
+            error.message,
+            'account',
+            'Error deleting old profile picture',
+            error.stack,
+          );
+
+          return new BadRequestException({
+            success: false,
+            error: error.message,
+          });
+        }
       }
 
       await this.userRepository.remove(user);

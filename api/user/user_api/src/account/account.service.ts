@@ -430,7 +430,6 @@ export class AccountService {
           .remove([photoName]);
 
         if (error) {
-          console.log(error);
           await this.logger.error(
             'Error deleting old profile picture',
             'account',

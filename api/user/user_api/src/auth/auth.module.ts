@@ -9,10 +9,10 @@ import { PassportModule } from '@nestjs/passport';
 import { TokenBlackList } from 'src/entities/token-black-list.entity';
 import { LoggerModule } from 'src/logger/logger.module';
 import { GoogleStrategy } from './strategy/google.strategy';
-import { HttpModule } from '@nestjs/axios';
 import { JwtAuthGuard } from 'src/jwt/jwt-auth-guard';
 import { JwtModule } from '@nestjs/jwt';
 import { PrivacySettings } from 'src/entities/privacy-settings.entity';
+import { SupabaseModule } from 'src/supabase/supabase.module';
 
 @Module({
   imports: [
@@ -23,7 +23,7 @@ import { PrivacySettings } from 'src/entities/privacy-settings.entity';
       signOptions: { expiresIn: '5d' },
     }),
     LoggerModule,
-    HttpModule
+    SupabaseModule
   ],
   providers: [AuthService, JwtStrategy, JwtAuthGuard, GoogleStrategy],
   controllers: [AuthController],
