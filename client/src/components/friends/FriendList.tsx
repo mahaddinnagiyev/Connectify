@@ -19,14 +19,14 @@ import PersonRemoveIcon from "@mui/icons-material/PersonRemove";
 import {
   getFriends,
   removeFriendship,
-} from "../../../services/friendship/friendship-service";
-import { UserFriendsDTO } from "../../../services/friendship/dto/friendship-dto";
-import no_profile_photo from "../../../assets/no-profile-photo.png";
-import { block_and_unblock_user } from "../../../services/user/block-list-service";
-import { BlockAction } from "../../../services/user/dto/block-list-dto";
-import ConfirmModal from "../../modals/confirm/ConfirmModal";
-import ErrorMessage from "../../messages/ErrorMessage";
-import SuccessMessage from "../../messages/SuccessMessage";
+} from "../../services/friendship/friendship-service";
+import { UserFriendsDTO } from "../../services/friendship/dto/friendship-dto";
+import no_profile_photo from "../../assets/no-profile-photo.png";
+import { block_and_unblock_user } from "../../services/user/block-list-service";
+import { BlockAction } from "../../services/user/dto/block-list-dto";
+import ConfirmModal from "../modals/confirm/ConfirmModal";
+import ErrorMessage from "../messages/ErrorMessage";
+import SuccessMessage from "../messages/SuccessMessage";
 
 const FriendList = () => {
   const [friends, setFriends] = useState<UserFriendsDTO[]>([]);
@@ -236,7 +236,7 @@ const FriendList = () => {
                         <Avatar
                           src={friend.profile_picture ?? no_profile_photo}
                           alt={`${friend.first_name} ${friend.last_name}`}
-                          sx={{ width: 56, height: 56, marginBottom: 1 }}
+                          sx={{ width: 56, height: 56, marginBottom: 1, border: "1px solid var(--primary-color)" }}
                         />
                       </ListItemAvatar>
                       <ListItemText
@@ -309,6 +309,7 @@ const FriendList = () => {
                           height: 45,
                           marginRight: 2,
                           marginY: 0.5,
+                          border: "1px solid var(--primary-color)",
                         }}
                       />
                     </ListItemAvatar>

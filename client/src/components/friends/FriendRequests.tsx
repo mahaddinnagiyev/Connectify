@@ -19,19 +19,19 @@ import {
 import {
   acceptAndRejectFriendship,
   getFriendRequests,
-} from "../../../services/friendship/friendship-service";
+} from "../../services/friendship/friendship-service";
 import {
   FriendshipRecieveRequestDTO,
   FriendshipSentRequestDTO,
-} from "../../../services/friendship/dto/friendship-dto";
+} from "../../services/friendship/dto/friendship-dto";
 import { styled } from "@mui/material/styles";
-import no_profile_photo from "../../../assets/no-profile-photo.png";
-import { block_and_unblock_user } from "../../../services/user/block-list-service";
-import { BlockAction } from "../../../services/user/dto/block-list-dto";
-import ConfirmModal from "../../modals/confirm/ConfirmModal";
-import { FriendshipAction } from "../../../services/friendship/enum/friendship-status.enum";
-import ErrorMessage from "../../messages/ErrorMessage";
-import SuccessMessage from "../../messages/SuccessMessage";
+import no_profile_photo from "../../assets/no-profile-photo.png";
+import { block_and_unblock_user } from "../../services/user/block-list-service";
+import { BlockAction } from "../../services/user/dto/block-list-dto";
+import ConfirmModal from "../modals/confirm/ConfirmModal";
+import { FriendshipAction } from "../../services/friendship/enum/friendship-status.enum";
+import ErrorMessage from "../messages/ErrorMessage";
+import SuccessMessage from "../messages/SuccessMessage";
 
 const FilterToggleButton = styled(ToggleButton)(({ theme }) => ({
   "&.MuiToggleButton-root": {
@@ -343,6 +343,9 @@ const FriendRequests: React.FC = () => {
                   <Avatar
                     src={req.requestee.profile_picture ?? no_profile_photo}
                     alt="user profile picture"
+                    sx={{
+                      border: "1px solid var(--primary-color)",
+                    }}
                   />
                 </ListItemAvatar>
                 <ListItemText

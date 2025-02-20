@@ -9,8 +9,8 @@ import {
 } from "@mui/material";
 import Header from "../../components/header/Header";
 import AllUsers from "../../components/friends/AllUsers";
-import FriendList from "../../components/profile/friends/FriendList";
-import FriendRequests from "../../components/profile/friends/FriendRequests";
+import FriendList from "../../components/friends/FriendList";
+import FriendRequests from "../../components/friends/FriendRequests";
 import "./style.css";
 import ErrorMessage from "../../components/messages/ErrorMessage";
 import SuccessMessage from "../../components/messages/SuccessMessage";
