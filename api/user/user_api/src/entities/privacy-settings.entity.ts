@@ -10,7 +10,6 @@ import {
 import { PrivacySettings as privacySettings } from 'src/enums/privacy-settings.enum';
 import { Account } from './account.entity';
 
-
 @Entity('privacy_settings')
 export class PrivacySettings {
   @PrimaryGeneratedColumn('uuid')
@@ -56,6 +55,13 @@ export class PrivacySettings {
     default: privacySettings.everyone,
   })
   social_links: privacySettings;
+
+  @Column({
+    type: 'enum',
+    enum: privacySettings,
+    default: privacySettings.everyone,
+  })
+  last_login: privacySettings;
 
   @CreateDateColumn()
   created_at: Date;
