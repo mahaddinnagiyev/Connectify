@@ -70,6 +70,7 @@ export const update_privacy_settings = async (
     {
       method: "PATCH",
       headers: {
+        "Content-Type": "application/json; charset=utf-8",
         Authorization: `Bearer ${await getToken()}`,
       },
       credentials: "include",

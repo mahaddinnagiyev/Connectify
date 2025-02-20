@@ -1,6 +1,7 @@
 import { getToken } from "../auth/token-service";
 import { Account } from "../account/dto/account-dto";
 import { EditUser, User, Users } from "./dto/user-dto";
+import { PrivacySettingsDTO } from "../account/dto/privacy-settings-dto";
 
 const SERVER_USER_URL = process.env.SERVER_USER_URL || "http://localhost:3535";
 
@@ -30,6 +31,7 @@ export const getUserById = async (): Promise<{
   success: boolean;
   user: User;
   account: Account;
+  privacy_settings: PrivacySettingsDTO;
   response: {
     success: boolean;
     message?: string;
@@ -52,10 +54,13 @@ export const getUserById = async (): Promise<{
 };
 
 // Get User By Username
-export const getUserByUsername = async (username: string): Promise<{
+export const getUserByUsername = async (
+  username: string
+): Promise<{
   success: boolean;
   user: User;
   account: Account;
+  privacy_settings: PrivacySettingsDTO;
   response: {
     success: boolean;
     message?: string;
@@ -64,14 +69,17 @@ export const getUserByUsername = async (username: string): Promise<{
   message?: string;
   error?: string;
 }> => {
-  const resposne = await fetch(`${SERVER_USER_URL}/user/by?username=${username}`, {
-    method: "GET",
-    headers: {
-      "Content-Type": "application/json; charset=utf-8",
-      Authorization: `Bearer ${await getToken()}`,
-    },
-    credentials: "include",
-  });
+  const resposne = await fetch(
+    `${SERVER_USER_URL}/user/by?username=${username}`,
+    {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json; charset=utf-8",
+        Authorization: `Bearer ${await getToken()}`,
+      },
+      credentials: "include",
+    }
+  );
 
   const data = await resposne.json();
   return data;

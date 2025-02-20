@@ -10,10 +10,12 @@ import { getUserById } from "../../services/user/user-service";
 import { User } from "../../services/user/dto/user-dto";
 import { Account } from "../../services/account/dto/account-dto";
 import AccountSettings from "../../components/settings/AccountSettings";
+import { PrivacySettingsDTO } from "../../services/account/dto/privacy-settings-dto";
 
 interface UserProfile {
   user: User;
   account: Account;
+  privacy_settings: PrivacySettingsDTO;
 }
 
 interface TabPanelProps {
@@ -109,6 +111,14 @@ const SettingsPage = () => {
             profile_picture: null,
             privacy_settings: null,
             social_links: [],
+          },
+          privacy_settings: response.privacy_settings ?? {
+            id: null,
+            email: null,
+            gender: null,
+            bio: null,
+            location: null,
+            social_links: null,
           },
         });
       } else {

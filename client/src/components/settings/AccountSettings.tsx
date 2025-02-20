@@ -16,11 +16,13 @@ import { update_privacy_settings } from "../../services/account/account-service"
 import {
   PrivacySettings,
   EditPrivacySettingsDTO,
+  PrivacySettingsDTO,
 } from "../../services/account/dto/privacy-settings-dto";
 
 interface UserProfile {
   user: User;
   account: Account;
+  privacy_settings: PrivacySettingsDTO;
 }
 
 interface AccountSettingsProps {
@@ -40,8 +42,14 @@ const AccountSettings: React.FC<AccountSettingsProps> = ({ userData }) => {
   });
 
   useEffect(() => {
-    if (userData && userData.account.privacy_settings) {
-      setPrivacy(userData.account.privacy_settings);
+    if (userData && userData.privacy_settings) {
+      setPrivacy({
+        email: userData.privacy_settings.email,
+        gender: userData.privacy_settings.gender,
+        bio: userData.privacy_settings.bio,
+        location: userData.privacy_settings.location,
+        social_links: userData.privacy_settings.social_links,
+      });
     }
   }, [userData]);
 
@@ -69,7 +77,6 @@ const AccountSettings: React.FC<AccountSettingsProps> = ({ userData }) => {
       console.log(error);
       setErrorMessage("An error occurred while updating privacy settings");
     }
-    window.location.reload();
   };
 
   return (
