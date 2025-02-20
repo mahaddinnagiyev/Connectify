@@ -10,6 +10,7 @@ import ForgotPassword from "./pages/auth/ForgotPassword";
 import ResetPassword from "./pages/auth/ResetPassword";
 import FriendPage from "./pages/friends/FriendPage";
 import UserProfilePage from "./pages/profile/user/UserProfilePage";
+import SettingsPage from "./pages/settings/SettingsPage";
 
 function App() {
   return (
@@ -45,6 +46,14 @@ function App() {
           element={
             <RouteControl>
               <FriendPage />
+            </RouteControl>
+          }
+        />
+        <Route
+          path="/settings"
+          element={
+            <RouteControl>
+              <SettingsPage />
             </RouteControl>
           }
         />

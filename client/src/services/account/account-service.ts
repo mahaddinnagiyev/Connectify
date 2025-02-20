@@ -1,5 +1,6 @@
 import { getToken } from "../auth/token-service";
 import { EditAccountDTO } from "./dto/account-dto";
+import { EditPrivacySettingsDTO } from "./dto/privacy-settings-dto";
 
 // Edit Account's Personal Informations
 export const edit_account = async (
@@ -48,6 +49,31 @@ export const update_profile_pic = async (
       },
       credentials: "include",
       body: formData,
+    }
+  );
+
+  const data = await response.json();
+  return data;
+};
+
+// Update Privacy Settings
+export const update_privacy_settings = async (
+  body: EditPrivacySettingsDTO
+): Promise<{
+  success: boolean;
+  message?: string;
+  error?: string;
+  response: { message?: string; error?: string };
+}> => {
+  const response = await fetch(
+    `${process.env.SERVER_USER_URL}/account/privacy-settings`,
+    {
+      method: "PATCH",
+      headers: {
+        Authorization: `Bearer ${await getToken()}`,
+      },
+      credentials: "include",
+      body: JSON.stringify(body),
     }
   );
 
