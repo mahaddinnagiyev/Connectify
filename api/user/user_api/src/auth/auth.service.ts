@@ -36,6 +36,7 @@ import {
   forgotPasswordMessage,
 } from './utils/messages/forgot-password-message';
 import { PrivacySettings } from 'src/entities/privacy-settings.entity';
+import { deleteAccountMessage } from './utils/messages/delete-account-message';
 
 @Injectable()
 export class AuthService {
@@ -573,6 +574,102 @@ export class AuthService {
     }
 
     return { success: true };
+  }
+
+  // Delete Account
+  async delete_account(
+    req_user: User,
+  ): Promise<{ success: boolean; message: string } | HttpException> {
+    try {
+      const user = await this.userRepository.findOne({
+        where: { id: req_user.id },
+      });
+
+      if (!user) {
+        return new NotFoundException({
+          success: false,
+          error: 'User not found',
+        });
+      }
+
+      const delete_token = crypto.randomBytes(32).toString('hex');
+      user.reset_token = delete_token;
+      user.reset_token_expiration = new Date(Date.now() + 3600000);
+
+      await this.userRepository.save(user);
+
+      await this.mailService.sendMail({
+        from: process.env.EMAIL_USER,
+        to: user.email,
+        subject: 'Delete Account Request - Connectify',
+        text: deleteAccountMessage(delete_token),
+      });
+
+      await this.logger.info(
+        `Delete account email sent successfully to: ${user.email}`,
+        'auth',
+      );
+
+      return {
+        success: true,
+        message: 'Check your email to delete your account',
+      };
+    } catch (error) {
+      await this.logger.error(
+        error.message,
+        'auth',
+        'There is an error - in the delete account process',
+        error.stack,
+      );
+      return new InternalServerErrorException(
+        'Delete account failed - Due to Internal Server Error',
+      );
+    }
+  }
+
+  // Confirm Delete Account
+  async confirm_delete_account(
+    token: string,
+  ): Promise<{ success: boolean; message: string } | HttpException> {
+    try {
+      const user = await this.userRepository.findOne({
+        where: { reset_token: token },
+      });
+
+      if (!user || user.reset_token_expiration < new Date()) {
+        return new NotFoundException({
+          success: false,
+          error: 'User not found or token expired',
+        });
+      }
+
+      await this.userRepository.remove(user);
+
+      await this.logger.info(
+        `Account deleted successfully for user:
+         First Name: ${user.first_name}
+         Last Name: ${user.last_name}
+         Username: ${user.username}
+         Email: ${user.email}
+        `,
+        'auth',
+      );
+
+      return {
+        success: true,
+        message: 'Your account has been deleted successfully. See you later :)',
+      };
+    } catch (error) {
+      await this.logger.error(
+        error.message,
+        'auth',
+        'There is an error - in the confirm delete account process',
+        error.stack,
+      );
+      return new InternalServerErrorException(
+        'Failed To Confirm Delete Account - Due To Internal Server Error',
+      );
+    }
   }
 
   // Google User Authentication

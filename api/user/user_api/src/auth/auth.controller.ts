@@ -2,6 +2,7 @@ import {
   BadRequestException,
   Body,
   Controller,
+  Delete,
   Get,
   HttpException,
   Patch,
@@ -24,6 +25,7 @@ import {
   SetNewPasswordDTO,
 } from './dto/forgot-passsword-dto';
 import { Request } from 'express';
+import { User } from 'src/entities/user.entity';
 
 @Controller('auth')
 export class AuthController {
@@ -86,7 +88,7 @@ export class AuthController {
     return this.authService.logout(req);
   }
 
-  // Forgot Password\
+  // Forgot Password
   @UseGuards(ThrottlerGuard)
   @Throttle({
     default: { limit: 40, ttl: 60 * 1000, blockDuration: 60 * 1000 },
@@ -123,6 +125,27 @@ export class AuthController {
   @Get('check')
   async isTokenValid(@Query('token') token: string) {
     return await this.authService.isResetTokenValid(token);
+  }
+
+  // Delete Account
+  @UseGuards(JwtAuthGuard)
+  @UseGuards(ThrottlerGuard)
+  @Throttle({
+    default: { limit: 40, ttl: 60 * 1000, blockDuration: 60 * 1000 },
+  })
+  @Post('delete')
+  async deleteAccount(@Req() req: Request) {
+    return this.authService.delete_account(req.user as User);
+  }
+
+  // Confirm Delete Account
+  @UseGuards(ThrottlerGuard)
+  @Throttle({
+    default: { limit: 40, ttl: 60 * 1000, blockDuration: 60 * 1000 },
+  })
+  @Delete('delete/confirm')
+  async confirm_delete_account(@Query('token') token: string) {
+    return this.authService.confirm_delete_account(token);
   }
 
   // Google Login
