@@ -1,5 +1,10 @@
-import { useState, useEffect } from "react";
-import { Box, Typography, Avatar } from "@mui/material";
+import React, { useState, useEffect } from "react";
+import { Box, Typography, Avatar, Tooltip, Button } from "@mui/material";
+import PersonAddIcon from "@mui/icons-material/PersonAdd";
+import TimerIcon from "@mui/icons-material/Timer";
+import ChatIcon from "@mui/icons-material/Chat";
+import GppBadIcon from "@mui/icons-material/GppBad";
+import PersonRemoveIcon from "@mui/icons-material/PersonRemove";
 import ErrorMessage from "../messages/ErrorMessage";
 import SuccessMessage from "../messages/SuccessMessage";
 import ImageModal from "../modals/profile/ImageModal";
@@ -16,6 +21,16 @@ import ProfilePictureModal from "../modals/profile/ProfilePictureModal";
 import no_profile_photo from "../../assets/no-profile-photo.png";
 import { User } from "../../services/user/dto/user-dto";
 import { Account } from "../../services/account/dto/account-dto";
+import ConfirmModal from "../../components/modals/confirm/ConfirmModal";
+import {
+  getAllFriendshipRequests,
+  removeFriendship,
+  sendFriendshipRequest,
+} from "../../services/friendship/friendship-service";
+import { block_and_unblock_user } from "../../services/user/block-list-service";
+import { BlockAction } from "../../services/user/dto/block-list-dto";
+import { UserFriendsDTO } from "../../services/friendship/dto/friendship-dto";
+import { FriendshipStatus } from "../../services/friendship/enum/friendship-status.enum";
 
 interface UserProfile {
   user: User;
@@ -26,7 +41,7 @@ interface ProfileInfoProps {
   userData: UserProfile | null;
 }
 
-const ProfileInfo = ({ userData }: ProfileInfoProps) => {
+const ProfileInfo: React.FC<ProfileInfoProps> = ({ userData }) => {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
@@ -36,6 +51,15 @@ const ProfileInfo = ({ userData }: ProfileInfoProps) => {
     useState(false);
   const [isProfilePictureModalOpen, setIsProfilePictureModalOpen] =
     useState(false);
+
+  const [accepted, setAccepted] = useState(false);
+  const [pending, setPending] = useState(false);
+
+  const [confirmModalOpen, setConfirmModalOpen] = useState(false);
+  const [confirmModalTitle, setConfirmModalTitle] = useState("");
+  const [confirmModalMessage, setConfirmModalMessage] = useState("");
+  const [confirmModalText, setConfirmModalText] = useState("");
+  const [pendingAction, setPendingAction] = useState<() => void>(() => {});
 
   const getUrl = (params: string): boolean => {
     return window.location.href.includes(params);
@@ -62,7 +86,6 @@ const ProfileInfo = ({ userData }: ProfileInfoProps) => {
   const handleProfilePictureChange = async (file: File) => {
     try {
       const response = await update_profile_pic(file);
-
       if (response.success) {
         localStorage.setItem(
           "successMessage",
@@ -76,7 +99,7 @@ const ProfileInfo = ({ userData }: ProfileInfoProps) => {
           setErrorMessage(
             response.response?.error &&
               response.response?.error === "Image upload failed"
-              ? "Image upload failed please check is image type correct or not"
+              ? "Image upload failed please check if image type is correct"
               : response.response?.error ||
                   response.message ||
                   response.error ||
@@ -100,9 +123,7 @@ const ProfileInfo = ({ userData }: ProfileInfoProps) => {
         username: data.username,
         gender: data.gender as Gender,
       };
-
       const response = await edit_user(body);
-
       if (response.success) {
         localStorage.setItem(
           "successMessage",
@@ -135,9 +156,7 @@ const ProfileInfo = ({ userData }: ProfileInfoProps) => {
         bio: data.bio,
         location: data.location,
       };
-
       const response = await edit_account(body);
-
       if (response.success) {
         localStorage.setItem(
           "successMessage",
@@ -160,6 +179,118 @@ const ProfileInfo = ({ userData }: ProfileInfoProps) => {
       console.log(error);
       setErrorMessage("Something went wrong - Please try again later");
     }
+  };
+
+  useEffect(() => {
+    if (!getUrl("my-profile") && userData) {
+      const fetchFriendshipStatus = async () => {
+        try {
+          const response = await getAllFriendshipRequests();
+          if (response.success) {
+            const acceptedFriends = response.friends
+              .filter((friend: UserFriendsDTO) => friend.status === "accepted")
+              .map((friend: UserFriendsDTO) => friend.friend_id);
+            const pendingFriends = response.friends
+              .filter(
+                (friend: UserFriendsDTO) =>
+                  friend.status === FriendshipStatus.pending
+              )
+              .map((friend: UserFriendsDTO) => friend.friend_id);
+            setAccepted(acceptedFriends.includes(userData.user.id));
+            setPending(pendingFriends.includes(userData.user.id));
+          }
+        } catch (error) {
+          console.error("Error fetching friendship status:", error);
+        }
+      };
+      fetchFriendshipStatus();
+    }
+  }, [userData]);
+
+  const send_friend_request = async () => {
+    if (!userData) return;
+    try {
+      const response = await sendFriendshipRequest(userData.user.id);
+      if (response.success) {
+        setSuccessMessage(response.message);
+        setPending(true);
+      } else {
+        setErrorMessage(
+          response.response?.error ??
+            response.response?.message ??
+            response.message ??
+            response.error ??
+            "Failed to send friend request"
+        );
+      }
+    } catch (error) {
+      setErrorMessage("Failed to send friend request");
+      console.error("Failed to send friend request:", error);
+    }
+  };
+
+  const block_user = async () => {
+    if (!userData) return;
+    try {
+      const response = await block_and_unblock_user(
+        userData.user.id,
+        BlockAction.block
+      );
+      if (response.success) {
+        setSuccessMessage("User blocked successfully");
+      }
+    } catch (error) {
+      console.error("Failed to block user:", error);
+      setErrorMessage("Failed to block user");
+    }
+  };
+
+  const remove_friend = async (id: string) => {
+    try {
+      const response = await removeFriendship(id);
+      if (response.success) {
+        localStorage.setItem("successMessage", response.message);
+      } else {
+        if (Array.isArray(response.message)) {
+          localStorage.setItem("errorMessage", response.message[0]);
+        } else {
+          localStorage.setItem(
+            "errorMessage",
+            response.response?.error ??
+              response.message ??
+              response.error ??
+              "Failed to remove friend."
+          );
+        }
+      }
+      window.location.reload();
+    } catch (error) {
+      console.error(error);
+      localStorage.setItem("errorMessage", "Failed to remove friend.");
+      window.location.reload();
+    }
+  };
+
+  const openConfirmModal = (
+    title: string,
+    message: string,
+    text: string,
+    action: () => void
+  ) => {
+    setConfirmModalTitle(title);
+    setConfirmModalMessage(message);
+    setConfirmModalText(text);
+    setPendingAction(() => action);
+    setConfirmModalOpen(true);
+  };
+
+  const handleConfirm = () => {
+    pendingAction();
+    setConfirmModalOpen(false);
+  };
+
+  const handleCancel = () => {
+    setConfirmModalOpen(false);
   };
 
   useEffect(() => {
@@ -228,7 +359,7 @@ const ProfileInfo = ({ userData }: ProfileInfoProps) => {
             }}
             onClick={handleImageClick}
           />
-          {getUrl("my-profile") && (
+          {getUrl("my-profile") ? (
             <Typography variant="h6">
               <button
                 type="button"
@@ -238,6 +369,70 @@ const ProfileInfo = ({ userData }: ProfileInfoProps) => {
                 Change profile photo
               </button>
             </Typography>
+          ) : (
+            <Box sx={{ display: "flex", gap: 1, mt: 1 }}>
+              <Tooltip title="Go Chat" placement="top">
+                <Button variant="contained" color="success" size="medium">
+                  <ChatIcon fontSize="medium" />
+                </Button>
+              </Tooltip>
+              {pending ? (
+                <Button
+                  variant="contained"
+                  color="success"
+                  size="medium"
+                  disabled
+                >
+                  <TimerIcon fontSize="medium" />
+                </Button>
+              ) : accepted ? (
+                <Tooltip title="Remove Friend" placement="top">
+                  <Button
+                    variant="contained"
+                    color="warning"
+                    size="small"
+                    onClick={() =>
+                      openConfirmModal(
+                        "Confirm Remove",
+                        "Are you sure you want to remove this friend?",
+                        "Remove",
+                        () => remove_friend(userData!.user.id)
+                      )
+                    }
+                  >
+                    <PersonRemoveIcon />
+                  </Button>
+                </Tooltip>
+              ) : (
+                <Tooltip title="Add Friend" placement="top">
+                  <Button
+                    variant="contained"
+                    color="success"
+                    size="medium"
+                    onClick={send_friend_request}
+                  >
+                    <PersonAddIcon fontSize="medium" />
+                  </Button>
+                </Tooltip>
+              )}
+              <Tooltip title="Block User" placement="top">
+                <Button
+                  variant="contained"
+                  color="warning"
+                  size="medium"
+                  onClick={() =>
+                    openConfirmModal(
+                      "Block User",
+                      `Are you sure you want to block ${userData?.user.username}?`,
+                      "Block",
+                      block_user
+                    )
+                  }
+                >
+                  <GppBadIcon fontSize="medium" />
+                </Button>
+              </Tooltip>
+            </Box>
           )}
         </Box>
         {/* Personal Information Section */}
@@ -317,7 +512,7 @@ const ProfileInfo = ({ userData }: ProfileInfoProps) => {
             allowEmpty={true}
           />
         )}
-        {/* ProfilePictureModal */}
+        {/* Profile Picture Modal */}
         {getUrl("my-profile") && (
           <ProfilePictureModal
             open={isProfilePictureModalOpen}
@@ -325,6 +520,15 @@ const ProfileInfo = ({ userData }: ProfileInfoProps) => {
             onSubmit={handleProfilePictureChange}
           />
         )}
+        <ConfirmModal
+          open={confirmModalOpen}
+          title={confirmModalTitle}
+          message={confirmModalMessage}
+          color="error"
+          confirmText={confirmModalText}
+          onConfirm={handleConfirm}
+          onCancel={handleCancel}
+        />
       </Box>
     </>
   );
