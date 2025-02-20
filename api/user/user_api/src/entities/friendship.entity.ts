@@ -7,7 +7,7 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 import { User } from './user.entity';
-import { FriendshipStatus } from 'src/enums/friendship-status';
+import { FriendshipStatus } from 'src/enums/friendship-status.enum';
 
 @Entity('friendships')
 export class Friendship {

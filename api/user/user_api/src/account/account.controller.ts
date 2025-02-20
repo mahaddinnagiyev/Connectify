@@ -13,12 +13,13 @@ import {
 } from '@nestjs/common';
 import { AccountService } from './account.service';
 import { JwtAuthGuard } from 'src/jwt/jwt-auth-guard';
-import { Throttle } from '@nestjs/throttler';
+import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
 import { EditSocialLinkDTO, SocialLinkDTO } from './dto/social-link-dto';
 import { Request } from 'express';
 import { User } from 'src/entities/user.entity';
 import { EditAccountDTO } from './dto/account-info-dto';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { UpdatePrivacySettingsDTO } from './dto/privacy-settings-dto';
 
 @Controller('account')
 export class AccountController {
@@ -102,5 +103,22 @@ export class AccountController {
     @UploadedFile() file: Express.Multer.File,
   ) {
     return await this.accountService.update_profile_pic(req.user as User, file);
+  }
+
+  // Update Privacy Settings
+  @Patch('/privacy-settings')
+  @UseGuards(JwtAuthGuard)
+  @UseGuards(ThrottlerGuard)
+  @Throttle({
+    default: { limit: 120, ttl: 60 * 1000, blockDuration: 60 * 1000 },
+  })
+  async update_privacy_settings(
+    @Body() privacy_settings: UpdatePrivacySettingsDTO,
+    @Req() req: Request,
+  ) {
+    return await this.accountService.update_privacy_settings(
+      req.user as User,
+      privacy_settings,
+    );
   }
 }

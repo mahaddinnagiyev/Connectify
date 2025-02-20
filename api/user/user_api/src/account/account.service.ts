@@ -14,6 +14,7 @@ import { User } from 'src/entities/user.entity';
 import { v4 as uuid } from 'uuid';
 import { EditAccountDTO } from './dto/account-info-dto';
 import { SupabaseService } from 'src/supabase/supabase.service';
+import { UpdatePrivacySettingsDTO } from './dto/privacy-settings-dto';
 
 @Injectable()
 export class AccountService {
@@ -436,7 +437,7 @@ export class AccountService {
           return new BadRequestException({
             success: false,
             error: error.message,
-          })
+          });
         }
       }
 
@@ -463,6 +464,53 @@ export class AccountService {
       );
       return new InternalServerErrorException(
         'Updating profile photo failed - Due To Internal Server Error',
+      );
+    }
+  }
+
+  // Update Privacy Settings
+  async update_privacy_settings(
+    req_user: User,
+    privacy_settings: UpdatePrivacySettingsDTO,
+  ): Promise<{ success: boolean; message: string } | HttpException> {
+    try {
+      const account = (await this.get_account_by_user(req_user)) as Account;
+
+      if (account instanceof HttpException) {
+        await this.logger.warn(
+          'Account not found',
+          'account',
+          `User: ${req_user.username}`,
+        );
+        return new NotFoundException({
+          success: false,
+          error: 'Account not found',
+        });
+      }
+
+      await this.accountRepository.update(account.id, {
+        privacy_settings: { ...account.privacy_settings, ...privacy_settings },
+      });
+
+      await this.logger.info(
+        `Privacy settings updated by user: ${req_user.username}`,
+        'account',
+        `User: ${req_user.username}`,
+      );
+
+      return {
+        success: true,
+        message: 'Privacy settings updated successfully',
+      };
+    } catch (error) {
+      await this.logger.error(
+        error.message,
+        'account',
+        'There is an error updating privacy settings',
+        error.stack,
+      );
+      return new InternalServerErrorException(
+        'Updating privacy settings failed - Due To Internal Server Error',
       );
     }
   }

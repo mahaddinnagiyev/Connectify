@@ -9,7 +9,7 @@ import { Friendship } from 'src/entities/friendship.entity';
 import { LoggerService } from 'src/logger/logger.service';
 import { Repository } from 'typeorm';
 import { User } from 'src/entities/user.entity';
-import { FriendshipStatus } from 'src/enums/friendship-status';
+import { FriendshipStatus } from 'src/enums/friendship-status.enum';
 import { BlockList } from 'src/entities/blocklist.entity';
 import { Account } from 'src/entities/account.entity';
 
