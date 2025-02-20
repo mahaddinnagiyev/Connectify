@@ -11,6 +11,7 @@ import ResetPassword from "./pages/auth/ResetPassword";
 import FriendPage from "./pages/friends/FriendPage";
 import UserProfilePage from "./pages/profile/user/UserProfilePage";
 import SettingsPage from "./pages/settings/SettingsPage";
+import DeleteAccount from "./pages/DeleteAccount";
 
 function App() {
   return (
@@ -59,8 +60,9 @@ function App() {
         />
         <Route path="/auth/login" element={<Login />} />
         <Route path="/auth/signup" element={<Signup />} />
-        <Route path="/auth/forgot-password" element={<ForgotPassword />} />
+        <Route path="/auth/delete-account" element={<DeleteAccount />} />
         <Route path="/auth/reset-password" element={<ResetPassword />} />
+        <Route path="/auth/forgot-password" element={<ForgotPassword />} />
       </Routes>
     </BrowserRouter>
   );

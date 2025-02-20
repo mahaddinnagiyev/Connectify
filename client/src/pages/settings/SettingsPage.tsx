@@ -1,5 +1,6 @@
-import Header from "../../components/header/Header";
 import * as React from "react";
+import "./style.css"
+import Header from "../../components/header/Header";
 import Tabs from "@mui/material/Tabs";
 import Tab from "@mui/material/Tab";
 import Typography from "@mui/material/Typography";

@@ -143,3 +143,44 @@ export const resetPassword = async (password: string, token: string) => {
   const data = await response.json();
   return data;
 };
+
+// Delete Account
+export const delete_account = async (): Promise<{
+  success: boolean;
+  message?: string;
+  error?: string;
+  response: { success: boolean; message?: string; error?: string };
+}> => {
+  const response = await fetch(`${SERVER_USER_URL}/auth/delete`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json; charset=utf-8",
+      Authorization: `Bearer ${await getToken()}`,
+    },
+    credentials: "include",
+  });
+
+  const data = await response.json();
+  return data;
+};
+
+// Confirm Delete Account
+export const confirm_delete_account = async (
+  token: string
+): Promise<{
+  success: boolean;
+  message?: string;
+  error?: string;
+  response: { success: boolean; message?: string; error?: string };
+}> => {
+  const response = await fetch(`${SERVER_USER_URL}/auth/delete/confirm`, {
+    method: "DELETE",
+    headers: {
+      "Content-Type": "application/json; charset=utf-8",
+    },
+    credentials: "include",
+    body: JSON.stringify({ token }),
+  });
+  const data = await response.json();
+  return data;
+};

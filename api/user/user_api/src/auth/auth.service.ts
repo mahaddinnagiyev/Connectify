@@ -634,7 +634,7 @@ export class AuthService {
     try {
       const user = await this.userRepository.findOne({
         where: { reset_token: token },
-        relations: ['accounts'],
+        relations: ['account'],
       });
 
       if (!user || user.reset_token_expiration < new Date()) {

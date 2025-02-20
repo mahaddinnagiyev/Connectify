@@ -6,6 +6,7 @@ import { User } from "../../services/user/dto/user-dto";
 import { Account } from "../../services/account/dto/account-dto";
 import { PrivacySettingsDTO } from "../../services/account/dto/privacy-settings-dto";
 import PrivacySettingsComponent from "./account/PrivacySettings";
+import AccountSettingsComponent from "./account/AccountSettingsComponent";
 
 interface UserProfile {
   user: User;
@@ -35,7 +36,7 @@ const AccountSettings: React.FC<AccountSettingsProps> = ({ userData }) => {
           onClose={() => setSuccessMessage(null)}
         />
       )}
-
+      <AccountSettingsComponent />
       <PrivacySettingsComponent userData={userData} />
     </Box>
   );
