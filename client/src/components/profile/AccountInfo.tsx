@@ -125,20 +125,45 @@ const AccountInfo: React.FC<AccountInfoProps> = ({
               )}
             </>
           )}
-          <TextField
-            id="last_login"
-            label="Last login"
-            value={
-              userData?.account.last_login
-                ? userData.account.last_login
-                : "There is no last login yet"
-            }
-            variant="outlined"
-            fullWidth
-            margin="normal"
-            InputProps={{ readOnly: true }}
-            sx={{ maxWidth: { xs: "100%", sm: "50%" } }}
-          />
+          {getUrl("my-profile") ||
+          privacy_settings?.last_login === PrivacySettings.everyone ? (
+            <TextField
+              id="last_login"
+              label="Last login"
+              value={
+                userData?.account.last_login
+                  ? userData.account.last_login
+                  : "There is no last login yet"
+              }
+              variant="outlined"
+              fullWidth
+              margin="normal"
+              InputProps={{ readOnly: true }}
+              sx={{ maxWidth: { xs: "100%", sm: "50%" } }}
+            />
+          ) : (
+            <>
+              {privacy_settings?.last_login === PrivacySettings.my_friends &&
+              accepted ? (
+                <TextField
+                  id="last_login"
+                  label="Last login"
+                  value={
+                    userData?.account.last_login
+                      ? userData.account.last_login
+                      : "There is no last login yet"
+                  }
+                  variant="outlined"
+                  fullWidth
+                  margin="normal"
+                  InputProps={{ readOnly: true }}
+                  sx={{ maxWidth: { xs: "100%", sm: "50%" } }}
+                />
+              ) : (
+                ""
+              )}
+            </>
+          )}
           {getUrl("my-profile") && (
             <div className="px-2 py-2">
               <button

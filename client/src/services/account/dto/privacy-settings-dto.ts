@@ -10,6 +10,7 @@ export interface PrivacySettingsDTO {
     bio: PrivacySettings;
     location: PrivacySettings;
     social_links: PrivacySettings;
+    last_login: PrivacySettings;
 }
 
 export interface EditPrivacySettingsDTO {
@@ -18,4 +19,5 @@ export interface EditPrivacySettingsDTO {
     bio?: PrivacySettings;
     location?: PrivacySettings;
     social_links?: PrivacySettings;
+    last_login?: PrivacySettings;
 }

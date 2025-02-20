@@ -119,6 +119,7 @@ const SettingsPage = () => {
             bio: null,
             location: null,
             social_links: null,
+            last_login: null,
           },
         });
       } else {
@@ -197,7 +198,7 @@ const SettingsPage = () => {
               paddingLeft: 0,
             }}
           >
-            <TabPanel value={value} index={0}>
+            <TabPanel value={0} index={0}>
               <AccountSettings userData={userData} />
             </TabPanel>
           </Box>

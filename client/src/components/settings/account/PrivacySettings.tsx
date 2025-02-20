@@ -39,6 +39,7 @@ const PrivacySettingsComponent: React.FC<PrivacySettingsProps> = ({ userData }) 
     bio: privacySettings.everyone,
     location: privacySettings.everyone,
     social_links: privacySettings.everyone,
+    last_login: privacySettings.everyone,
   });
 
   useEffect(() => {
@@ -49,6 +50,7 @@ const PrivacySettingsComponent: React.FC<PrivacySettingsProps> = ({ userData }) 
         bio: userData.privacy_settings.bio,
         location: userData.privacy_settings.location,
         social_links: userData.privacy_settings.social_links,
+        last_login: userData.privacy_settings.last_login,
       });
     }
   }, [userData]);
@@ -228,6 +230,29 @@ const PrivacySettingsComponent: React.FC<PrivacySettingsProps> = ({ userData }) 
               value={privacy.social_links}
               onChange={(e) =>
                 handleChange("social_links", e.target.value as privacySettings)
+              }
+              sx={{ width: "150px" }}
+            >
+              <MenuItem value={privacySettings.everyone}>Everyone</MenuItem>
+              <MenuItem value={privacySettings.my_friends}>My Friends</MenuItem>
+              <MenuItem value={privacySettings.nobody}>Nobody</MenuItem>
+            </Select>
+          </FormControl>
+        </Box>
+        <Box
+          sx={{
+            display: "grid",
+            gridTemplateColumns: "1fr 150px",
+            alignItems: "center",
+            gap: 1,
+          }}
+        >
+          <Typography>Who can see my last login date?</Typography>
+          <FormControl variant="outlined" size="small">
+            <Select
+              value={privacy.last_login}
+              onChange={(e) =>
+                handleChange("last_login", e.target.value as privacySettings)
               }
               sx={{ width: "150px" }}
             >
