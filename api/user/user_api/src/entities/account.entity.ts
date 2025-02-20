@@ -8,7 +8,7 @@ import {
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import { User } from './user.entity';
-import { PrivacySettings } from 'src/enums/privacy-settings.enum';
+import { PrivacySettings } from './privacy-settings.entity';
 
 @Entity('accounts')
 export class Account {
@@ -34,24 +34,11 @@ export class Account {
   @Column({ type: 'timestamp', nullable: true })
   last_login: Date;
 
-  @Column({
-    type: 'json',
-    nullable: true,
-    default: {
-      email: PrivacySettings.everyone,
-      gender: PrivacySettings.everyone,
-      bio: PrivacySettings.everyone,
-      location: PrivacySettings.everyone,
-      social_links: PrivacySettings.everyone,
-    },
+  @OneToOne(() => PrivacySettings, (privacy) => privacy.account, {
+    cascade: true,
+    eager: true,
   })
-  privacy_settings: {
-    email?: PrivacySettings;
-    gender?: PrivacySettings;
-    bio?: PrivacySettings;
-    location?: PrivacySettings;
-    social_links?: PrivacySettings;
-  };
+  privacy: PrivacySettings;
 
   @CreateDateColumn()
   created_at: Date;

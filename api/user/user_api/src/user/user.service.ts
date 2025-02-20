@@ -13,6 +13,7 @@ import { Repository } from 'typeorm';
 import { EditUserInfoDTO } from './dto/user-info-dto';
 import { BlockList } from 'src/entities/blocklist.entity';
 import { Friendship } from 'src/entities/friendship.entity';
+import { PrivacySettings } from 'src/entities/privacy-settings.entity';
 
 @Injectable()
 export class UserService {
@@ -25,6 +26,9 @@ export class UserService {
     private blockListRepository: Repository<BlockList>,
     @InjectRepository(Friendship)
     private friendshipRepository: Repository<Friendship>,
+    @InjectRepository(PrivacySettings)
+    private privacySettingsRepository: Repository<PrivacySettings>,
+
     private readonly logger: LoggerService,
   ) {}
 
@@ -66,7 +70,13 @@ export class UserService {
   async get_user_by_id(
     id: string,
   ): Promise<
-    { success: boolean; user: User; account: Account } | HttpException
+    | {
+        success: boolean;
+        user: User;
+        account: Account;
+        privacy_settings: PrivacySettings;
+      }
+    | HttpException
   > {
     try {
       const user: User = await this.userRepository.findOne({
@@ -86,7 +96,12 @@ export class UserService {
         where: { user: { id: id } },
       });
 
-      if (!(user && account)) {
+      const privacy_settings: PrivacySettings =
+        await this.privacySettingsRepository.findOne({
+          where: { account: { id: account.id } },
+        });
+
+      if (!(user && account && privacy_settings)) {
         return new NotFoundException({
           success: false,
           error: 'User not found',
@@ -97,6 +112,7 @@ export class UserService {
         success: true,
         user,
         account,
+        privacy_settings,
       };
     } catch (error) {
       await this.logger.error(
@@ -112,7 +128,13 @@ export class UserService {
   async get_user_by_username(
     username: string,
   ): Promise<
-    { success: boolean; user: User; account: Account } | HttpException
+    | {
+        success: boolean;
+        user: User;
+        account: Account;
+        privacy_settings: PrivacySettings;
+      }
+    | HttpException
   > {
     try {
       const user: User = await this.userRepository.findOne({
@@ -132,7 +154,12 @@ export class UserService {
         where: { user: { id: user.id } },
       });
 
-      if (!(user && account)) {
+      const privacy_settings: PrivacySettings =
+        await this.privacySettingsRepository.findOne({
+          where: { account: { id: account.id } },
+        });
+
+      if (!(user && account && privacy_settings)) {
         return new NotFoundException({
           success: false,
           error: 'User not found',
@@ -143,6 +170,7 @@ export class UserService {
         success: true,
         user,
         account,
+        privacy_settings,
       };
     } catch (error) {
       await this.logger.error(

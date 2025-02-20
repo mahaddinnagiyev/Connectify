@@ -10,10 +10,11 @@ import { JwtStrategy } from 'src/jwt/jwt-strategy';
 import { AuthModule } from 'src/auth/auth.module';
 import { BlockList } from 'src/entities/blocklist.entity';
 import { Friendship } from 'src/entities/friendship.entity';
+import { PrivacySettings } from 'src/entities/privacy-settings.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([User, Account, Friendship, BlockList]),
+    TypeOrmModule.forFeature([User, Account, Friendship, PrivacySettings, BlockList]),
     PassportModule.register({ defaultStrategy: 'jwt' }),
     LoggerModule,
     AuthModule

@@ -35,6 +35,7 @@ import {
   emailNotFoundMessage,
   forgotPasswordMessage,
 } from './utils/messages/forgot-password-message';
+import { PrivacySettings } from 'src/entities/privacy-settings.entity';
 
 @Injectable()
 export class AuthService {
@@ -45,6 +46,9 @@ export class AuthService {
     private accountRepository: Repository<Account>,
     @InjectRepository(TokenBlackList)
     private tokenBlackListRepository: Repository<TokenBlackList>,
+    @InjectRepository(PrivacySettings)
+    private privacySettingsRepository: Repository<PrivacySettings>,
+
     private readonly mailService: MailerService,
     private readonly logger: LoggerService,
     private httpService: HttpService,
@@ -233,6 +237,12 @@ export class AuthService {
       });
 
       await this.accountRepository.save(newAccount);
+
+      const newPrivacySettings: PrivacySettings =
+        this.privacySettingsRepository.create({
+          account: newAccount,
+        });
+      await this.privacySettingsRepository.save(newPrivacySettings);
 
       delete session.unconfirmed_user;
       delete session.confirm_code;
@@ -589,9 +599,16 @@ export class AuthService {
 
         const newAccount = this.accountRepository.create({
           user: existUser,
-          profile_picture: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQUy9s7L2aRDadM1KxmVNkNQ9Edar2APzIeHw&s",
+          profile_picture:
+            'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQUy9s7L2aRDadM1KxmVNkNQ9Edar2APzIeHw&s',
         });
         await this.accountRepository.save(newAccount);
+
+        const newPrivacySettings: PrivacySettings =
+          this.privacySettingsRepository.create({
+            account: newAccount,
+          });
+        await this.privacySettingsRepository.save(newPrivacySettings);
 
         await this.logger.info(
           `New user created:\nFull name: ${existUser.first_name} ${existUser.last_name},\nusername: ${existUser.username},\nemail: ${existUser.email}`,

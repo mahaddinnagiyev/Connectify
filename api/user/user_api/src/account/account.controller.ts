@@ -117,8 +117,8 @@ export class AccountController {
     @Req() req: Request,
   ) {
     return await this.accountService.update_privacy_settings(
-      req.user as User,
       privacy_settings,
+      req.user as User,
     );
   }
 }

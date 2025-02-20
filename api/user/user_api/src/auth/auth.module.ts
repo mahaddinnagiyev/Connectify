@@ -12,10 +12,11 @@ import { GoogleStrategy } from './strategy/google.strategy';
 import { HttpModule } from '@nestjs/axios';
 import { JwtAuthGuard } from 'src/jwt/jwt-auth-guard';
 import { JwtModule } from '@nestjs/jwt';
+import { PrivacySettings } from 'src/entities/privacy-settings.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([User, Account, TokenBlackList]),
+    TypeOrmModule.forFeature([User, Account, PrivacySettings, TokenBlackList]),
     PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.register({
       secret: process.env.JWT_ACCESS_SECRET_KEY,

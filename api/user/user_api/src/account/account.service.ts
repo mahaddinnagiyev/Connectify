@@ -14,6 +14,7 @@ import { User } from 'src/entities/user.entity';
 import { v4 as uuid } from 'uuid';
 import { EditAccountDTO } from './dto/account-info-dto';
 import { SupabaseService } from 'src/supabase/supabase.service';
+import { PrivacySettings } from 'src/entities/privacy-settings.entity';
 import { UpdatePrivacySettingsDTO } from './dto/privacy-settings-dto';
 
 @Injectable()
@@ -21,6 +22,9 @@ export class AccountService {
   constructor(
     @InjectRepository(Account)
     private accountRepository: Repository<Account>,
+    @InjectRepository(PrivacySettings)
+    private privacySettingsRepository: Repository<PrivacySettings>,
+
     private readonly logger: LoggerService,
     private readonly supabase: SupabaseService,
   ) {}
@@ -470,47 +474,53 @@ export class AccountService {
 
   // Update Privacy Settings
   async update_privacy_settings(
-    req_user: User,
     privacy_settings: UpdatePrivacySettingsDTO,
-  ): Promise<{ success: boolean; message: string } | HttpException> {
+    req_user: User,
+  ) {
     try {
-      const account = (await this.get_account_by_user(req_user)) as Account;
+      const account = await this.get_account_by_user(req_user);
 
       if (account instanceof HttpException) {
+        return account;
+      }
+
+      const privacy = await this.privacySettingsRepository.findOne({
+        where: { account: { id: account.id } },
+      });
+
+      if (!privacy) {
         await this.logger.warn(
-          'Account not found',
+          'Privacy not found',
           'account',
           `User: ${req_user.username}`,
         );
         return new NotFoundException({
           success: false,
-          error: 'Account not found',
+          error: 'Privacy Not Found',
         });
       }
 
-      await this.accountRepository.update(account.id, {
-        privacy_settings: { ...account.privacy_settings, ...privacy_settings },
-      });
+      await this.privacySettingsRepository.update(privacy.id, privacy_settings);
 
       await this.logger.info(
-        `Privacy settings updated by user: ${req_user.username}`,
+        `${req_user.username} updated privacy settings`,
         'account',
         `User: ${req_user.username}`,
       );
 
       return {
         success: true,
-        message: 'Privacy settings updated successfully',
+        message: 'Privacy settings updated',
       };
     } catch (error) {
       await this.logger.error(
         error.message,
         'account',
-        'There is an error updating privacy settings',
+        'There was an error in update privacy settings',
         error.stack,
       );
       return new InternalServerErrorException(
-        'Updating privacy settings failed - Due To Internal Server Error',
+        'Failed to update privacy settings - Due to Internal Server Error',
       );
     }
   }

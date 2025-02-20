@@ -9,10 +9,11 @@ import { LoggerModule } from 'src/logger/logger.module';
 import { User } from 'src/entities/user.entity';
 import { AuthModule } from 'src/auth/auth.module';
 import { SupabaseModule } from 'src/supabase/supabase.module';
+import { PrivacySettings } from 'src/entities/privacy-settings.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([User, Account]),
+    TypeOrmModule.forFeature([User, Account, PrivacySettings]),
     PassportModule.register({ defaultStrategy: 'jwt' }),
     LoggerModule,
     AuthModule,
