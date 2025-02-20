@@ -20,15 +20,23 @@ import {
 } from "../../services/account/social-links-service";
 import ErrorMessage from "../messages/ErrorMessage";
 import SuccessMessage from "../messages/SuccessMessage";
+import {
+  PrivacySettings,
+  PrivacySettingsDTO,
+} from "../../services/account/dto/privacy-settings-dto";
 
 interface SocialLinkProps {
   socialLinks: { id: string; name: string; link: string }[];
   copy_soical_link: (link: string) => void;
+  privacy_settings: PrivacySettingsDTO | null;
+  accepted: boolean;
 }
 
 const SocialLink: React.FC<SocialLinkProps> = ({
   socialLinks,
   copy_soical_link,
+  privacy_settings,
+  accepted,
 }) => {
   const [openModal, setOpenModal] = useState(false);
   const [editMode, setEditMode] = useState(false);
@@ -158,31 +166,71 @@ const SocialLink: React.FC<SocialLinkProps> = ({
       ) : (
         socialLinks.map((link) => (
           <div key={link.name} className="flex items-center gap-2">
-            <TextField
-              id={link.id}
-              label={link.name}
-              value={link.link}
-              variant="outlined"
-              fullWidth
-              margin="normal"
-              InputProps={{
-                readOnly: true,
-              }}
-            />
-            <Tooltip title="Copy link" placement="top">
-              <InsertLinkIcon
-                className="cursor-pointer"
-                style={{ fontSize: "30px" }}
-                onClick={() => copy_soical_link(link.link)}
-              />
-            </Tooltip>
-            <Tooltip title="Open link in new tab" placement="top">
-              <OpenInNewIcon
-                className="cursor-pointer"
-                style={{ fontSize: "24px" }}
-                onClick={() => window.open(link.link, "_blank")}
-              />
-            </Tooltip>
+            {getUrl("my-profile") ||
+            privacy_settings?.social_links === PrivacySettings.everyone ? (
+              <>
+                <TextField
+                  id={link.id}
+                  label={link.name}
+                  value={link.link}
+                  variant="outlined"
+                  fullWidth
+                  margin="normal"
+                  InputProps={{
+                    readOnly: true,
+                  }}
+                />
+                <Tooltip title="Copy link" placement="top">
+                  <InsertLinkIcon
+                    className="cursor-pointer"
+                    style={{ fontSize: "30px" }}
+                    onClick={() => copy_soical_link(link.link)}
+                  />
+                </Tooltip>
+                <Tooltip title="Open link in new tab" placement="top">
+                  <OpenInNewIcon
+                    className="cursor-pointer"
+                    style={{ fontSize: "24px" }}
+                    onClick={() => window.open(link.link, "_blank")}
+                  />
+                </Tooltip>
+              </>
+            ) : (
+              <>
+                {privacy_settings?.social_links ===
+                  PrivacySettings.my_friends && accepted ? (
+                  <>
+                    <TextField
+                      id={link.id}
+                      label={link.name}
+                      value={link.link}
+                      variant="outlined"
+                      fullWidth
+                      margin="normal"
+                      InputProps={{
+                        readOnly: true,
+                      }}
+                    />
+                    <Tooltip title="Copy link" placement="top">
+                      <InsertLinkIcon
+                        className="cursor-pointer"
+                        style={{ fontSize: "30px" }}
+                        onClick={() => copy_soical_link(link.link)}
+                      />
+                    </Tooltip>
+                    <Tooltip title="Open link in new tab" placement="top">
+                      <OpenInNewIcon
+                        className="cursor-pointer"
+                        style={{ fontSize: "24px" }}
+                        onClick={() => window.open(link.link, "_blank")}
+                      />
+                    </Tooltip>
+                  </>
+                ) : (
+                  ""
+                )}
+              </>
+            )}
             {getUrl("my-profile") && (
               <>
                 <Tooltip title="Edit Link" placement="top">

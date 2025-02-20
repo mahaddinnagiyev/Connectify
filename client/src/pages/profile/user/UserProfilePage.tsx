@@ -12,10 +12,14 @@ import { User } from "../../../services/user/dto/user-dto";
 import { Account } from "../../../services/account/dto/account-dto";
 import { jwtDecode } from "jwt-decode";
 import { getToken } from "../../../services/auth/token-service";
+import { PrivacySettingsDTO } from "../../../services/account/dto/privacy-settings-dto";
+// import { UserFriendsDTO } from "../../../services/friendship/dto/friendship-dto";
+// import { getFriends } from "../../../services/friendship/friendship-service";
 
 interface UserProfile {
   user: User;
   account: Account;
+  privacy_settings: PrivacySettingsDTO;
 }
 
 interface TabPanelProps {
@@ -51,16 +55,13 @@ function TabPanel(props: TabPanelProps) {
 }
 
 const UserProfilePage = () => {
-  const [value, setValue] = React.useState<number>(() => {
-    const savedTab = localStorage.getItem("activeTab");
-    return savedTab ? parseInt(savedTab, 10) : 0;
-  });
   const [isVertical, setIsVertical] = React.useState(window.innerWidth >= 886);
   const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
   const [successMessage, setSuccessMessage] = React.useState<string | null>(
     null
   );
   const [userData, setUserData] = React.useState<UserProfile | null>(null);
+  // const [friends, setFriends] = React.useState<UserFriendsDTO[]>([]);
 
   React.useEffect(() => {
     const handleResize = () => {
@@ -70,14 +71,6 @@ const UserProfilePage = () => {
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
-
-  React.useEffect(() => {
-    localStorage.setItem("activeTab", value.toString());
-  }, [value]);
-
-  const handleChange = (event: React.SyntheticEvent, newValue: number) => {
-    setValue(newValue);
-  };
 
   const decodeTokenAndGetUsername = async () => {
     const token = await getToken();
@@ -130,6 +123,13 @@ const UserProfilePage = () => {
               profile_picture: null,
               social_links: [],
             },
+            privacy_settings: response.privacy_settings ?? {
+              id: null,
+              show_bio: null,
+              show_location: null,
+              show_profile_picture: null,
+              show_social_links: null,
+            },
           });
         } else {
           setErrorMessage(
@@ -145,6 +145,17 @@ const UserProfilePage = () => {
 
     fetchData();
   }, []);
+
+  // React.useEffect(() => {
+  //   const fetchFriends = async () => {
+  //     const response = await getFriends();
+  //     if (response.success) {
+  //       setFriends(response.friends);
+  //     }
+  //   };
+
+  //   fetchFriends();
+  // }, []);
 
   return (
     <>
@@ -178,8 +189,6 @@ const UserProfilePage = () => {
             variant="scrollable"
             scrollButtons="auto"
             allowScrollButtonsMobile
-            value={value}
-            onChange={handleChange}
             aria-label="Profile tabs"
             sx={{
               borderRight: isVertical ? 1 : 0,
@@ -213,7 +222,7 @@ const UserProfilePage = () => {
               paddingLeft: 0,
             }}
           >
-            <TabPanel value={value} index={0}>
+            <TabPanel value={0} index={0}>
               <ProfileInfo userData={userData} />
             </TabPanel>
           </Box>

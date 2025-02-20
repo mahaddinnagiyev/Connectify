@@ -31,10 +31,12 @@ import { block_and_unblock_user } from "../../services/user/block-list-service";
 import { BlockAction } from "../../services/user/dto/block-list-dto";
 import { UserFriendsDTO } from "../../services/friendship/dto/friendship-dto";
 import { FriendshipStatus } from "../../services/friendship/enum/friendship-status.enum";
+import { PrivacySettingsDTO } from "../../services/account/dto/privacy-settings-dto";
 
 interface UserProfile {
   user: User;
   account: Account;
+  privacy_settings: PrivacySettingsDTO;
 }
 
 interface ProfileInfoProps {
@@ -439,12 +441,15 @@ const ProfileInfo: React.FC<ProfileInfoProps> = ({ userData }) => {
         <PersonalInfo
           userData={userData}
           onEdit={() => setEditPersonalInfoModalOpen(true)}
+          accepted={accepted}
         />
         {/* Account Information Section */}
         <AccountInfo
           userData={userData}
+          privacy_settings={userData?.privacy_settings ?? null}
           onEdit={() => setEditProfileInfoModalOpen(true)}
           copySocialLink={copy_soical_link}
+          accepted={accepted}
         />
         {/* Modals */}
         <ImageModal

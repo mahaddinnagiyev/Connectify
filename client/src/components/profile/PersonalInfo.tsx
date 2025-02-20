@@ -1,6 +1,10 @@
 // PersonalInfo.tsx
 import React from "react";
 import { Box, TextField } from "@mui/material";
+import {
+  PrivacySettings,
+  PrivacySettingsDTO,
+} from "../../services/account/dto/privacy-settings-dto";
 
 interface PersonalInfoProps {
   userData: {
@@ -11,11 +15,17 @@ interface PersonalInfoProps {
       email: string | null;
       gender: string | null;
     };
+    privacy_settings: PrivacySettingsDTO;
   } | null;
   onEdit: () => void;
+  accepted: boolean;
 }
 
-const PersonalInfo: React.FC<PersonalInfoProps> = ({ userData, onEdit }) => {
+const PersonalInfo: React.FC<PersonalInfoProps> = ({
+  userData,
+  onEdit,
+  accepted,
+}) => {
   const getUrl = (params: string): boolean => {
     return window.location.href.includes(params);
   };
@@ -65,31 +75,78 @@ const PersonalInfo: React.FC<PersonalInfoProps> = ({ userData, onEdit }) => {
             InputProps={{ readOnly: true }}
             sx={{ maxWidth: { xs: "100%", sm: "50%" } }}
           />
-          <TextField
-            id="email"
-            label="Email"
-            value={userData?.user.email || ""}
-            variant="outlined"
-            fullWidth
-            margin="normal"
-            InputProps={{ readOnly: true }}
-            sx={{ maxWidth: { xs: "100%", sm: "50%" } }}
-          />
-          <TextField
-            id="gender"
-            label="Gender"
-            value={
-              userData?.user.gender
-                ? userData.user.gender.charAt(0).toUpperCase() +
-                  userData.user.gender.slice(1)
-                : ""
-            }
-            variant="outlined"
-            fullWidth
-            margin="normal"
-            InputProps={{ readOnly: true }}
-            sx={{ maxWidth: { xs: "100%", sm: "50%" } }}
-          />
+          {getUrl("my-profile") ||
+          userData?.privacy_settings.email === PrivacySettings.everyone ? (
+            <TextField
+              id="email"
+              label="Email"
+              value={userData?.user.email || ""}
+              variant="outlined"
+              fullWidth
+              margin="normal"
+              InputProps={{ readOnly: true }}
+              sx={{ maxWidth: { xs: "100%", sm: "50%" } }}
+            />
+          ) : (
+            <>
+              {userData?.privacy_settings.email ===
+                PrivacySettings.my_friends && accepted ? (
+                <TextField
+                  id="email"
+                  label="Email"
+                  value={userData?.user.email || ""}
+                  variant="outlined"
+                  fullWidth
+                  margin="normal"
+                  InputProps={{ readOnly: true }}
+                  sx={{ maxWidth: { xs: "100%", sm: "50%" } }}
+                />
+              ) : (
+                ""
+              )}
+            </>
+          )}
+          {getUrl("my-profile") ||
+          userData?.privacy_settings.gender === PrivacySettings.everyone ? (
+            <TextField
+              id="gender"
+              label="Gender"
+              value={
+                userData?.user.gender
+                  ? userData.user.gender.charAt(0).toUpperCase() +
+                    userData.user.gender.slice(1)
+                  : ""
+              }
+              variant="outlined"
+              fullWidth
+              margin="normal"
+              InputProps={{ readOnly: true }}
+              sx={{ maxWidth: { xs: "100%", sm: "50%" } }}
+            />
+          ) : (
+            <>
+              {userData?.privacy_settings.gender ===
+                PrivacySettings.my_friends && accepted ? (
+                <TextField
+                  id="gender"
+                  label="Gender"
+                  value={
+                    userData?.user.gender
+                      ? userData.user.gender.charAt(0).toUpperCase() +
+                        userData.user.gender.slice(1)
+                      : ""
+                  }
+                  variant="outlined"
+                  fullWidth
+                  margin="normal"
+                  InputProps={{ readOnly: true }}
+                  sx={{ maxWidth: { xs: "100%", sm: "50%" } }}
+                />
+              ) : (
+                ""
+              )}
+            </>
+          )}
         </div>
         {getUrl("my-profile") && (
           <div className="px-2 py-2">

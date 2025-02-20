@@ -1,6 +1,10 @@
 import React from "react";
 import { Box, TextField } from "@mui/material";
 import SocialLink from "./SocialLink";
+import {
+  PrivacySettings,
+  PrivacySettingsDTO,
+} from "../../services/account/dto/privacy-settings-dto";
 
 interface AccountInfoProps {
   userData: {
@@ -13,12 +17,16 @@ interface AccountInfoProps {
   } | null;
   onEdit: () => void;
   copySocialLink: (link: string) => void;
+  privacy_settings: PrivacySettingsDTO | null;
+  accepted: boolean;
 }
 
 const AccountInfo: React.FC<AccountInfoProps> = ({
   userData,
   onEdit,
   copySocialLink,
+  privacy_settings,
+  accepted,
 }) => {
   const getUrl = (params: string): boolean => {
     return window.location.href.includes(params);
@@ -39,34 +47,84 @@ const AccountInfo: React.FC<AccountInfoProps> = ({
         autoComplete="off"
       >
         <div>
-          <TextField
-            id="bio"
-            label="Bio"
-            value={
-              userData?.account.bio
-                ? userData.account.bio
-                : "There is no bio yet"
-            }
-            variant="outlined"
-            fullWidth
-            margin="normal"
-            InputProps={{ readOnly: true }}
-            sx={{ maxWidth: { xs: "100%", sm: "50%" } }}
-          />
-          <TextField
-            id="location"
-            label="Location"
-            value={
-              userData?.account.location
-                ? userData.account.location
-                : "There is no location yet"
-            }
-            variant="outlined"
-            fullWidth
-            margin="normal"
-            InputProps={{ readOnly: true }}
-            sx={{ maxWidth: { xs: "100%", sm: "50%" } }}
-          />
+          {getUrl("my-profile") ||
+          privacy_settings?.bio === PrivacySettings.everyone ? (
+            <TextField
+              id="bio"
+              label="Bio"
+              value={
+                userData?.account.bio
+                  ? userData.account.bio
+                  : "There is no bio yet"
+              }
+              variant="outlined"
+              fullWidth
+              margin="normal"
+              InputProps={{ readOnly: true }}
+              sx={{ maxWidth: { xs: "100%", sm: "50%" } }}
+            />
+          ) : (
+            <>
+              {privacy_settings?.bio === PrivacySettings.my_friends &&
+              accepted ? (
+                <TextField
+                  id="bio"
+                  label="Bio"
+                  value={
+                    userData?.account.bio
+                      ? userData.account.bio
+                      : "There is no bio yet"
+                  }
+                  variant="outlined"
+                  fullWidth
+                  margin="normal"
+                  InputProps={{ readOnly: true }}
+                  sx={{ maxWidth: { xs: "100%", sm: "50%" } }}
+                />
+              ) : (
+                ""
+              )}
+            </>
+          )}
+          {getUrl("my-profile") ||
+          privacy_settings?.location === PrivacySettings.everyone ? (
+            <TextField
+              id="location"
+              label="Location"
+              value={
+                userData?.account.location
+                  ? userData.account.location
+                  : "There is no location yet"
+              }
+              variant="outlined"
+              fullWidth
+              margin="normal"
+              InputProps={{ readOnly: true }}
+              sx={{ maxWidth: { xs: "100%", sm: "50%" } }}
+            />
+          ) : (
+            <>
+              {privacy_settings?.location === PrivacySettings.my_friends &&
+              accepted ? (
+                <TextField
+                  id="location"
+                  label="Location"
+                  value={
+                    userData?.account.location
+                      ? userData.account.location
+                      : "There is no location yet"
+                  }
+                  variant="outlined"
+                  fullWidth
+                  margin="normal"
+                  InputProps={{ readOnly: true }}
+                  sx={{ maxWidth: { xs: "100%", sm: "50%" } }}
+                />
+              ) : (
+                ""
+              )}
+            </>
+          )}
           <TextField
             id="last_login"
             label="Last login"
@@ -98,6 +156,8 @@ const AccountInfo: React.FC<AccountInfoProps> = ({
         <SocialLink
           socialLinks={userData?.account.social_links || []}
           copy_soical_link={copySocialLink}
+          privacy_settings={privacy_settings ?? null}
+          accepted={accepted}
         />
       </Box>
     </>
