@@ -36,4 +36,11 @@ export class UpdatePrivacySettingsDTO {
       "Social link privacy settings must be one of the following: 'everyone', 'my_friends', 'nobody'",
   })
   social_links?: PrivacySettings;
+
+  @IsOptional()
+  @IsEnum(PrivacySettings, {
+    message:
+      "Last login privacy settings must be one of the following: 'everyone', 'my_friends', 'nobody'",
+  })
+  last_login?: PrivacySettings;
 }
