@@ -11,13 +11,15 @@ import { AuthModule } from 'src/auth/auth.module';
 import { BlockList } from 'src/entities/blocklist.entity';
 import { Friendship } from 'src/entities/friendship.entity';
 import { PrivacySettings } from 'src/entities/privacy-settings.entity';
+import { SupabaseModule } from 'src/supabase/supabase.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([User, Account, Friendship, PrivacySettings, BlockList]),
     PassportModule.register({ defaultStrategy: 'jwt' }),
     LoggerModule,
-    AuthModule
+    AuthModule,
+    SupabaseModule
   ],
   providers: [UserService, JwtStrategy],
   controllers: [UserController],

@@ -67,9 +67,7 @@ export class UserService {
     }
   }
 
-  async get_user_by_id(
-    id: string,
-  ): Promise<
+  async get_user_by_id(id: string): Promise<
     | {
         success: boolean;
         user: User;
@@ -125,9 +123,7 @@ export class UserService {
     }
   }
 
-  async get_user_by_username(
-    username: string,
-  ): Promise<
+  async get_user_by_username(username: string): Promise<
     | {
         success: boolean;
         user: User;
