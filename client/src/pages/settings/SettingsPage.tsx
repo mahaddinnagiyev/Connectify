@@ -53,7 +53,7 @@ function TabPanel(props: TabPanelProps) {
 
 const SettingsPage = () => {
   const [value, setValue] = React.useState<number>(() => {
-    const savedTab = localStorage.getItem("activeTab");
+    const savedTab = localStorage.getItem("activeSettingsTab");
     return savedTab ? parseInt(savedTab, 10) : 0;
   });
   const [isVertical, setIsVertical] = React.useState(window.innerWidth >= 886);
@@ -73,7 +73,7 @@ const SettingsPage = () => {
   }, []);
 
   React.useEffect(() => {
-    localStorage.setItem("activeTab", value.toString());
+    localStorage.setItem("activeSettingsTab", value.toString());
   }, [value]);
 
   const handleChange = (event: React.SyntheticEvent, newValue: number) => {
