@@ -18,12 +18,15 @@ import ErrorMessage from "../messages/ErrorMessage";
 import CheckModal from "../modals/spinner/CheckModal";
 import SettingsIcon from "@mui/icons-material/Settings";
 import { getUserById } from "../../services/user/user-service";
+import { getFriendRequests } from "../../services/friendship/friendship-service";
+import { Badge } from "@mui/material";
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [profilePicture, setProfilePicture] = useState<string | null>(null);
+  const [receivedRequestsCount, setReceivedRequestsCount] = useState(0);
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
@@ -61,6 +64,14 @@ const Header = () => {
     });
   }, []);
 
+  useEffect(() => {
+    getFriendRequests().then((response) => {
+      if (response.success) {
+        setReceivedRequestsCount(response.receivedRequests.length);
+      }
+    });
+  }, []);
+
   return (
     <>
       {errorMessage && (
@@ -92,7 +103,19 @@ const Header = () => {
           <ForumIcon /> Channels
         </a> */}
           <a href="/friends">
-            <PeopleIcon /> Friends
+            <Badge
+              badgeContent={receivedRequestsCount}
+              color="error"
+              className="flex gap-1"
+              sx={{
+                "& .MuiBadge-badge": {
+                  top: "3px",
+                  right: "-5px",
+                },
+              }}
+            >
+              <PeopleIcon /> Friends
+            </Badge>
           </a>
           <a href="/bot">
             <SmartToyIcon /> Bots

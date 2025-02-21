@@ -111,6 +111,8 @@ const ProfilePage = () => {
             location: null,
             profile_picture: null,
             social_links: [],
+            last_login: null,
+            privacy: null,
           },
         });
       } else {

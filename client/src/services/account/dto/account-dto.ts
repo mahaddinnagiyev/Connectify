@@ -1,3 +1,5 @@
+import { PrivacySettingsDTO } from "./privacy-settings-dto";
+
 export interface Account {
   id: string;
   bio: string;
@@ -5,6 +7,7 @@ export interface Account {
   profile_picture: string;
   social_links: { id: string; name: string; link: string }[];
   last_login: Date;
+  privacy?: PrivacySettingsDTO;
 }
 
 export interface EditAccountDTO {

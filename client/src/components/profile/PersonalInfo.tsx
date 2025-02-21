@@ -15,16 +15,17 @@ interface PersonalInfoProps {
       email: string | null;
       gender: string | null;
     };
-    privacy_settings: PrivacySettingsDTO;
   } | null;
   onEdit: () => void;
   accepted: boolean;
+  privacy_settings: PrivacySettingsDTO | null;
 }
 
 const PersonalInfo: React.FC<PersonalInfoProps> = ({
   userData,
   onEdit,
   accepted,
+  privacy_settings,
 }) => {
   const getUrl = (params: string): boolean => {
     return window.location.href.includes(params);
@@ -76,7 +77,7 @@ const PersonalInfo: React.FC<PersonalInfoProps> = ({
             sx={{ maxWidth: { xs: "100%", sm: "50%" } }}
           />
           {getUrl("my-profile") ||
-          userData?.privacy_settings.email === PrivacySettings.everyone ? (
+          privacy_settings?.email === PrivacySettings.everyone ? (
             <TextField
               id="email"
               label="Email"
@@ -89,8 +90,8 @@ const PersonalInfo: React.FC<PersonalInfoProps> = ({
             />
           ) : (
             <>
-              {userData?.privacy_settings.email ===
-                PrivacySettings.my_friends && accepted ? (
+              {privacy_settings?.email === PrivacySettings.my_friends &&
+              accepted ? (
                 <TextField
                   id="email"
                   label="Email"
@@ -107,7 +108,7 @@ const PersonalInfo: React.FC<PersonalInfoProps> = ({
             </>
           )}
           {getUrl("my-profile") ||
-          userData?.privacy_settings.gender === PrivacySettings.everyone ? (
+          privacy_settings?.gender === PrivacySettings.everyone ? (
             <TextField
               id="gender"
               label="Gender"
@@ -125,8 +126,8 @@ const PersonalInfo: React.FC<PersonalInfoProps> = ({
             />
           ) : (
             <>
-              {userData?.privacy_settings.gender ===
-                PrivacySettings.my_friends && accepted ? (
+              {privacy_settings?.gender === PrivacySettings.my_friends &&
+              accepted ? (
                 <TextField
                   id="gender"
                   label="Gender"
