@@ -17,7 +17,7 @@ async function bootstrap() {
     }),
   );
   app.enableCors({
-    origin: 'http://localhost:5173',
+    origin: ['http://localhost:5173', 'http://localhost:3636'],
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
@@ -32,7 +32,7 @@ async function bootstrap() {
       cookie: {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
-        maxAge: 5 * 24 * 60 * 60 * 1000,
+        maxAge: 30 * 60 * 1000,
       },
     }),
   );
