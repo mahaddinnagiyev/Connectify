@@ -5,11 +5,8 @@ import Chat from "./Chat";
 import SearchModal from "../modals/search/SearchModal";
 
 import no_profile_photo from "../../assets/no-profile-photo.png";
-import MoreVertIcon from "@mui/icons-material/MoreVert";
 import DeleteIcon from "@mui/icons-material/Delete";
 import BlockIcon from "@mui/icons-material/Block";
-import VideocamIcon from "@mui/icons-material/Videocam";
-import LocalPhoneIcon from "@mui/icons-material/LocalPhone";
 import AccountBoxIcon from "@mui/icons-material/AccountBox";
 import { socket } from "../../services/socket/socket-service";
 import { ChatRoomsDTO } from "../../services/socket/dto/ChatRoom-dto";
@@ -17,18 +14,37 @@ import { getToken } from "../../services/auth/token-service";
 import { jwtDecode } from "jwt-decode";
 import { getUserById } from "../../services/user/user-service";
 import { Users } from "../../services/user/dto/user-dto";
+import { MessagesDTO } from "../../services/socket/dto/messages-dto";
+import { Account } from "../../services/account/dto/account-dto";
 
 const Messenger = () => {
   const [visibleUserIndex, setVisibleUserIndex] = useState<number | null>(null);
-  const [visibleChatIndex, setVisibleChatIndex] = useState<boolean>(false);
-  const [chats, setChats] = useState<(ChatRoomsDTO & { otherUser?: Users })[]>(
-    []
-  );
+  const [chats, setChats] = useState<
+    (ChatRoomsDTO & { otherUser?: Users; otherUserAccount?: Account })[]
+  >([]);
+  const [messages, setMessages] = useState<MessagesDTO[]>([]);
+  const [currentRoomId, setCurrentRoomId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const roomId = params.get("room");
+    setCurrentRoomId(roomId);
+  }, []);
+
+  useEffect(() => {
+    if (!currentRoomId) return;
+
+    socket?.emit("getMessages", { roomId: currentRoomId });
+    socket?.on("messages", (data) => setMessages(data));
+
+    return () => {
+      socket?.off("messages");
+    };
+  }, [currentRoomId]);
 
   useEffect(() => {
     const handleClickOutside = () => {
       setVisibleUserIndex(null);
-      setVisibleChatIndex(false);
     };
 
     document.addEventListener("click", handleClickOutside);
@@ -42,11 +58,6 @@ const Messenger = () => {
     event.preventDefault();
     event.stopPropagation();
     setVisibleUserIndex(visibleUserIndex === index ? null : index);
-  };
-
-  const toggleChatOptions = (event: React.MouseEvent) => {
-    event.stopPropagation();
-    setVisibleChatIndex(!visibleChatIndex);
   };
 
   useEffect(() => {
@@ -71,8 +82,13 @@ const Messenger = () => {
 
             try {
               const userResponse = await getUserById(otherUserId);
+
               if (userResponse.success) {
-                return { ...chat, otherUser: userResponse.user as Users };
+                return {
+                  ...chat,
+                  otherUser: userResponse.user as Users,
+                  otherUserAccount: userResponse.account as Account,
+                };
               }
             } catch (error) {
               console.error("User fetch error:", error);
@@ -81,10 +97,9 @@ const Messenger = () => {
           })
         );
 
-        // Hər bir chat üçün son mesajı al
         const chatsWithLastMessage = await Promise.all(
           chatsWithUsers.map(async (chat) => {
-            const messages = await new Promise<any[]>((resolve) => {
+            const messages = await new Promise<MessagesDTO[]>((resolve) => {
               socket!.emit("getMessages", { roomId: chat.id });
               socket!.once("messages", resolve);
             });
@@ -108,6 +123,8 @@ const Messenger = () => {
     };
   }, [socket]);
 
+  const currentChat = chats.find((chat) => chat.id === currentRoomId);
+
   return (
     <section className="messenger-container">
       <div className="messenger flex gap-3">
@@ -126,101 +143,69 @@ const Messenger = () => {
             {chats.map((chat, index) => (
               <div
                 key={index}
-                className="message-user my-2"
+                className="message-user px-2 py-2 my-2 hover:bg-[var(--secondary-color)] hover:rounded-lg cursor-pointer transition-all duration-500"
+                onClick={() => (window.location.href = `?room=${chat.id}`)}
                 onContextMenu={(e) => handleRightClick(index, e)}
               >
-                <a
-                  href={`?room=${chat.id}`}
-                  className="user-profile-photo flex items-center justify-between pr-4"
-                  onClick={(e) => e.preventDefault()}
-                >
-                  {/* User Information */}
-                  <div className="flex items-center gap-3">
-                    <img
-                      src={no_profile_photo}
-                      alt="User Profile"
-                      width={50}
-                      height={50}
-                    />
-                    <div className="flex flex-col gap-1">
-                      <p className="text-sm">
-                        {chat.otherUser?.first_name} {chat.otherUser?.last_name}{" "}
-                        | @{chat.otherUser?.username}
-                      </p>
-                      <p className="text-xs">
-                        {chat?.lastMessage ?? "No message"}
-                      </p>
-                    </div>
+                {/* User Information */}
+                <div className="flex items-center gap-3">
+                  <img
+                    src={
+                      chat.otherUserAccount?.profile_picture ?? no_profile_photo
+                    }
+                    alt="User Profile"
+                    width={50}
+                    height={50}
+                    className="rounded-full border-2 border-[var(--primary-color)]"
+                  />
+                  <div className="flex flex-col gap-1">
+                    <p className="text-sm">
+                      {chat.otherUser?.first_name} {chat.otherUser?.last_name} |
+                      @{chat.otherUser?.username}
+                    </p>
+                    <p className="text-xs">
+                      {chat?.lastMessage ?? "No message"}
+                    </p>
                   </div>
+                </div>
 
-                  {/* User Actions */}
-                  <div className="relative">
-                    {visibleUserIndex === index && (
-                      <div className="action-buttons">
-                        <button className="user-profile-btn">
-                          <AccountBoxIcon className="profile-icon" /> User
-                          Profile
-                        </button>
-                        <button className="delete-btn">
-                          <DeleteIcon className="delete-icon" /> Delete Chat
-                        </button>
-                        <button className="block-btn">
-                          <BlockIcon /> Block User
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                </a>
+                {/* User Actions */}
+                <div className="relative">
+                  {visibleUserIndex === index && (
+                    <div className="action-buttons">
+                      <button className="user-profile-btn">
+                        <AccountBoxIcon className="profile-icon" /> User Profile
+                      </button>
+                      <button className="delete-btn">
+                        <DeleteIcon className="delete-icon" /> Delete Chat
+                      </button>
+                      <button className="block-btn">
+                        <BlockIcon /> Block User
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
             ))}
           </div>
         </div>
 
         {/* Chat Rooms Part */}
-        <div className="messenger-right text-left">
-          <div className="right-header pb-3 px-4 max-h-[55px] flex items-center justify-between">
-            <div className="flex items-center gap-5">
-              <img src={no_profile_photo} alt="" width={50} height={40} />
-
-              <div>
-                <p className="text-sm mb-1">John Doe</p>
-                <p className="text-xs">Last seen at 5:30 PM</p>
-              </div>
-            </div>
-            <div className="flex gap-1 items-center mr-3">
-              <div>
-                <button className="call-btn">
-                  <LocalPhoneIcon />
-                </button>
-              </div>
-              <div>
-                <button className="call-btn">
-                  <VideocamIcon />
-                </button>
-              </div>
-              <div>
-                <button onClick={(e) => toggleChatOptions(e)}>
-                  <MoreVertIcon />
-                </button>
-                {visibleChatIndex && (
-                  <div className="action-buttons-2">
-                    <button className="user-profile-btn">
-                      <AccountBoxIcon className="profile-icon" /> User Profile
-                    </button>
-                    <button className="delete-btn">
-                      <DeleteIcon className="delete-icon" /> Delete Chat
-                    </button>
-                    <button className="block-btn">
-                      <BlockIcon /> Block User
-                    </button>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-          <hr className="font-bold" />
-
-          <Chat />
+        <div
+          className={`messenger-right text-left ${
+            currentRoomId && currentChat
+              ? ""
+              : "bg-[var(--secondary-color)] border-2 border-[var(--secondary-color] rounded-lg"
+          }`}
+        >
+          {currentRoomId && currentChat && (
+            <Chat
+              roomId={currentRoomId}
+              otherUser={currentChat.otherUser}
+              otherUserAccount={currentChat.otherUserAccount}
+              messages={messages}
+            />
+          )}
         </div>
       </div>
     </section>
