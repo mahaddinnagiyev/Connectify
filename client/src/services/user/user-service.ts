@@ -27,7 +27,9 @@ export const getAllUsers = async (): Promise<{
 };
 
 // Get User By ID
-export const getUserById = async (): Promise<{
+export const getUserById = async (
+  id?: string
+): Promise<{
   success: boolean;
   user: User;
   account: Account;
@@ -40,14 +42,17 @@ export const getUserById = async (): Promise<{
   message?: string;
   error?: string;
 }> => {
-  const resposne = await fetch(`${SERVER_USER_URL}/user/by`, {
-    method: "GET",
-    headers: {
-      "Content-Type": "application/json; charset=utf-8",
-      Authorization: `Bearer ${await getToken()}`,
-    },
-    credentials: "include",
-  });
+  const resposne = await fetch(
+    `${SERVER_USER_URL}/user/by${id ? `?id=${id}` : ""}`,
+    {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json; charset=utf-8",
+        Authorization: `Bearer ${await getToken()}`,
+      },
+      credentials: "include",
+    }
+  );
 
   const data = await resposne.json();
   return data;

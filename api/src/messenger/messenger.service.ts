@@ -130,23 +130,26 @@ export class MessengerService {
 
   async getChatRoomsForUser(userId: string) {
     try {
-      const { data, error } = await this.supabase
+      const { data: chatRooms, error } = await this.supabase
         .getClient()
         .from('chat_rooms')
-        .select('*')
+        .select(
+          `
+      *,
+      messages!messages_room_id_fkey (
+        content,
+        created_at
+      )
+    `,
+        )
         .contains('user_ids', [userId]);
 
-      if (error) {
-        this.logger.error('Error retrieving chat rooms', error);
-        throw new InternalServerErrorException(
-          `Error retrieving chat rooms: ${error.message}`,
-        );
-      }
+      const roomsWithLastMessage = chatRooms.map((room) => ({
+        ...room,
+        lastMessage: room.messages?.[room.messages.length - 1]?.content || null,
+      }));
 
-      this.logger.debug(
-        `Retrieved ${data?.length || 0} chat rooms for user ${userId}`,
-      );
-      return data;
+      return roomsWithLastMessage;
     } catch (error) {
       this.logger.error('Exception in getChatRoomsForUser', error);
       throw new InternalServerErrorException(

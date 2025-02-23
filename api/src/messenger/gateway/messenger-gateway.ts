@@ -18,7 +18,13 @@ import {
 import { JwtPayload } from 'src/jwt/jwt-payload';
 import { IUser } from 'src/interfaces/user.interface';
 
-@WebSocketGateway(3636, { cors: true })
+@WebSocketGateway(3636, {
+  cors: {
+    origin: '*',
+    allowedHeaders: ['Authorization'],
+    credentials: true,
+  },
+})
 export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer() server: Server;
   private readonly logger = new Logger(ChatGateway.name);
@@ -30,12 +36,15 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   ) {}
 
   private extractToken(client: Socket): string | null {
-    return (
+    const token =
       client.handshake.auth?.token ||
-      (client.handshake.headers.authorization
-        ? client.handshake.headers.authorization.split(' ')[1]
-        : null)
-    );
+      client.handshake.headers.authorization?.split(' ')[1] ||
+      null;
+
+    console.log(token);
+
+    this.logger.debug(`Extracted token: ${token}`); // Əlavə log
+    return token;
   }
 
   private async validateUser(userId: string): Promise<IUser> {
@@ -189,7 +198,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       }
 
       const chatRooms = await this.messengerService.getChatRoomsForUser(userId);
-      client.emit('chatRooms', chatRooms);
+      client.emit('getChatRooms', chatRooms);
       this.logger.debug(`Chat rooms sent to user ${userId}`);
     } catch (error) {
       this.logger.error('Error in getChatRooms', error);

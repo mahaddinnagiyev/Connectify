@@ -11,10 +11,19 @@ import BlockIcon from "@mui/icons-material/Block";
 import VideocamIcon from "@mui/icons-material/Videocam";
 import LocalPhoneIcon from "@mui/icons-material/LocalPhone";
 import AccountBoxIcon from "@mui/icons-material/AccountBox";
+import { socket } from "../../services/socket/socket-service";
+import { ChatRoomsDTO } from "../../services/socket/dto/ChatRoom-dto";
+import { getToken } from "../../services/auth/token-service";
+import { jwtDecode } from "jwt-decode";
+import { getUserById } from "../../services/user/user-service";
+import { Users } from "../../services/user/dto/user-dto";
 
 const Messenger = () => {
   const [visibleUserIndex, setVisibleUserIndex] = useState<number | null>(null);
   const [visibleChatIndex, setVisibleChatIndex] = useState<boolean>(false);
+  const [chats, setChats] = useState<(ChatRoomsDTO & { otherUser?: Users })[]>(
+    []
+  );
 
   useEffect(() => {
     const handleClickOutside = () => {
@@ -40,6 +49,65 @@ const Messenger = () => {
     setVisibleChatIndex(!visibleChatIndex);
   };
 
+  useEffect(() => {
+    const fetchChats = async () => {
+      const token = await getToken();
+      if (!token) return;
+
+      const decodedToken: { id: string } = jwtDecode(token);
+      const currentUserId = decodedToken.id;
+
+      if (!socket) return;
+
+      socket.emit("getChatRooms");
+
+      socket.on("getChatRooms", async (chatRooms: ChatRoomsDTO[]) => {
+        const chatsWithUsers = await Promise.all(
+          chatRooms.map(async (chat) => {
+            const otherUserId = chat.user_ids.find(
+              (id) => id !== currentUserId
+            );
+            if (!otherUserId) return chat;
+
+            try {
+              const userResponse = await getUserById(otherUserId);
+              if (userResponse.success) {
+                return { ...chat, otherUser: userResponse.user as Users };
+              }
+            } catch (error) {
+              console.error("User fetch error:", error);
+            }
+            return chat;
+          })
+        );
+
+        // Hər bir chat üçün son mesajı al
+        const chatsWithLastMessage = await Promise.all(
+          chatsWithUsers.map(async (chat) => {
+            const messages = await new Promise<any[]>((resolve) => {
+              socket!.emit("getMessages", { roomId: chat.id });
+              socket!.once("messages", resolve);
+            });
+
+            return {
+              ...chat,
+              lastMessage:
+                messages[messages.length - 1]?.content || "Söhbət başladı",
+            };
+          })
+        );
+
+        setChats(chatsWithLastMessage);
+      });
+    };
+
+    fetchChats();
+
+    return () => {
+      socket?.off("getChatRooms");
+    };
+  }, [socket]);
+
   return (
     <section className="messenger-container">
       <div className="messenger flex gap-3">
@@ -55,53 +123,56 @@ const Messenger = () => {
           <hr className="font-bold" />
 
           <div className="message-users flex flex-col gap-3 my-3">
-            {Array(50)
-              .fill(null)
-              .map((_, index) => (
-                <div
-                  key={index}
-                  className="message-user my-2"
-                  onContextMenu={(e) => handleRightClick(index, e)}
+            {chats.map((chat, index) => (
+              <div
+                key={index}
+                className="message-user my-2"
+                onContextMenu={(e) => handleRightClick(index, e)}
+              >
+                <a
+                  href={`?room=${chat.id}`}
+                  className="user-profile-photo flex items-center justify-between pr-4"
+                  onClick={(e) => e.preventDefault()}
                 >
-                  <a
-                    href="/help"
-                    className="user-profile-photo flex items-center justify-between pr-4"
-                    onClick={(e) => e.preventDefault()}
-                  >
-                    {/* User Information */}
-                    <div className="flex items-center gap-3">
-                      <img
-                        src={no_profile_photo}
-                        alt="User Profile"
-                        width={50}
-                        height={50}
-                      />
-                      <div className="flex flex-col gap-1">
-                        <p className="text-sm">John Doe</p>
-                        <p className="text-xs">Hello John Doe, how are you?</p>
-                      </div>
+                  {/* User Information */}
+                  <div className="flex items-center gap-3">
+                    <img
+                      src={no_profile_photo}
+                      alt="User Profile"
+                      width={50}
+                      height={50}
+                    />
+                    <div className="flex flex-col gap-1">
+                      <p className="text-sm">
+                        {chat.otherUser?.first_name} {chat.otherUser?.last_name}{" "}
+                        | @{chat.otherUser?.username}
+                      </p>
+                      <p className="text-xs">
+                        {chat?.lastMessage ?? "No message"}
+                      </p>
                     </div>
+                  </div>
 
-                    {/* User Actions */}
-                    <div className="relative">
-                      {visibleUserIndex === index && (
-                        <div className="action-buttons">
-                          <button className="user-profile-btn">
-                            <AccountBoxIcon className="profile-icon" /> User
-                            Profile
-                          </button>
-                          <button className="delete-btn">
-                            <DeleteIcon className="delete-icon" /> Delete Chat
-                          </button>
-                          <button className="block-btn">
-                            <BlockIcon /> Block User
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  </a>
-                </div>
-              ))}
+                  {/* User Actions */}
+                  <div className="relative">
+                    {visibleUserIndex === index && (
+                      <div className="action-buttons">
+                        <button className="user-profile-btn">
+                          <AccountBoxIcon className="profile-icon" /> User
+                          Profile
+                        </button>
+                        <button className="delete-btn">
+                          <DeleteIcon className="delete-icon" /> Delete Chat
+                        </button>
+                        <button className="block-btn">
+                          <BlockIcon /> Block User
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </a>
+              </div>
+            ))}
           </div>
         </div>
 

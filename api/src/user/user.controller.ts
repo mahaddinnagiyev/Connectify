@@ -41,6 +41,10 @@ export class UserController {
         query.username.toString(),
       );
     }
+
+    if (query.id) {
+      return await this.userService.get_user_by_id(query.id.toString());
+    }
     return await this.userService.get_user_by_id((req.user as User).id);
   }
 
