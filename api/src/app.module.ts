@@ -12,6 +12,7 @@ import { LoggerModule } from './logger/logger.module';
 import { AccountModule } from './account/account.module';
 import { SupabaseModule } from './supabase/supabase.module';
 import { FriendshipModule } from './friendship/friendship.module';
+import { MessengerModule } from './messenger/messenger.module';
 
 @Module({
   imports: [
@@ -39,6 +40,7 @@ import { FriendshipModule } from './friendship/friendship.module';
     AccountModule,
     SupabaseModule,
     FriendshipModule,
+    MessengerModule,
   ],
   controllers: [AppController],
   providers: [
