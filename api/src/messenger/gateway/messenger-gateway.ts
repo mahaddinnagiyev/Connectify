@@ -18,9 +18,7 @@ import {
 import { JwtPayload } from 'src/jwt/jwt-payload';
 import { IUser } from 'src/interfaces/user.interface';
 
-@WebSocketGateway(3737, {
-  cors: true,
-})
+@WebSocketGateway(3636, { cors: true })
 export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer() server: Server;
   private readonly logger = new Logger(ChatGateway.name);
@@ -31,11 +29,6 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     private readonly supabase: SupabaseService,
   ) {}
 
-  /**
-   * Socket connection zamanı token-i handshake-dən və ya header-dən çıxarır.
-   * @param client - Socket instance
-   * @returns Token string və ya null
-   */
   private extractToken(client: Socket): string | null {
     return (
       client.handshake.auth?.token ||
@@ -45,15 +38,10 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     );
   }
 
-  /**
-   * Verilən istifadəçi ID-sinə görə istifadəçini doğrulayır.
-   * @param userId - İstifadəçi ID-si
-   * @returns Doğrulanmış istifadəçi məlumatları
-   */
   private async validateUser(userId: string): Promise<IUser> {
     try {
       const { data: user, error } = await this.supabase
-        .getUserClient()
+        .getClient()
         .from('users')
         .select('*')
         .eq('id', userId)
@@ -70,10 +58,6 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     }
   }
 
-  /**
-   * Socket bağlantısı qurulduqda token-i yoxlayır və istifadəçini doğrulayır.
-   * @param client - Socket instance
-   */
   async handleConnection(client: Socket) {
     try {
       const token = this.extractToken(client);
@@ -84,7 +68,13 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         secret: process.env.JWT_ACCESS_SECRET_KEY,
       });
       const user = await this.validateUser(payload.id);
-      // Həssas məlumatları çıxarırıq (məsələn, password və s.)
+
+      await this.supabase
+        .getClient()
+        .from('accounts')
+        .update({ last_login: new Date() })
+        .eq('user_id', user.id);
+
       const { password, is_admin, ...safeUser } = user;
       client.data.user = safeUser;
       this.logger.log(`Client connected: ${client.id} (User: ${user.id})`);
@@ -99,19 +89,10 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     }
   }
 
-  /**
-   * Socket bağlantısı kəsildikdə loglama aparır.
-   * @param client - Socket instance
-   */
   handleDisconnect(client: Socket) {
     this.logger.log(`User disconnected: ${client.id}`);
   }
 
-  /**
-   * İstifadəçinin başqa istifadəçi ilə chat otağına qoşulma tələbi.
-   * @param client - Socket instance
-   * @param payload - { user2Id: string }
-   */
   @SubscribeMessage('joinRoom')
   async handleJoinRoom(client: Socket, payload: { user2Id: string }) {
     try {
@@ -134,6 +115,8 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       }
 
       client.join(room.id);
+
+      await this.messengerService.setMessageRead(room.id);
       client.emit('roomJoined', room);
       this.logger.log(`User ${client.id} joined room ${room.id}`);
     } catch (error) {
@@ -152,11 +135,6 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     }
   }
 
-  /**
-   * Mesaj göndərmə tələbi üçün dinləyici.
-   * @param client - Socket instance
-   * @param payload - { roomId: string, content: string, message_type: MessageType }
-   */
   @SubscribeMessage('sendMessage')
   async handleSendMessage(
     client: Socket,
@@ -172,6 +150,12 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         throw new BadRequestException('Missing required message fields');
       }
 
+      if (client.data.user.is_banned) {
+        throw new UnauthorizedException(
+          'You are banned from sending messages.',
+        );
+      }
+
       this.logger.debug(
         `Send message request from ${client.data.user.id} in room ${payload.roomId}`,
       );
@@ -183,7 +167,6 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         payload.message_type,
       );
 
-      // Mesajı otaqda olan bütün istifadəçilərə göndəririk
       this.server.to(payload.roomId).emit('newMessage', savedMessage);
       this.logger.debug(
         `Message sent in room ${payload.roomId}: ${JSON.stringify(savedMessage)}`,
@@ -197,11 +180,6 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     }
   }
 
-  /**
-   * İstifadəçinin qatıldığı chat otaqlarını sorğulayan dinləyici.
-   * Token artıq bağlantı zamanı doğrulandığı üçün əlavə payload tələb olunmur.
-   * @param client - Socket instance
-   */
   @SubscribeMessage('getChatRooms')
   async handleGetChatRooms(client: Socket) {
     try {
@@ -222,11 +200,6 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     }
   }
 
-  /**
-   * Seçilmiş chat otağındakı mesajları sorğulayan dinləyici.
-   * @param client - Socket instance
-   * @param payload - { roomId: string }
-   */
   @SubscribeMessage('getMessages')
   async handleGetMessages(client: Socket, payload: { roomId: string }) {
     try {
