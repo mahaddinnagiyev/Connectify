@@ -107,13 +107,14 @@ export class MessengerService {
     }
   }
 
-  async setMessageRead(roomId: string) {
+  async setMessageRead(roomId: string, userId: string) {
     try {
       const { data, error } = await this.supabase
         .getClient()
         .from('messages')
         .update({ status: MessageStatus.READ })
-        .eq('room_id', roomId);
+        .eq('room_id', roomId)
+        .neq('sender_id', userId);
 
       if (error) {
         this.logger.error('Error updating messages to read', error);

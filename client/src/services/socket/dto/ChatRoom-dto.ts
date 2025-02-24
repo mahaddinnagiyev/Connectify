@@ -3,6 +3,6 @@ export interface ChatRoomsDTO {
   name?: string;
   user_ids: string[];
   created_at: Date;
-  uodated_at: Date;
+  updated_at: Date;
   lastMessage?: string;
 }

@@ -14,7 +14,10 @@ import { getToken } from "../../services/auth/token-service";
 import { jwtDecode } from "jwt-decode";
 import { getUserById } from "../../services/user/user-service";
 import { Users } from "../../services/user/dto/user-dto";
-import { MessagesDTO } from "../../services/socket/dto/messages-dto";
+import {
+  MessagesDTO,
+  MessageStatus,
+} from "../../services/socket/dto/messages-dto";
 import { Account } from "../../services/account/dto/account-dto";
 
 const Messenger = () => {
@@ -73,10 +76,14 @@ const Messenger = () => {
   useEffect(() => {
     const fetchChats = async () => {
       const token = await getToken();
+
       if (!token) return;
+
       const decodedToken: { id: string } = jwtDecode(token);
       const currentUserId = decodedToken.id;
+
       if (!socket) return;
+
       socket.emit("getChatRooms");
       socket.on("getChatRooms", async (chatRooms: ChatRoomsDTO[]) => {
         const chatsWithUsers = await Promise.all(
@@ -85,6 +92,7 @@ const Messenger = () => {
               (id) => id !== currentUserId
             );
             if (!otherUserId) return chat;
+
             try {
               const userResponse = await getUserById(otherUserId);
               if (userResponse.success) {
@@ -97,9 +105,11 @@ const Messenger = () => {
             } catch (error) {
               console.error("User fetch error:", error);
             }
+
             return chat;
           })
         );
+
         setChats(chatsWithUsers);
       });
     };
@@ -136,14 +146,13 @@ const Messenger = () => {
                   );
                 }}
               >
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3 relative">
                   <img
                     src={
                       chat.otherUserAccount?.profile_picture ?? no_profile_photo
                     }
                     alt="User Profile"
-                    width={50}
-                    height={50}
+                    style={{ height: "50px", width: "50px" }}
                     className="rounded-full border-2 border-[var(--primary-color)]"
                   />
                   <div className="flex flex-col gap-1">
@@ -155,6 +164,23 @@ const Messenger = () => {
                       {chat?.lastMessage ?? "No message"}
                     </p>
                   </div>
+                  {messages.filter(
+                    (m) =>
+                      m.room_id === chat.id &&
+                      m.sender_id === chat.otherUser?.id &&
+                      m.status !== MessageStatus.READ
+                  ).length > 0 && (
+                    <span className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-red-500 text-white rounded-full px-2 py-0.5 text-xs">
+                      {
+                        messages.filter(
+                          (m) =>
+                            m.room_id === chat.id &&
+                            m.sender_id === chat.otherUser?.id &&
+                            m.status !== MessageStatus.READ
+                        ).length
+                      }
+                    </span>
+                  )}
                 </div>
                 {visibleUserIndex === index && (
                   <div className="action-buttons">

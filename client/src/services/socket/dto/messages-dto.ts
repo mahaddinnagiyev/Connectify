@@ -6,10 +6,10 @@ export enum MessageType {
 }
 
 export enum MessageStatus {
-  PENDING = "pending",
-  SENT = "sent",
-  RECIEVED = "recieved",
-  READ = "read",
+  PENDING = 'pending',
+  SENT = 'sent',
+  RECEIVED = 'received',
+  READ = 'read',
 }
 
 export interface MessagesDTO {
@@ -18,7 +18,7 @@ export interface MessagesDTO {
   sender_id: string;
   message_type: MessageType;
   content: string;
-  message_status: MessageStatus;
+  status: MessageStatus;
   created_at: Date;
   updated_at: Date;
 }

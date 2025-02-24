@@ -41,8 +41,6 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       client.handshake.headers.authorization?.split(' ')[1] ||
       null;
 
-    console.log(token);
-
     return token;
   }
 
@@ -124,7 +122,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
       client.join(room.id);
 
-      await this.messengerService.setMessageRead(room.id);
+      await this.messengerService.setMessageRead(room.id, client.data.user.id);
       client.emit('roomJoined', room);
       this.logger.log(`User ${client.id} joined room ${room.id}`);
     } catch (error) {
@@ -176,6 +174,10 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       );
 
       const messageToEmit = { ...savedMessage, roomId: savedMessage.room_id };
+      await this.messengerService.setMessageRead(
+        payload.roomId,
+        client.data.user.id,
+      );
       this.server.to(payload.roomId).emit('newMessage', messageToEmit);
       this.logger.debug(
         `Message sent in room ${payload.roomId}: ${JSON.stringify(savedMessage)}`,
@@ -219,7 +221,12 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       const messages = await this.messengerService.getMessagesForRoom(
         payload.roomId,
       );
+
       client.emit('messages', { roomId: payload.roomId, messages });
+      await this.messengerService.setMessageRead(
+        payload.roomId,
+        client.data.user.id,
+      );
       this.logger.debug(`Messages sent for room ${payload.roomId}`);
     } catch (error) {
       this.logger.error('Error in getMessages', error);
@@ -243,6 +250,18 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         success: false,
         message: error.message || 'Error retrieving last message',
       });
+    }
+  }
+
+  @SubscribeMessage('leaveRoom')
+  async handleLeaveRoom(client: Socket, payload: { roomId: string }) {
+    try {
+      client.leave(payload.roomId);
+      this.logger.log(`Client ${client.id} left room ${payload.roomId}`);
+      client.emit('roomLeft', payload.roomId);
+    } catch (error) {
+      this.logger.error('Error in leaveRoom', error);
+      client.emit('error', { message: error.message || 'Error leaving room' });
     }
   }
 }

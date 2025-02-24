@@ -65,9 +65,8 @@ const Chat = ({ roomId, otherUser, otherUserAccount, messages }: ChatProps) => {
           <img
             src={otherUserAccount?.profile_picture ?? no_profile_photo}
             alt=""
-            width={50}
-            height={40}
             className="rounded-full border-2 border-[var(--primary-color)]"
+            style={{ height: "50px", width: "50px" }}
           />
           <div>
             <a
@@ -141,19 +140,19 @@ const Chat = ({ roomId, otherUser, otherUserAccount, messages }: ChatProps) => {
                       ""
                     ) : (
                       <>
-                        {message.message_status === MessageStatus.PENDING ? (
+                        {message.status === MessageStatus.PENDING ? (
                           <MoreHorizIcon style={{ fontSize: "15px" }} />
                         ) : (
                           <>
-                            {message.message_status === MessageStatus.SENT ? (
+                            {message.status === MessageStatus.SENT ? (
                               <Tooltip placement="top" title="Sent">
                                 <CheckIcon style={{ fontSize: "15px" }} />
                               </Tooltip>
                             ) : (
                               <>
-                                {message.message_status ===
-                                MessageStatus.RECIEVED ? (
-                                  <Tooltip placement="top" title="Recieved">
+                                {message.status ===
+                                MessageStatus.RECEIVED ? (
+                                  <Tooltip placement="top" title="Received">
                                     <DoneAllIcon
                                       style={{
                                         fontSize: "15px",
