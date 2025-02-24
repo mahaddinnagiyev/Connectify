@@ -4,10 +4,12 @@ import Header from "../components/header/Header";
 import Messenger from "../components/messenger/Messenger";
 import MainSpinner from "../components/modals/spinner/MainSpinner";
 import SuccessMessage from "../components/messages/SuccessMessage";
+import InfoMessage from "../components/messages/InfoMessage";
 
 const ChatPage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [infoMessage, setInfoMessage] = useState<string | null>(null);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -24,6 +26,13 @@ const ChatPage = () => {
       setSuccessMessage(message);
       localStorage.removeItem("successMessage");
     }
+
+    const infoMesssage = localStorage.getItem("infoMessage");
+
+    if (infoMesssage) {
+      setInfoMessage(infoMesssage);
+      localStorage.removeItem("infoMessage");
+    }
   }, []);
 
   return (
@@ -32,6 +41,13 @@ const ChatPage = () => {
         <SuccessMessage
           message={successMessage}
           onClose={() => setSuccessMessage(null)}
+        />
+      )}
+
+      {infoMessage && (
+        <InfoMessage
+          message={infoMessage}
+          onClose={() => setInfoMessage(null)}
         />
       )}
 
