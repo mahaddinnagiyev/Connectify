@@ -31,7 +31,7 @@ const Login = () => {
       localStorage.setItem("successMessage", "Login successfull!");
       setTimeout(() => {
         setIsLoading(false);
-        navigate("/chat");
+        window.location.href = "/chat";
       }, 2000);
     } else if (error) {
       setErrorMessage("This email already registered with normal way of login");
@@ -64,7 +64,7 @@ const Login = () => {
       if (response.success) {
         setSuccessMessage("Login successfull!");
         setTimeout(() => {
-          window.location.replace("/");
+          window.location.href = "/chat";
         }, 1500);
       } else {
         setIsLoading(false);
