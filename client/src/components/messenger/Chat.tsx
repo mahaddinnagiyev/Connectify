@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import "./chat-style.css";
 import SendIcon from "@mui/icons-material/Send";
 import AttachFileIcon from "@mui/icons-material/AttachFile";
@@ -26,6 +26,7 @@ interface ChatProps {
 const Chat = ({ roomId, otherUser, otherUserAccount, messages }: ChatProps) => {
   const [messageInput, setMessageInput] = useState("");
   const [visibleChatOptions, setVisibleChatOptions] = useState(false);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
 
   const handleSendMessage = () => {
     if (messageInput.trim()) {
@@ -43,6 +44,13 @@ const Chat = ({ roomId, otherUser, otherUserAccount, messages }: ChatProps) => {
     setVisibleChatOptions(!visibleChatOptions);
   };
 
+  useEffect(() => {
+    if (messagesContainerRef.current) {
+      messagesContainerRef.current.scrollTop =
+        messagesContainerRef.current.scrollHeight;
+    }
+  }, [messages]);
+
   return (
     <>
       {/* Header */}
@@ -58,11 +66,13 @@ const Chat = ({ roomId, otherUser, otherUserAccount, messages }: ChatProps) => {
           <div>
             <p className="text-sm mb-1">
               {otherUser?.first_name} {otherUser?.last_name} | @
-              {otherUser?.username}{" "}
+              {otherUser?.username}
             </p>
             <p className="text-xs">
               Last seen at:{" "}
-              {new Date(otherUserAccount?.last_login ?? 0).toLocaleString()}
+              {otherUserAccount?.last_login
+                ? new Date(otherUserAccount?.last_login ?? 0).toLocaleString()
+                : "N/A"}
             </p>
           </div>
         </div>
@@ -98,25 +108,24 @@ const Chat = ({ roomId, otherUser, otherUserAccount, messages }: ChatProps) => {
         </div>
       </div>
       <hr className="font-bold" />
-
-      {/* Messages */}
+      {/* Messages Section */}
       <section className="chat">
-        <div className="messages-container">
-          {messages.map((message, index) => (
-            <div
-              key={index}
-              className={`message ${
-                message.sender_id === otherUser?.id ? "sender" : "receiver"
-              }`}
-            >
-              <p className="message-text">{message.content}</p>
-              <span className="message-time">
-                {new Date(message.created_at).toLocaleTimeString()}
-              </span>
-            </div>
-          ))}
+        <div className="messages-container" ref={messagesContainerRef}>
+          {Array.isArray(messages) &&
+            messages.map((message, index) => (
+              <div
+                key={index}
+                className={`message ${
+                  message.sender_id === otherUser?.id ? "sender" : "receiver"
+                }`}
+              >
+                <p className="message-text">{message.content}</p>
+                <span className="message-time">
+                  {new Date(message.created_at).toLocaleTimeString()}
+                </span>
+              </div>
+            ))}
         </div>
-
         {/* Send Message Form */}
         <div className="send-message-container mt-2">
           <Tooltip title="Emotes" placement="top">
@@ -134,7 +143,12 @@ const Chat = ({ roomId, otherUser, otherUserAccount, messages }: ChatProps) => {
             onChange={(e) => setMessageInput(e.target.value)}
             placeholder="Type your message..."
             className="message-input"
-            onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
+            onKeyPress={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                handleSendMessage();
+              }
+            }}
           ></textarea>
           <button
             type="submit"

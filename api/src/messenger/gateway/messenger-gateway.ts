@@ -43,7 +43,6 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
     console.log(token);
 
-    this.logger.debug(`Extracted token: ${token}`); // Əlavə log
     return token;
   }
 
@@ -176,7 +175,8 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         payload.message_type,
       );
 
-      this.server.to(payload.roomId).emit('newMessage', savedMessage);
+      const messageToEmit = { ...savedMessage, roomId: savedMessage.room_id };
+      this.server.to(payload.roomId).emit('newMessage', messageToEmit);
       this.logger.debug(
         `Message sent in room ${payload.roomId}: ${JSON.stringify(savedMessage)}`,
       );
@@ -219,13 +219,29 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       const messages = await this.messengerService.getMessagesForRoom(
         payload.roomId,
       );
-      client.emit('messages', messages);
+      client.emit('messages', { roomId: payload.roomId, messages });
       this.logger.debug(`Messages sent for room ${payload.roomId}`);
     } catch (error) {
       this.logger.error('Error in getMessages', error);
       client.emit('error', {
         success: false,
         message: error.message || 'Error retrieving messages',
+      });
+    }
+  }
+
+  @SubscribeMessage('getLastMessage')
+  async handleGetLastMessage(client: Socket, payload: { roomId: string }) {
+    try {
+      const lastMessage = await this.messengerService.getLastMessageForRoom(
+        payload.roomId,
+      );
+      client.emit('lastMessage', { roomId: payload.roomId, lastMessage });
+    } catch (error) {
+      this.logger.error('Error in getMessages', error);
+      client.emit('error', {
+        success: false,
+        message: error.message || 'Error retrieving last message',
       });
     }
   }

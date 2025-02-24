@@ -45,7 +45,7 @@ export class MessengerService {
       const { data: newChatRoom, error: createError } = await this.supabase
         .getClient()
         .from('chat_rooms')
-        .insert([{ user_ids: sortedUserIds, message_ids: [] }])
+        .insert([{ user_ids: sortedUserIds }])
         .select()
         .single();
 
@@ -180,6 +180,33 @@ export class MessengerService {
       this.logger.error('Exception in getMessagesForRoom', error);
       throw new InternalServerErrorException(
         `Error retrieving messages: ${error.message}`,
+      );
+    }
+  }
+
+  async getLastMessageForRoom(roomId: string) {
+    try {
+      const { data, error } = await this.supabase
+        .getClient()
+        .from('messages')
+        .select('*')
+        .eq('room_id', roomId)
+        .order('created_at', { ascending: false })
+        .limit(1);
+
+      if (error) {
+        this.logger.error('Error retrieving last message', error);
+        throw new InternalServerErrorException(
+          `Error retrieving last message: ${error.message}`,
+        );
+      }
+
+      this.logger.debug(`Retrieved last message for room ${roomId}`);
+      return data[0];
+    } catch (error) {
+      this.logger.error('Exception in getLastMessageForRoom', error);
+      throw new InternalServerErrorException(
+        `Error retrieving last message: ${error.message}`,
       );
     }
   }

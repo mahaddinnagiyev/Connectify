@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
+import { Link, useSearchParams } from "react-router-dom";
 import "../../colors.css";
 import "./style.css";
 import Chat from "./Chat";
 import SearchModal from "../modals/search/SearchModal";
-
 import no_profile_photo from "../../assets/no-profile-photo.png";
 import DeleteIcon from "@mui/icons-material/Delete";
 import BlockIcon from "@mui/icons-material/Block";
@@ -23,55 +23,61 @@ const Messenger = () => {
     (ChatRoomsDTO & { otherUser?: Users; otherUserAccount?: Account })[]
   >([]);
   const [messages, setMessages] = useState<MessagesDTO[]>([]);
-  const [currentRoomId, setCurrentRoomId] = useState<string | null>(null);
+  const [searchParams] = useSearchParams();
+  const currentRoomId = searchParams.get("room");
 
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const roomId = params.get("room");
-    setCurrentRoomId(roomId);
-  }, []);
+    if (currentRoomId && chats.length > 0) {
+      const currentChat = chats.find((chat) => chat.id === currentRoomId);
+      if (currentChat?.otherUser?.id) {
+        socket?.emit("joinRoom", { user2Id: currentChat.otherUser.id });
+      }
+    }
+  }, [currentRoomId, chats]);
 
   useEffect(() => {
+    const handleNewMessage = (newMessage: MessagesDTO) => {
+      if (newMessage.room_id === currentRoomId) {
+        setMessages((prevMessages) => [...prevMessages, newMessage]);
+      }
+
+      setChats((prevChats) =>
+        prevChats.map((chat) =>
+          chat.id === newMessage.room_id
+            ? { ...chat, lastMessage: newMessage.content }
+            : chat
+        )
+      );
+    };
+
+    socket?.on("newMessage", handleNewMessage);
+    return () => {
+      socket?.off("newMessage", handleNewMessage);
+    };
+  }, [currentRoomId]);
+
+  useEffect(() => {
+    setMessages([]);
     if (!currentRoomId) return;
-
     socket?.emit("getMessages", { roomId: currentRoomId });
-    socket?.on("messages", (data) => setMessages(data));
-
+    socket?.on("messages", (data) => {
+      if (data.messages[0]?.room_id === currentRoomId) {
+        setMessages(data.messages);
+      }
+    });
     return () => {
       socket?.off("messages");
     };
   }, [currentRoomId]);
 
   useEffect(() => {
-    const handleClickOutside = () => {
-      setVisibleUserIndex(null);
-    };
-
-    document.addEventListener("click", handleClickOutside);
-
-    return () => {
-      document.removeEventListener("click", handleClickOutside);
-    };
-  }, []);
-
-  const handleRightClick = (index: number, event: React.MouseEvent) => {
-    event.preventDefault();
-    event.stopPropagation();
-    setVisibleUserIndex(visibleUserIndex === index ? null : index);
-  };
-
-  useEffect(() => {
     const fetchChats = async () => {
       const token = await getToken();
       if (!token) return;
-
       const decodedToken: { id: string } = jwtDecode(token);
       const currentUserId = decodedToken.id;
-
       if (!socket) return;
-
       socket.emit("getChatRooms");
-
       socket.on("getChatRooms", async (chatRooms: ChatRoomsDTO[]) => {
         const chatsWithUsers = await Promise.all(
           chatRooms.map(async (chat) => {
@@ -79,10 +85,8 @@ const Messenger = () => {
               (id) => id !== currentUserId
             );
             if (!otherUserId) return chat;
-
             try {
               const userResponse = await getUserById(otherUserId);
-
               if (userResponse.success) {
                 return {
                   ...chat,
@@ -96,28 +100,10 @@ const Messenger = () => {
             return chat;
           })
         );
-
-        const chatsWithLastMessage = await Promise.all(
-          chatsWithUsers.map(async (chat) => {
-            const messages = await new Promise<MessagesDTO[]>((resolve) => {
-              socket!.emit("getMessages", { roomId: chat.id });
-              socket!.once("messages", resolve);
-            });
-
-            return {
-              ...chat,
-              lastMessage:
-                messages[messages.length - 1]?.content || "Söhbət başladı",
-            };
-          })
-        );
-
-        setChats(chatsWithLastMessage);
+        setChats(chatsWithUsers);
       });
     };
-
     fetchChats();
-
     return () => {
       socket?.off("getChatRooms");
     };
@@ -128,26 +114,28 @@ const Messenger = () => {
   return (
     <section className="messenger-container">
       <div className="messenger flex gap-3">
-        {/* Chat User Part */}
+        {/* Chat List */}
         <div className="messenger-left text-left">
           <div className="left-header pt-2 pb-5 px-1 flex justify-between">
             <div>Messenger</div>
             <div>
-              {/* Modal Component */}
               <SearchModal />
             </div>
           </div>
           <hr className="font-bold" />
-
-          <div className="message-users flex flex-col gap-3 my-3">
+          <div className="message-users flex flex-col gap-1 my-3">
             {chats.map((chat, index) => (
-              <div
+              <Link
+                to={`?room=${chat.id}`}
                 key={index}
-                className="message-user px-2 py-2 my-2 hover:bg-[var(--secondary-color)] hover:rounded-lg cursor-pointer transition-all duration-500"
-                onClick={() => (window.location.href = `?room=${chat.id}`)}
-                onContextMenu={(e) => handleRightClick(index, e)}
+                className="message-user px-2 py-2 hover:bg-[var(--secondary-color)] hover:rounded-lg cursor-pointer transition-all duration-500"
+                onContextMenu={(e) => {
+                  e.preventDefault();
+                  setVisibleUserIndex(
+                    visibleUserIndex === index ? null : index
+                  );
+                }}
               >
-                {/* User Information */}
                 <div className="flex items-center gap-3">
                   <img
                     src={
@@ -168,34 +156,29 @@ const Messenger = () => {
                     </p>
                   </div>
                 </div>
-
-                {/* User Actions */}
-                <div className="relative">
-                  {visibleUserIndex === index && (
-                    <div className="action-buttons">
-                      <button className="user-profile-btn">
-                        <AccountBoxIcon className="profile-icon" /> User Profile
-                      </button>
-                      <button className="delete-btn">
-                        <DeleteIcon className="delete-icon" /> Delete Chat
-                      </button>
-                      <button className="block-btn">
-                        <BlockIcon /> Block User
-                      </button>
-                    </div>
-                  )}
-                </div>
-              </div>
+                {visibleUserIndex === index && (
+                  <div className="action-buttons">
+                    <button className="user-profile-btn">
+                      <AccountBoxIcon className="profile-icon" /> User Profile
+                    </button>
+                    <button className="delete-btn">
+                      <DeleteIcon className="delete-icon" /> Delete Chat
+                    </button>
+                    <button className="block-btn">
+                      <BlockIcon /> Block User
+                    </button>
+                  </div>
+                )}
+              </Link>
             ))}
           </div>
         </div>
-
-        {/* Chat Rooms Part */}
+        {/* Chat Room */}
         <div
           className={`messenger-right text-left ${
             currentRoomId && currentChat
               ? ""
-              : "bg-[var(--secondary-color)] border-2 border-[var(--secondary-color] rounded-lg"
+              : "bg-[var(--secondary-color)] border-2 border-[var(--secondary-color)] rounded-lg"
           }`}
         >
           {currentRoomId && currentChat && (
