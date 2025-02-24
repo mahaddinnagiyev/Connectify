@@ -26,22 +26,6 @@ body {
   background-color: var(--primary-color);
 }
 
-.success-message {
-  position: fixed;
-  top: 0;
-  right: 0;
-  width: 30%;
-  z-index: 9999999;
-}
-
-.error-message {
-  position: fixed;
-  top: 0;
-  right: 0;
-  width: 30%;
-  z-index: 9999999;
-}
-
 @media (max-width: 768px) {
   .success-message,
   .error-message {

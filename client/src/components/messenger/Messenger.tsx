@@ -204,7 +204,7 @@ const Messenger = () => {
           className={`messenger-right text-left ${
             currentRoomId && currentChat
               ? ""
-              : "bg-[var(--secondary-color)] border-2 border-[var(--secondary-color)] rounded-lg"
+              : "bg-[var(--chatroom-bg-color)] border-2 border-[var(--chatroom-bg-color)] rounded-lg"
           }`}
         >
           {currentRoomId && currentChat && (
