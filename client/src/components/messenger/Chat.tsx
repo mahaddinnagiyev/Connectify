@@ -4,7 +4,10 @@ import SendIcon from "@mui/icons-material/Send";
 import AttachFileIcon from "@mui/icons-material/AttachFile";
 import InsertEmoticonIcon from "@mui/icons-material/InsertEmoticon";
 import { Tooltip } from "@mui/material";
-import { MessagesDTO } from "../../services/socket/dto/messages-dto";
+import {
+  MessagesDTO,
+  MessageStatus,
+} from "../../services/socket/dto/messages-dto";
 import { Users } from "../../services/user/dto/user-dto";
 import no_profile_photo from "../../assets/no-profile-photo.png";
 import LocalPhoneIcon from "@mui/icons-material/LocalPhone";
@@ -13,6 +16,9 @@ import MoreVertIcon from "@mui/icons-material/MoreVert";
 import AccountBoxIcon from "@mui/icons-material/AccountBox";
 import DeleteIcon from "@mui/icons-material/Delete";
 import BlockIcon from "@mui/icons-material/Block";
+import CheckIcon from "@mui/icons-material/Check";
+import DoneAllIcon from "@mui/icons-material/DoneAll";
+import MoreHorizIcon from "@mui/icons-material/MoreHoriz";
 import { socket } from "../../services/socket/socket-service";
 import { Account } from "../../services/account/dto/account-dto";
 
@@ -64,10 +70,13 @@ const Chat = ({ roomId, otherUser, otherUserAccount, messages }: ChatProps) => {
             className="rounded-full border-2 border-[var(--primary-color)]"
           />
           <div>
-            <p className="text-sm mb-1">
+            <a
+              href={`/user/@${otherUser?.username}`}
+              className="text-sm mb-1 hover:underline"
+            >
               {otherUser?.first_name} {otherUser?.last_name} | @
               {otherUser?.username}
-            </p>
+            </a>
             <p className="text-xs">
               Last seen at:{" "}
               {otherUserAccount?.last_login
@@ -119,10 +128,57 @@ const Chat = ({ roomId, otherUser, otherUserAccount, messages }: ChatProps) => {
                   message.sender_id === otherUser?.id ? "sender" : "receiver"
                 }`}
               >
-                <p className="message-text">{message.content}</p>
-                <span className="message-time">
-                  {new Date(message.created_at).toLocaleTimeString()}
-                </span>
+                <p className="message-text text-right">{message.content}</p>
+                <div className="flex items-center justify-end gap-1">
+                  <span className="message-time">
+                    {new Date(message.created_at).toLocaleTimeString([], {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </span>
+                  <span>
+                    {message.sender_id === otherUser?.id ? (
+                      ""
+                    ) : (
+                      <>
+                        {message.message_status === MessageStatus.PENDING ? (
+                          <MoreHorizIcon style={{ fontSize: "15px" }} />
+                        ) : (
+                          <>
+                            {message.message_status === MessageStatus.SENT ? (
+                              <Tooltip placement="top" title="Sent">
+                                <CheckIcon style={{ fontSize: "15px" }} />
+                              </Tooltip>
+                            ) : (
+                              <>
+                                {message.message_status ===
+                                MessageStatus.RECIEVED ? (
+                                  <Tooltip placement="top" title="Recieved">
+                                    <DoneAllIcon
+                                      style={{
+                                        fontSize: "15px",
+                                        color: "white",
+                                      }}
+                                    />
+                                  </Tooltip>
+                                ) : (
+                                  <Tooltip placement="top" title="Read">
+                                    <DoneAllIcon
+                                      style={{
+                                        fontSize: "15px",
+                                        color: "blue",
+                                      }}
+                                    />
+                                  </Tooltip>
+                                )}
+                              </>
+                            )}
+                          </>
+                        )}
+                      </>
+                    )}
+                  </span>
+                </div>
               </div>
             ))}
         </div>
