@@ -29,7 +29,39 @@ interface ChatProps {
   messages: MessagesDTO[];
 }
 
-const Chat = ({ roomId, otherUser, otherUserAccount, messages }: ChatProps) => {
+const MessageStatusIcon = ({ status }: { status: MessageStatus }) => {
+  switch (status) {
+    case MessageStatus.PENDING:
+      return <MoreHorizIcon style={{ fontSize: "15px" }} />;
+    case MessageStatus.SENT:
+      return (
+        <Tooltip title="Sent">
+          <CheckIcon style={{ fontSize: "15px" }} />
+        </Tooltip>
+      );
+    case MessageStatus.RECEIVED:
+      return (
+        <Tooltip title="Received">
+          <DoneAllIcon style={{ fontSize: "15px", color: "white" }} />
+        </Tooltip>
+      );
+    case MessageStatus.READ:
+      return (
+        <Tooltip title="Read">
+          <DoneAllIcon style={{ fontSize: "15px", color: "blue" }} />
+        </Tooltip>
+      );
+    default:
+      return null;
+  }
+};
+
+const Chat = ({
+  roomId,
+  otherUser,
+  otherUserAccount,
+  messages
+}: ChatProps) => {
   const [messageInput, setMessageInput] = useState("");
   const [visibleChatOptions, setVisibleChatOptions] = useState(false);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
@@ -64,7 +96,7 @@ const Chat = ({ roomId, otherUser, otherUserAccount, messages }: ChatProps) => {
         <div className="flex items-center gap-5">
           <img
             src={otherUserAccount?.profile_picture ?? no_profile_photo}
-            alt=""
+            alt="User Profile"
             className="rounded-full border-2 border-[var(--primary-color)]"
             style={{ height: "50px", width: "50px" }}
           />
@@ -139,42 +171,7 @@ const Chat = ({ roomId, otherUser, otherUserAccount, messages }: ChatProps) => {
                     {message.sender_id === otherUser?.id ? (
                       ""
                     ) : (
-                      <>
-                        {message.status === MessageStatus.PENDING ? (
-                          <MoreHorizIcon style={{ fontSize: "15px" }} />
-                        ) : (
-                          <>
-                            {message.status === MessageStatus.SENT ? (
-                              <Tooltip placement="top" title="Sent">
-                                <CheckIcon style={{ fontSize: "15px" }} />
-                              </Tooltip>
-                            ) : (
-                              <>
-                                {message.status ===
-                                MessageStatus.RECEIVED ? (
-                                  <Tooltip placement="top" title="Received">
-                                    <DoneAllIcon
-                                      style={{
-                                        fontSize: "15px",
-                                        color: "white",
-                                      }}
-                                    />
-                                  </Tooltip>
-                                ) : (
-                                  <Tooltip placement="top" title="Read">
-                                    <DoneAllIcon
-                                      style={{
-                                        fontSize: "15px",
-                                        color: "blue",
-                                      }}
-                                    />
-                                  </Tooltip>
-                                )}
-                              </>
-                            )}
-                          </>
-                        )}
-                      </>
+                      <MessageStatusIcon status={message.status} />
                     )}
                   </span>
                 </div>

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import "../../colors.css";
 import "./style.css";
@@ -28,15 +28,41 @@ const Messenger = () => {
   const [messages, setMessages] = useState<MessagesDTO[]>([]);
   const [searchParams] = useSearchParams();
   const currentRoomId = searchParams.get("room");
+  const lastJoinedRoomRef = useRef<string | null>(null);
 
   useEffect(() => {
-    if (currentRoomId && chats.length > 0) {
+    if (
+      currentRoomId &&
+      chats.length > 0 &&
+      lastJoinedRoomRef.current !== currentRoomId
+    ) {
       const currentChat = chats.find((chat) => chat.id === currentRoomId);
       if (currentChat?.otherUser?.id) {
         socket?.emit("joinRoom", { user2Id: currentChat.otherUser.id });
+        socket?.emit("setMessageRead", { roomId: currentRoomId });
+        lastJoinedRoomRef.current = currentRoomId;
       }
     }
   }, [currentRoomId, chats]);
+
+  useEffect(() => {
+    const handleMessagesRead = (data: { roomId: string }) => {
+      if (data.roomId === currentRoomId) {
+        setMessages((prevMessages) =>
+          prevMessages.map((msg) =>
+            msg.status !== MessageStatus.READ
+              ? { ...msg, status: MessageStatus.READ }
+              : msg
+          )
+        );
+      }
+    };
+
+    socket?.on("messagesRead", handleMessagesRead);
+    return () => {
+      socket?.off("messagesRead", handleMessagesRead);
+    };
+  }, [currentRoomId]);
 
   useEffect(() => {
     const handleNewMessage = (newMessage: MessagesDTO) => {
@@ -47,7 +73,7 @@ const Messenger = () => {
       setChats((prevChats) =>
         prevChats.map((chat) =>
           chat.id === newMessage.room_id
-            ? { ...chat, lastMessage: newMessage.content }
+            ? { ...chat, lastMessage: { ...newMessage } }
             : chat
         )
       );
@@ -68,6 +94,7 @@ const Messenger = () => {
         setMessages(data.messages);
       }
     });
+    socket?.emit("setMessageRead", { roomId: currentRoomId });
     return () => {
       socket?.off("messages");
     };
@@ -110,6 +137,26 @@ const Messenger = () => {
           })
         );
 
+        let unreadCount: number = 0;
+        const user_ids: string[] = [];
+
+        chatRooms.map((chat) => {
+          if (chat.unreadCount! > 0) {
+            unreadCount += chat.unreadCount!;
+            const otherUserId = chat.user_ids.find(
+              (id) => id !== currentUserId
+            );
+
+            user_ids.push(otherUserId!);
+          }
+        });
+
+        if (unreadCount > 0) {
+          localStorage.setItem(
+            "infoMessage",
+            `You have ${unreadCount} unread messages from ${user_ids.length} users`
+          );
+        }
         setChats(chatsWithUsers);
       });
     };
@@ -161,24 +208,12 @@ const Messenger = () => {
                       @{chat.otherUser?.username}
                     </p>
                     <p className="text-xs">
-                      {chat?.lastMessage ?? "No message"}
+                      {chat?.lastMessage?.content ?? "No message"}
                     </p>
                   </div>
-                  {messages.filter(
-                    (m) =>
-                      m.room_id === chat.id &&
-                      m.sender_id === chat.otherUser?.id &&
-                      m.status !== MessageStatus.READ
-                  ).length > 0 && (
+                  {chat.unreadCount! > 0 && (
                     <span className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-red-500 text-white rounded-full px-2 py-0.5 text-xs">
-                      {
-                        messages.filter(
-                          (m) =>
-                            m.room_id === chat.id &&
-                            m.sender_id === chat.otherUser?.id &&
-                            m.status !== MessageStatus.READ
-                        ).length
-                      }
+                      {chat.unreadCount}
                     </span>
                   )}
                 </div>
@@ -209,6 +244,7 @@ const Messenger = () => {
         >
           {currentRoomId && currentChat && (
             <Chat
+              key={currentRoomId}
               roomId={currentRoomId}
               otherUser={currentChat.otherUser}
               otherUserAccount={currentChat.otherUserAccount}

@@ -121,9 +121,15 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         );
       }
 
+      const rooms = Array.from(client.rooms).filter((r) => r !== client.id);
+
+      for (const oldRoom of rooms) {
+        client.leave(oldRoom);
+        this.logger.log(`User ${client.id} left room ${oldRoom}`);
+      }
+
       client.join(room.id);
 
-      await this.messengerService.setMessageRead(room.id, client.data.user.id);
       client.emit('roomJoined', room);
       this.logger.log(`User ${client.id} joined room ${room.id}`);
     } catch (error) {
@@ -175,11 +181,25 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       );
 
       const messageToEmit = { ...savedMessage, roomId: savedMessage.room_id };
-      await this.messengerService.setMessageRead(
-        payload.roomId,
-        client.data.user.id,
-      );
+
       this.server.to(payload.roomId).emit('newMessage', messageToEmit);
+
+      const sockets = await this.server.in(payload.roomId).fetchSockets();
+
+      const otherSocket = sockets.find(
+        (socket) => socket.data.user.id !== client.data.user.id,
+      );
+
+      if (otherSocket) {
+        await this.messengerService.setMessageRead(
+          payload.roomId,
+          otherSocket.data.user.id,
+        );
+
+        this.server
+          .to(payload.roomId)
+          .emit('messagesRead', { roomId: payload.roomId });
+      }
 
       const { count } = await this.supabase
         .getClient()
@@ -238,10 +258,6 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       );
 
       client.emit('messages', { roomId: payload.roomId, messages });
-      await this.messengerService.setMessageRead(
-        payload.roomId,
-        client.data.user.id,
-      );
       this.logger.debug(`Messages sent for room ${payload.roomId}`);
     } catch (error) {
       this.logger.error('Error in getMessages', error);
@@ -272,10 +288,9 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         client.data.user.id,
       );
 
-      this.server.emit('unreadCountUpdated', {
-        roomId: payload.roomId,
-        count: 0,
-      });
+      this.server
+        .to(payload.roomId)
+        .emit('messagesRead', { roomId: payload.roomId });
     } catch (error) {
       this.logger.error('Error in setMessageRead', error);
       client.emit('error', {
