@@ -17,6 +17,7 @@ import {
 } from '@nestjs/common';
 import { JwtPayload } from 'src/jwt/jwt-payload';
 import { IUser } from 'src/interfaces/user.interface';
+import { MessageStatus } from 'src/enums/message-status.enum';
 
 @WebSocketGateway(3636, {
   cors: {
@@ -179,6 +180,20 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         client.data.user.id,
       );
       this.server.to(payload.roomId).emit('newMessage', messageToEmit);
+
+      const { count } = await this.supabase
+        .getClient()
+        .from('messages')
+        .select('*', { count: 'exact' })
+        .eq('room_id', payload.roomId)
+        .neq('sender_id', client.data.user.id)
+        .neq('status', MessageStatus.READ);
+
+      this.server.emit('unreadCountUpdated', {
+        roomId: payload.roomId,
+        count: count || 0,
+      });
+
       this.logger.debug(
         `Message sent in room ${payload.roomId}: ${JSON.stringify(savedMessage)}`,
       );
@@ -237,22 +252,6 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     }
   }
 
-  @SubscribeMessage('getLastMessage')
-  async handleGetLastMessage(client: Socket, payload: { roomId: string }) {
-    try {
-      const lastMessage = await this.messengerService.getLastMessageForRoom(
-        payload.roomId,
-      );
-      client.emit('lastMessage', { roomId: payload.roomId, lastMessage });
-    } catch (error) {
-      this.logger.error('Error in getMessages', error);
-      client.emit('error', {
-        success: false,
-        message: error.message || 'Error retrieving last message',
-      });
-    }
-  }
-
   @SubscribeMessage('leaveRoom')
   async handleLeaveRoom(client: Socket, payload: { roomId: string }) {
     try {
@@ -262,6 +261,27 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     } catch (error) {
       this.logger.error('Error in leaveRoom', error);
       client.emit('error', { message: error.message || 'Error leaving room' });
+    }
+  }
+
+  @SubscribeMessage('setMessageRead')
+  async handleSetMessageRead(client: Socket, payload: { roomId: string }) {
+    try {
+      await this.messengerService.setMessageRead(
+        payload.roomId,
+        client.data.user.id,
+      );
+
+      this.server.emit('unreadCountUpdated', {
+        roomId: payload.roomId,
+        count: 0,
+      });
+    } catch (error) {
+      this.logger.error('Error in setMessageRead', error);
+      client.emit('error', {
+        success: false,
+        message: error.message || 'Error setting messages as read',
+      });
     }
   }
 }

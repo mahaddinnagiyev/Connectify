@@ -131,27 +131,33 @@ export class MessengerService {
 
   async getChatRoomsForUser(userId: string) {
     try {
-      const { data: chatRooms, error } = await this.supabase
+      const { data: chatRooms } = await this.supabase
         .getClient()
         .from('chat_rooms')
-        .select(
-          `
-      *,
-      messages!messages_room_id_fkey (
-        content,
-        created_at
-      )
-    `,
-        )
+        .select('*, messages!inner(*)')
         .contains('user_ids', [userId]);
 
-      const roomsWithLastMessage = chatRooms.map((room) => ({
-        ...room,
-        lastMessage: room.messages?.[room.messages.length - 1]?.content || null,
-      }));
+      return Promise.all(
+        chatRooms.map(async (room) => {
+          const { count } = await this.supabase
+            .getClient()
+            .from('messages')
+            .select('*', { count: 'exact' })
+            .eq('room_id', room.id)
+            .neq('sender_id', userId)
+            .neq('status', MessageStatus.READ);
 
-      return roomsWithLastMessage;
+          return {
+            ...room,
+            unreadCount: count,
+            lastMessageDate:
+              room.messages[room.messages.length - 1]?.created_at,
+            lastMessage: room.messages[room.messages.length - 1] || null,
+          };
+        }),
+      );
     } catch (error) {
+      console.log(error);
       this.logger.error('Exception in getChatRoomsForUser', error);
       throw new InternalServerErrorException(
         `Error retrieving chat rooms: ${error.message}`,
@@ -185,29 +191,29 @@ export class MessengerService {
     }
   }
 
-  async getLastMessageForRoom(roomId: string) {
+  async updateMessageStatus(messageId: string, status: MessageStatus) {
     try {
       const { data, error } = await this.supabase
         .getClient()
         .from('messages')
+        .update({ status })
+        .eq('id', messageId)
         .select('*')
-        .eq('room_id', roomId)
-        .order('created_at', { ascending: false })
-        .limit(1);
+        .single();
 
       if (error) {
-        this.logger.error('Error retrieving last message', error);
+        this.logger.error('Error updating message status', error);
         throw new InternalServerErrorException(
-          `Error retrieving last message: ${error.message}`,
+          `Error updating message status: ${error.message}`,
         );
       }
 
-      this.logger.debug(`Retrieved last message for room ${roomId}`);
-      return data[0];
+      this.logger.debug('Message status updated successfully');
+      return data;
     } catch (error) {
-      this.logger.error('Exception in getLastMessageForRoom', error);
+      this.logger.error('Exception in updateMessageStatus', error);
       throw new InternalServerErrorException(
-        `Error retrieving last message: ${error.message}`,
+        `Error updating message status: ${error.message}`,
       );
     }
   }
