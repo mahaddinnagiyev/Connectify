@@ -18,9 +18,12 @@
 }
 
 .message {
-  display: inline-block;
+  display: flex;
+  align-items: center;
+  gap: 10px;
   max-width: 70%;
   padding: 10px;
+  padding-top: 5px;
   border-radius: 10px;
   color: var(--text-color);
   position: relative;
@@ -40,7 +43,7 @@
 
 .message-text {
   margin: 0;
-  font-size: small;
+  font-size: .8rem;
 }
 
 .message-time {

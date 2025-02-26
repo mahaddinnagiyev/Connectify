@@ -209,7 +209,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         .neq('sender_id', client.data.user.id)
         .neq('status', MessageStatus.READ);
 
-      this.server.emit('unreadCountUpdated', {
+      this.server.to(payload.roomId).emit('unreadCountUpdated', {
         roomId: payload.roomId,
         count: count || 0,
       });
@@ -287,6 +287,20 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         payload.roomId,
         client.data.user.id,
       );
+
+      // YENİ: Oxunma zamanı unread count-u yenilə
+      const { count } = await this.supabase
+        .getClient()
+        .from('messages')
+        .select('*', { count: 'exact' })
+        .eq('room_id', payload.roomId)
+        .neq('sender_id', client.data.user.id)
+        .neq('status', MessageStatus.READ);
+
+      this.server.to(payload.roomId).emit('unreadCountUpdated', {
+        roomId: payload.roomId,
+        count: count || 0,
+      });
 
       this.server
         .to(payload.roomId)

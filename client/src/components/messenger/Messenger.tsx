@@ -29,36 +29,89 @@ const Messenger = () => {
   const [searchParams] = useSearchParams();
   const currentRoomId = searchParams.get("room");
   const lastJoinedRoomRef = useRef<string | null>(null);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
   useEffect(() => {
-    if (
-      currentRoomId &&
-      chats.length > 0 &&
-      lastJoinedRoomRef.current !== currentRoomId
-    ) {
+    const getIdFromToken = async () => {
+      const token = await getToken();
+      if (token) {
+        const decodedToken: { id: string } = jwtDecode(token);
+        setCurrentUserId(decodedToken.id);
+      }
+    };
+
+    getIdFromToken();
+  }, []);
+
+  useEffect(() => {
+    if (currentRoomId && chats.length > 0) {
       const currentChat = chats.find((chat) => chat.id === currentRoomId);
-      if (currentChat?.otherUser?.id) {
+      if (
+        currentChat?.otherUser?.id &&
+        lastJoinedRoomRef.current !== currentRoomId
+      ) {
         socket?.emit("joinRoom", { user2Id: currentChat.otherUser.id });
         socket?.emit("setMessageRead", { roomId: currentRoomId });
+
         lastJoinedRoomRef.current = currentRoomId;
       }
     }
   }, [currentRoomId, chats]);
 
   useEffect(() => {
-    const handleMessagesRead = (data: { roomId: string }) => {
+    const handleUnreadCountUpdated = (data: {
+      roomId: string;
+      count: number;
+    }) => {
+      setChats((prevChats) =>
+        prevChats.map((chat) =>
+          chat.id === data.roomId ? { ...chat, unreadCount: data.count } : chat
+        )
+      );
+    };
+
+    socket?.on("unreadCountUpdated", handleUnreadCountUpdated);
+    return () => {
+      socket?.off("unreadCountUpdated", handleUnreadCountUpdated);
+    };
+  }, []);
+
+  useEffect(() => {
+    const handleMessagesRead = async (data: { roomId: string }) => {
+      if (data.roomId === currentRoomId) {
+        // Unread count-u sıfırla
+        setChats((prevChats) =>
+          prevChats.map((chat) =>
+            chat.id === data.roomId ? { ...chat, unreadCount: 0 } : chat
+          )
+        );
+
+        // Mesaj statuslarını yenilə
+        setMessages((prevMessages) =>
+          prevMessages.map((msg) => {
+            if (
+              msg.sender_id !== currentUserId &&
+              msg.status !== MessageStatus.READ
+            ) {
+              return { ...msg, status: MessageStatus.READ };
+            }
+            return msg;
+          })
+        );
+      }
+    };
+
+    socket?.on("messagesRead", (data: { roomId: string }) => {
       if (data.roomId === currentRoomId) {
         setMessages((prevMessages) =>
           prevMessages.map((msg) =>
-            msg.status !== MessageStatus.READ
+            msg.status !== MessageStatus.READ && msg.room_id === currentRoomId
               ? { ...msg, status: MessageStatus.READ }
               : msg
           )
         );
       }
-    };
-
-    socket?.on("messagesRead", handleMessagesRead);
+    });
     return () => {
       socket?.off("messagesRead", handleMessagesRead);
     };
