@@ -14,6 +14,38 @@ export class MessengerService {
 
   constructor(private readonly supabase: SupabaseService) {}
 
+  async getChatRoomById(roomId: string) {
+    try {
+      const { data: chatRoom, error } = await this.supabase
+        .getClient()
+        .from('chat_rooms')
+        .select('*')
+        .eq('id', roomId)
+        .single();
+
+      if (error) {
+        this.logger.error('Error checking existing chat room', error);
+        throw new InternalServerErrorException(
+          `Error checking existing chat room: ${error.message}`,
+        );
+      }
+
+      if (!chatRoom) {
+        throw new BadRequestException('Chat room not found');
+      }
+
+      return chatRoom;
+    } catch (error) {
+      this.logger.error('Exception in createChatRoomIfNotExist', error);
+      if (error instanceof BadRequestException) {
+        throw error;
+      }
+      throw new InternalServerErrorException(
+        `Error creating chat room: ${error.message}`,
+      );
+    }
+  }
+
   async createChatRoomIfNotExist(user1: string, user2: string) {
     if (user1 === user2) {
       throw new BadRequestException(
@@ -137,8 +169,14 @@ export class MessengerService {
         .select('*, messages!inner(*)')
         .contains('user_ids', [userId]);
 
-      return Promise.all(
+      const roomsWithDetails = await Promise.all(
         chatRooms.map(async (room) => {
+          const lastMessage = room.messages.sort(
+            (a, b) =>
+              new Date(b.created_at).getTime() -
+              new Date(a.created_at).getTime(),
+          )[0];
+
           const { count } = await this.supabase
             .getClient()
             .from('messages')
@@ -150,11 +188,17 @@ export class MessengerService {
           return {
             ...room,
             unreadCount: count,
-            lastMessageDate:
-              room.messages[room.messages.length - 1]?.created_at,
-            lastMessage: room.messages[room.messages.length - 1] || null,
+            lastMessageDate: lastMessage?.created_at || null,
+            lastMessage: lastMessage || null,
           };
         }),
+      );
+
+      // Son mesaja görə sırala (ən son yazılan otaq birinci gəlsin)
+      return roomsWithDetails.sort(
+        (a, b) =>
+          new Date(b.lastMessageDate || 0).getTime() -
+          new Date(a.lastMessageDate || 0).getTime(),
       );
     } catch (error) {
       console.log(error);

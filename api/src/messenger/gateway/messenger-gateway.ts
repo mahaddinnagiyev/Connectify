@@ -84,6 +84,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
       const { password, is_admin, ...safeUser } = user;
       client.data.user = safeUser;
+      client.join(`user:${user.id}`);
       this.logger.log(`Client connected: ${client.id} (User: ${user.id})`);
     } catch (error) {
       this.logger.error('Connection error', error);
@@ -182,10 +183,19 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
       const messageToEmit = { ...savedMessage, roomId: savedMessage.room_id };
 
+      // Mesajı otağa göndəririk (göndərən otaqda olan istifadəçilər alır)
       this.server.to(payload.roomId).emit('newMessage', messageToEmit);
 
-      const sockets = await this.server.in(payload.roomId).fetchSockets();
+      // İndi, əgər mesaj qarşı tərəfə aidirsə, həmin istifadəçinin şəxsi kanalına da göndəririk
+      const room = await this.messengerService.getChatRoomById(payload.roomId);
+      const recipientId = room.user_ids.find(
+        (id: string) => id !== client.data.user.id,
+      );
+      if (recipientId) {
+        this.server.to(`user:${recipientId}`).emit('newMessage', messageToEmit);
+      }
 
+      const sockets = await this.server.in(payload.roomId).fetchSockets();
       const otherSocket = sockets.find(
         (socket) => socket.data.user.id !== client.data.user.id,
       );
@@ -206,10 +216,10 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         .from('messages')
         .select('*', { count: 'exact' })
         .eq('room_id', payload.roomId)
-        .neq('sender_id', client.data.user.id)
+        .eq('sender_id', client.data.user.id)
         .neq('status', MessageStatus.READ);
 
-      this.server.to(payload.roomId).emit('unreadCountUpdated', {
+      this.server.to(`user:${recipientId}`).emit('unreadCountUpdated', {
         roomId: payload.roomId,
         count: count || 0,
       });
@@ -297,7 +307,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         .neq('sender_id', client.data.user.id)
         .neq('status', MessageStatus.READ);
 
-      this.server.to(payload.roomId).emit('unreadCountUpdated', {
+      this.server.to(`user:${client.data.user.id}`).emit('unreadCountUpdated', {
         roomId: payload.roomId,
         count: count || 0,
       });
