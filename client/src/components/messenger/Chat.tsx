@@ -4,10 +4,7 @@ import SendIcon from "@mui/icons-material/Send";
 import AttachFileIcon from "@mui/icons-material/AttachFile";
 import InsertEmoticonIcon from "@mui/icons-material/InsertEmoticon";
 import { Tooltip } from "@mui/material";
-import {
-  MessagesDTO,
-  MessageStatus,
-} from "../../services/socket/dto/messages-dto";
+import { MessagesDTO } from "../../services/socket/dto/messages-dto";
 import { Users } from "../../services/user/dto/user-dto";
 import no_profile_photo from "../../assets/no-profile-photo.png";
 import LocalPhoneIcon from "@mui/icons-material/LocalPhone";
@@ -16,9 +13,6 @@ import MoreVertIcon from "@mui/icons-material/MoreVert";
 import AccountBoxIcon from "@mui/icons-material/AccountBox";
 import DeleteIcon from "@mui/icons-material/Delete";
 import BlockIcon from "@mui/icons-material/Block";
-import CheckIcon from "@mui/icons-material/Check";
-import DoneAllIcon from "@mui/icons-material/DoneAll";
-import MoreHorizIcon from "@mui/icons-material/MoreHoriz";
 import { socket } from "../../services/socket/socket-service";
 import { Account } from "../../services/account/dto/account-dto";
 
@@ -29,39 +23,7 @@ interface ChatProps {
   messages: MessagesDTO[];
 }
 
-const MessageStatusIcon = ({ status }: { status: MessageStatus }) => {
-  switch (status) {
-    case MessageStatus.PENDING:
-      return <MoreHorizIcon style={{ fontSize: "15px" }} />;
-    case MessageStatus.SENT:
-      return (
-        <Tooltip title="Sent">
-          <CheckIcon style={{ fontSize: "15px" }} />
-        </Tooltip>
-      );
-    case MessageStatus.RECEIVED:
-      return (
-        <Tooltip title="Received">
-          <DoneAllIcon style={{ fontSize: "15px", color: "white" }} />
-        </Tooltip>
-      );
-    case MessageStatus.READ:
-      return (
-        <Tooltip title="Read">
-          <DoneAllIcon style={{ fontSize: "15px", color: "blue" }} />
-        </Tooltip>
-      );
-    default:
-      return null;
-  }
-};
-
-const Chat = ({
-  roomId,
-  otherUser,
-  otherUserAccount,
-  messages
-}: ChatProps) => {
+const Chat = ({ roomId, otherUser, otherUserAccount, messages }: ChatProps) => {
   const [messageInput, setMessageInput] = useState("");
   const [visibleChatOptions, setVisibleChatOptions] = useState(false);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
@@ -117,16 +79,12 @@ const Chat = ({
           </div>
         </div>
         <div className="flex gap-1 items-center mr-3">
-          <div>
-            <button className="call-btn">
-              <LocalPhoneIcon />
-            </button>
-          </div>
-          <div>
-            <button className="call-btn">
-              <VideocamIcon />
-            </button>
-          </div>
+          <button className="call-btn">
+            <LocalPhoneIcon />
+          </button>
+          <button className="call-btn">
+            <VideocamIcon />
+          </button>
           <div>
             <button onClick={toggleChatOptions}>
               <MoreVertIcon />
@@ -167,13 +125,7 @@ const Chat = ({
                       minute: "2-digit",
                     })}
                   </span>
-                  <span>
-                    {message.sender_id === otherUser?.id ? (
-                      ""
-                    ) : (
-                      <MessageStatusIcon status={message.status} />
-                    )}
-                  </span>
+                  {/* Mesaj statusu ilə bağlı ikon renderi silindi */}
                 </div>
               </div>
             ))}

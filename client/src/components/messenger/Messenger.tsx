@@ -14,10 +14,7 @@ import { getToken } from "../../services/auth/token-service";
 import { jwtDecode } from "jwt-decode";
 import { getUserById } from "../../services/user/user-service";
 import { Users } from "../../services/user/dto/user-dto";
-import {
-  MessagesDTO,
-  MessageStatus,
-} from "../../services/socket/dto/messages-dto";
+import { MessagesDTO } from "../../services/socket/dto/messages-dto";
 import { Account } from "../../services/account/dto/account-dto";
 
 const Messenger = () => {
@@ -29,19 +26,6 @@ const Messenger = () => {
   const [searchParams] = useSearchParams();
   const currentRoomId = searchParams.get("room");
   const lastJoinedRoomRef = useRef<string | null>(null);
-  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
-
-  useEffect(() => {
-    const getIdFromToken = async () => {
-      const token = await getToken();
-      if (token) {
-        const decodedToken: { id: string } = jwtDecode(token);
-        setCurrentUserId(decodedToken.id);
-      }
-    };
-
-    getIdFromToken();
-  }, []);
 
   useEffect(() => {
     if (currentRoomId && chats.length > 0) {
@@ -51,8 +35,7 @@ const Messenger = () => {
         lastJoinedRoomRef.current !== currentRoomId
       ) {
         socket?.emit("joinRoom", { user2Id: currentChat.otherUser.id });
-        socket?.emit("setMessageRead", { roomId: currentRoomId });
-
+        // Message status ilə bağlı əməliyyatlar silindi
         lastJoinedRoomRef.current = currentRoomId;
       }
     }
@@ -76,46 +59,7 @@ const Messenger = () => {
     };
   }, []);
 
-  useEffect(() => {
-    const handleMessagesRead = async (data: { roomId: string }) => {
-      if (data.roomId === currentRoomId) {
-        // Unread count-u sıfırla
-        setChats((prevChats) =>
-          prevChats.map((chat) =>
-            chat.id === data.roomId ? { ...chat, unreadCount: 0 } : chat
-          )
-        );
-
-        // Mesaj statuslarını yenilə
-        setMessages((prevMessages) =>
-          prevMessages.map((msg) => {
-            if (
-              msg.sender_id !== currentUserId &&
-              msg.status !== MessageStatus.READ
-            ) {
-              return { ...msg, status: MessageStatus.READ };
-            }
-            return msg;
-          })
-        );
-      }
-    };
-
-    socket?.on("messagesRead", (data: { roomId: string }) => {
-      if (data.roomId === currentRoomId) {
-        setMessages((prevMessages) =>
-          prevMessages.map((msg) =>
-            msg.status !== MessageStatus.READ && msg.room_id === currentRoomId
-              ? { ...msg, status: MessageStatus.READ }
-              : msg
-          )
-        );
-      }
-    });
-    return () => {
-      socket?.off("messagesRead", handleMessagesRead);
-    };
-  }, [currentRoomId]);
+  // Mesaj statusu ilə bağlı useEffect tamamilə çıxarıldı
 
   useEffect(() => {
     const handleNewMessage = (newMessage: MessagesDTO) => {
@@ -147,7 +91,7 @@ const Messenger = () => {
         setMessages(data.messages);
       }
     });
-    socket?.emit("setMessageRead", { roomId: currentRoomId });
+    // setMessageRead əmri də çıxarıldı
     return () => {
       socket?.off("messages");
     };
@@ -156,7 +100,6 @@ const Messenger = () => {
   useEffect(() => {
     const fetchChats = async () => {
       const token = await getToken();
-
       if (!token) return;
 
       const decodedToken: { id: string } = jwtDecode(token);
@@ -185,7 +128,6 @@ const Messenger = () => {
             } catch (error) {
               console.error("User fetch error:", error);
             }
-
             return chat;
           })
         );
@@ -193,14 +135,13 @@ const Messenger = () => {
         let unreadCount: number = 0;
         const user_ids: string[] = [];
 
-        chatRooms.map((chat) => {
+        chatRooms.forEach((chat) => {
           if (chat.unreadCount! > 0) {
             unreadCount += chat.unreadCount!;
             const otherUserId = chat.user_ids.find(
               (id) => id !== currentUserId
             );
-
-            user_ids.push(otherUserId!);
+            if (otherUserId) user_ids.push(otherUserId);
           }
         });
 
