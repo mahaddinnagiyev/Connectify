@@ -1,4 +1,4 @@
-# Connectify App
+# Connectify App - Chat App
 
 ## This project is still in the development phase
 
