@@ -43,7 +43,7 @@
 
 .message-text {
   margin: 0;
-  font-size: .8rem;
+  font-size: 0.8rem;
 }
 
 .message-time {
@@ -67,7 +67,7 @@
   padding: 10px;
   border: 1px solid #ccc;
   border-radius: 5px;
-  font-size: .8rem;
+  font-size: 0.8rem;
   box-sizing: border-box;
   resize: none;
 }
@@ -88,4 +88,63 @@
 
 .send-button:hover {
   background-color: #aaffaa;
+}
+
+/* Standart stil - hover olmadan */
+.user-name,
+.last-seen-container p {
+  display: inline-block;
+  transform: translateX(0);
+  transition: transform 0.5s ease-out;
+}
+
+/* Responsive vəziyyət: Mobil */
+@media screen and (max-width: 768px) {
+  .user-info-container {
+    overflow: hidden;
+    width: 200px; /* ehtiyacınıza görə tənzimləyin */
+  }
+  .marquee,
+  .last-seen-container {
+    white-space: nowrap;
+    overflow: hidden;
+  }
+  /* .hovered sinifi animasiyanı aktivləşdirir */
+  .user-info-container.hovered .user-name,
+  .user-info-container.hovered .last-seen-container p {
+    animation: marqueeScroll 8s linear infinite;
+    /* İstəyə bağlı: animasiya başladıqda, element hazırda olan vəziyyətdən axmağa başlasın */
+  }
+}
+
+/* Desktop vəziyyəti üçün adi göstərim */
+@media screen and (min-width: 768px) {
+  .user-info-container {
+    overflow: visible;
+  }
+  .user-name {
+    animation: none;
+  }
+}
+
+/* Marquee animasiya keyframes – mətni soldan sola axıdır */
+@keyframes marqueeScroll {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-100%);
+  }
+}
+
+/* Mövcud digər stil kodlarınız */
+.last-seen-container {
+  font-size: 0.55rem;
+  color: #555;
+}
+
+/* Mövcud digər stil kodlarınız (məsələn, .last-seen-container ölçüsü) */
+.last-seen-container {
+  font-size: 0.55rem;
+  color: #555;
 }

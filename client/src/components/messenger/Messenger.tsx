@@ -176,7 +176,7 @@ const Messenger = () => {
       <section className="messenger-container">
         <div className="messenger flex gap-3">
           {/* Chat List */}
-          <div className="messenger-left text-left">
+          <div className={`messenger-left text-left ${currentRoomId ? 'rpv-messenger-left' : ''}`}>
             <div className="left-header pt-2 pb-5 px-1 flex justify-between">
               <div>Messenger</div>
               <div>
@@ -245,7 +245,7 @@ const Messenger = () => {
               currentRoomId && currentChat
                 ? ""
                 : "bg-[var(--chatroom-bg-color)] border-2 border-[var(--chatroom-bg-color)] rounded-lg"
-            }`}
+            } ${currentRoomId ? 'rpv-messenger-right' : ''}`}
           >
             {currentRoomId && currentChat && (
               <Chat
