@@ -122,6 +122,44 @@ const Chat = ({ roomId, otherUser, otherUserAccount, messages }: ChatProps) => {
     }
   }, [messages]);
 
+  const groupMessagesByDate = (messages: MessagesDTO[]) => {
+    const groupedMessages: { [key: string]: MessagesDTO[] } = {};
+
+    const formatDate = (date: string) => {
+      const messageDate = new Date(date);
+      const today = new Date();
+      const yesterday = new Date(today);
+      yesterday.setDate(today.getDate() - 1);
+
+      if (messageDate.toDateString() === today.toDateString()) {
+        return "Today";
+      }
+      if (messageDate.toDateString() === yesterday.toDateString()) {
+        return "Yesterday";
+      }
+
+      return messageDate.toLocaleDateString("en-GB", {
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+      });
+    };
+
+    messages.forEach((message) => {
+      const formattedDate = formatDate(new Date(message.created_at).toString());
+
+      if (!groupedMessages[formattedDate]) {
+        groupedMessages[formattedDate] = [];
+      }
+
+      groupedMessages[formattedDate].push(message);
+    });
+
+    return groupedMessages;
+  };
+
+  const groupedMessages = groupMessagesByDate(messages);
+
   return (
     <>
       {/* Header */}
@@ -178,29 +216,38 @@ const Chat = ({ roomId, otherUser, otherUserAccount, messages }: ChatProps) => {
       {/* Messages Section */}
       <section className="chat">
         <div className="messages-container" ref={messagesContainerRef}>
-          {Array.isArray(messages) &&
-            messages.map((message, index) => (
-              <div
-                key={index}
-                className={`message ${
-                  message.sender_id === otherUser?.id ? "sender" : "receiver"
-                }`}
-              >
-                <p className="message-text text-right">{message.content}</p>
-                <div className="flex items-center justify-end gap-1">
-                  <span className="message-time">
-                    {new Date(message.created_at + "Z").toLocaleTimeString(
-                      "az-AZ",
-                      {
-                        timeZone: "Asia/Baku",
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      }
-                    )}
-                  </span>
-                </div>
+          {Object.entries(groupedMessages).map(([date, messages]) => (
+            <>
+              <div className="message-date w-full text-center text-sm border-y-2 border-[var(--primary-color)] my-2 py-2">
+                {date}
               </div>
-            ))}
+              {Array.isArray(messages) &&
+                messages.map((message, index) => (
+                  <div
+                    key={index}
+                    className={`message ${
+                      message.sender_id === otherUser?.id
+                        ? "sender"
+                        : "receiver"
+                    }`}
+                  >
+                    <p className="message-text text-right">{message.content}</p>
+                    <div className="flex items-center justify-end gap-1">
+                      <span className="message-time">
+                        {new Date(message.created_at + "Z").toLocaleTimeString(
+                          "az-AZ",
+                          {
+                            timeZone: "Asia/Baku",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          }
+                        )}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+            </>
+          ))}
         </div>
         {/* Send Message Form */}
         <div className="send-message-container mt-2">
