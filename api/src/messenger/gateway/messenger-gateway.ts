@@ -122,8 +122,10 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         );
       }
 
-      const rooms = Array.from(client.rooms).filter((r) => r !== client.id);
-
+      const personalRoom = `user:${client.data.user.id}`;
+      const rooms = Array.from(client.rooms).filter(
+        (r) => r !== client.id && r !== personalRoom,
+      );
       for (const oldRoom of rooms) {
         client.leave(oldRoom);
         this.logger.log(`User ${client.id} left room ${oldRoom}`);
