@@ -16,11 +16,9 @@ import { getUserById } from "../../services/user/user-service";
 import { Users } from "../../services/user/dto/user-dto";
 import { MessagesDTO } from "../../services/socket/dto/messages-dto";
 import { Account } from "../../services/account/dto/account-dto";
-import InfoMessage from "../messages/InfoMessage";
 
 const Messenger = () => {
   const [visibleUserIndex, setVisibleUserIndex] = useState<number | null>(null);
-  const [infoMessage, setInfoMessage] = useState<string>("");
   const [chats, setChats] = useState<
     (ChatRoomsDTO & { otherUser?: Users; otherUserAccount?: Account })[]
   >([]);
@@ -74,7 +72,6 @@ const Messenger = () => {
   useEffect(() => {
     const handleNewMessage = (newMessage: MessagesDTO) => {
       setChats((prevChats) => {
-        // Əvvəlcə chat obyektlərini update edirik
         let updatedChats = prevChats.map((chat) => {
           if (chat.id === newMessage.room_id) {
             if (newMessage.room_id === currentRoomId) {
@@ -163,26 +160,6 @@ const Messenger = () => {
           })
         );
 
-        let unreadCount: number = 0;
-        const user_ids: string[] = [];
-
-        chatRooms.forEach((chat) => {
-          if (chat.unreadCount! > 0) {
-            unreadCount += chat.unreadCount!;
-            const otherUserId = chat.user_ids.find(
-              (id) => id !== currentUserId
-            );
-            if (otherUserId) user_ids.push(otherUserId);
-          }
-        });
-
-        if (unreadCount > 0) {
-          setInfoMessage(
-            `${unreadCount} unread messages from ${user_ids.length} ${
-              user_ids.length === 1 ? "chat" : "chats"
-            }`
-          );
-        }
         setChats(chatsWithUsers);
       });
     };
@@ -196,10 +173,6 @@ const Messenger = () => {
 
   return (
     <>
-      {infoMessage && (
-        <InfoMessage message={infoMessage} onClose={() => setInfoMessage("")} />
-      )}
-
       <section className="messenger-container">
         <div className="messenger flex gap-3">
           {/* Chat List */}
