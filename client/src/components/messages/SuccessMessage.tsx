@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import Alert from "@mui/material/Alert";
 import { styled, keyframes } from "@mui/system";
 
@@ -10,32 +10,35 @@ interface SuccessMessageProps {
 const slideIn = keyframes`
   from {
     transform: translateX(100%);
+    opacity: 0;
   }
   to {
     transform: translateX(0);
+    opacity: 1;
   }
 `;
 
 const slideOut = keyframes`
   from {
     transform: translateX(0);
+    opacity: 1;
   }
   to {
     transform: translateX(100%);
+    opacity: 0;
   }
 `;
 
-const MessageContainer = styled("div")(() => ({
-  position: "fixed",
-  top: "20px",
-  right: "20px",
-  width: "350px",
-  zIndex: 9999,
-  animation: `${slideIn} 0.5s ease-out forwards`,
-  "&.exiting": {
-    animation: `${slideOut} 0.5s ease-in forwards`,
-  },
-}));
+const MessageContainer = styled("div")<{ isExiting: boolean }>(
+  ({ isExiting }) => ({
+    position: "fixed",
+    top: "20px",
+    right: "20px",
+    width: "350px",
+    zIndex: 9999,
+    animation: `${isExiting ? slideOut : slideIn} 0.5s ease-in-out forwards`,
+  })
+);
 
 const CustomAlert = styled(Alert)({
   padding: "20px 25px",
@@ -49,23 +52,36 @@ const CustomAlert = styled(Alert)({
     fontSize: "28px",
     marginRight: "15px",
   },
+  color: "#fff",
+  "& .MuiAlert-message": {
+    color: "#fff",
+  },
 });
 
 const SuccessMessage: React.FC<SuccessMessageProps> = ({
   message,
   onClose,
 }) => {
+  const [isExiting, setIsExiting] = useState(false);
+
+  const handleClose = useCallback(() => {
+    setIsExiting(true);
+    setTimeout(() => {
+      onClose();
+    }, 500);
+  }, [onClose, setIsExiting]);
+
   useEffect(() => {
     const timer = setTimeout(() => {
-      onClose();
+      handleClose();
     }, 5000);
 
     return () => clearTimeout(timer);
-  }, [onClose]);
+  }, [handleClose]);
 
   return (
-    <MessageContainer>
-      <CustomAlert variant="filled" severity="success" onClose={onClose}>
+    <MessageContainer isExiting={isExiting}>
+      <CustomAlert variant="filled" severity="success" onClose={handleClose}>
         {message}
       </CustomAlert>
     </MessageContainer>

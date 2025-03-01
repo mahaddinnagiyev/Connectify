@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import Alert from "@mui/material/Alert";
 import { styled, keyframes } from "@mui/system";
 
@@ -25,16 +25,15 @@ const slideOut = keyframes`
   }
 `;
 
-const MessageContainer = styled("div")(() => ({
+const MessageContainer = styled("div")<{ exiting: boolean }>(({ exiting }) => ({
   position: "fixed",
   top: "20px",
   right: "20px",
   width: "350px",
   zIndex: 9999,
-  animation: `${slideIn} 0.5s ease-out forwards`,
-  "&.exiting": {
-    animation: `${slideOut} 0.5s ease-in forwards`,
-  },
+  animation: exiting
+    ? `${slideOut} 0.5s ease-in forwards`
+    : `${slideIn} 0.5s ease-out forwards`,
 }));
 
 const CustomAlert = styled(Alert)({
@@ -52,16 +51,19 @@ const CustomAlert = styled(Alert)({
 });
 
 const InfoMessage: React.FC<InfoMessageProps> = ({ message, onClose }) => {
+  const [exiting, setExiting] = useState(false);
+
   useEffect(() => {
     const timer = setTimeout(() => {
-      onClose();
+      setExiting(true);
+      setTimeout(onClose, 500);
     }, 5000);
 
     return () => clearTimeout(timer);
   }, [onClose]);
 
   return (
-    <MessageContainer>
+    <MessageContainer exiting={exiting}>
       <CustomAlert variant="filled" severity="info" onClose={onClose}>
         {message}
       </CustomAlert>
