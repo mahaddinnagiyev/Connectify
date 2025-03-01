@@ -3,11 +3,11 @@ import {
   Dialog,
   DialogTitle,
   DialogContent,
-  DialogContentText,
   DialogActions,
   Button,
   IconButton,
   useTheme,
+  Typography,
 } from "@mui/material";
 import { Close as CloseIcon } from "@mui/icons-material";
 import { styled } from "@mui/material/styles";
@@ -16,7 +16,14 @@ interface ConfirmModalProps {
   open: boolean;
   title: string;
   message: string;
-  color: 'primary' | 'inherit' | 'secondary' | 'success' | 'error' | 'info' | 'warning';
+  color:
+    | "primary"
+    | "inherit"
+    | "secondary"
+    | "success"
+    | "error"
+    | "info"
+    | "warning";
   confirmText: string;
   onConfirm: () => void;
   onCancel: () => void;
@@ -30,14 +37,22 @@ const StyledDialogTitle = styled(DialogTitle)(({ theme }) => ({
   display: "flex",
   alignItems: "center",
   justifyContent: "space-between",
+  fontWeight: "bold",
+  textAlign: "center",
+  color: theme.palette.error.main,
+  fontSize: "1.25rem",
 }));
 
 const StyledDialogContent = styled(DialogContent)(({ theme }) => ({
   padding: theme.spacing(2),
+  textAlign: "center",
+  marginBottom: theme.spacing(2),
 }));
 
 const StyledDialogActions = styled(DialogActions)(({ theme }) => ({
   padding: theme.spacing(1, 2, 2),
+  justifyContent: "center",
+  gap: 2,
 }));
 
 const ConfirmModal: React.FC<ConfirmModalProps> = ({
@@ -59,30 +74,51 @@ const ConfirmModal: React.FC<ConfirmModalProps> = ({
       aria-describedby="confirm-dialog-description"
       PaperProps={{
         sx: {
-          borderRadius: 2,
-          boxShadow: theme.shadows[5],
+          borderRadius: 3,
+          padding: 2,
+          boxShadow: 3,
+          maxWidth: "400px",
+          margin: "16px",
         },
       }}
     >
       <StyledDialogTitle id="confirm-dialog-title">
         {title}
-        <IconButton onClick={onCancel} size="small" sx={{ color: theme.palette.grey[500] }}>
+        <IconButton
+          onClick={onCancel}
+          size="small"
+          sx={{ color: theme.palette.grey[500] }}
+        >
           <CloseIcon />
         </IconButton>
       </StyledDialogTitle>
       <StyledDialogContent dividers>
-        <DialogContentText
-          id="confirm-dialog-description"
-          sx={{ fontSize: "1rem", lineHeight: 1.5 }}
-        >
+        <Typography variant="body1" sx={{ fontSize: "1rem", lineHeight: 1.5 }}>
           {message}
-        </DialogContentText>
+        </Typography>
       </StyledDialogContent>
-      <StyledDialogActions sx={{ paddingY: 1 }}>
-        <Button onClick={onCancel} color="inherit">
+      <StyledDialogActions>
+        <Button
+          onClick={onCancel}
+          variant="outlined"
+          sx={{
+            textTransform: "none",
+            width: "120px",
+          }}
+        >
           Cancel
         </Button>
-        <Button onClick={onConfirm} variant="contained" color={color}>
+        <Button
+          onClick={onConfirm}
+          variant="contained"
+          color={color}
+          sx={{
+            textTransform: "none",
+            width: "150px",
+            backgroundColor: theme.palette.error.main,
+            "&:hover": { backgroundColor: theme.palette.error.dark },
+          }}
+        >
           {confirmText}
         </Button>
       </StyledDialogActions>
