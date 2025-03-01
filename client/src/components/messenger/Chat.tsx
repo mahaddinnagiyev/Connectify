@@ -15,6 +15,9 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import BlockIcon from "@mui/icons-material/Block";
 import { socket } from "../../services/socket/socket-service";
 import { Account } from "../../services/account/dto/account-dto";
+import { PrivacySettings } from "../../services/account/dto/privacy-settings-dto";
+import { getAllFriendshipRequests } from "../../services/friendship/friendship-service";
+import { FriendshipStatus } from "../../services/friendship/enum/friendship-status.enum";
 
 interface ChatProps {
   roomId: string;
@@ -22,6 +25,74 @@ interface ChatProps {
   otherUserAccount?: Account;
   messages: MessagesDTO[];
 }
+
+interface LastSeenProps {
+  otherUserAccount: Account;
+  otherUserId: string;
+}
+
+const LastSeen = ({ otherUserAccount, otherUserId }: LastSeenProps) => {
+  const [isFriend, setIsFriend] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (otherUserAccount.privacy!.last_login === PrivacySettings.my_friends) {
+      getAllFriendshipRequests()
+        .then((response) => {
+          if (response.success) {
+            const acceptedFriend = response.friends.find(
+              (friend) =>
+                (friend.friend_id === otherUserId ||
+                  friend.id === otherUserId) &&
+                friend.status === FriendshipStatus.accepted
+            );
+            setIsFriend(!!acceptedFriend);
+          }
+          setLoading(false);
+        })
+        .catch(() => setLoading(false));
+    } else {
+      setLoading(false);
+    }
+  }, [otherUserAccount, otherUserId]);
+
+  if (otherUserAccount.privacy!.last_login === PrivacySettings.everyone) {
+    return (
+      <p className="text-xs">
+        Last seen at:{" "}
+        {otherUserAccount?.last_login
+          ? new Date(otherUserAccount.last_login).toLocaleString("az-AZ", {
+              timeZone: "Asia/Baku",
+            })
+          : "N/A"}
+      </p>
+    );
+  }
+
+  if (otherUserAccount.privacy!.last_login === PrivacySettings.my_friends) {
+    if (loading) {
+      return <p className="text-xs">Loading last seen...</p>;
+    }
+    return isFriend ? (
+      <p className="text-xs">
+        Last seen at:{" "}
+        {otherUserAccount?.last_login
+          ? new Date(otherUserAccount.last_login).toLocaleString("az-AZ", {
+              timeZone: "Asia/Baku",
+            })
+          : "N/A"}
+      </p>
+    ) : (
+      <p className="text-xs">Last seen at: N/A</p>
+    );
+  }
+
+  if (otherUserAccount.privacy!.last_login === PrivacySettings.nobody) {
+    return null;
+  }
+
+  return <p className="text-xs">Last seen at: N/A</p>;
+};
 
 const Chat = ({ roomId, otherUser, otherUserAccount, messages }: ChatProps) => {
   const [messageInput, setMessageInput] = useState("");
@@ -70,12 +141,10 @@ const Chat = ({ roomId, otherUser, otherUserAccount, messages }: ChatProps) => {
               {otherUser?.first_name} {otherUser?.last_name} | @
               {otherUser?.username}
             </a>
-            <p className="text-xs">
-              Last seen at:{" "}
-              {otherUserAccount?.last_login
-                ? new Date(otherUserAccount?.last_login ?? 0).toLocaleString()
-                : "N/A"}
-            </p>
+            <LastSeen
+              otherUserAccount={otherUserAccount as Account}
+              otherUserId={otherUser?.id as string}
+            />
           </div>
         </div>
         <div className="flex gap-1 items-center mr-3">
@@ -120,12 +189,15 @@ const Chat = ({ roomId, otherUser, otherUserAccount, messages }: ChatProps) => {
                 <p className="message-text text-right">{message.content}</p>
                 <div className="flex items-center justify-end gap-1">
                   <span className="message-time">
-                    {new Date(message.created_at).toLocaleTimeString([], {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
+                    {new Date(message.created_at + "Z").toLocaleTimeString(
+                      "az-AZ",
+                      {
+                        timeZone: "Asia/Baku",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      }
+                    )}
                   </span>
-                  {/* Mesaj statusu ilə bağlı ikon renderi silindi */}
                 </div>
               </div>
             ))}
