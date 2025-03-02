@@ -41,6 +41,13 @@
   border-bottom-right-radius: 0;
 }
 
+.default {
+  align-self: center;
+  background-color: white;
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
 .message-text {
   margin: 0;
   font-size: 0.8rem;
@@ -102,22 +109,19 @@
 @media screen and (max-width: 768px) {
   .user-info-container {
     overflow: hidden;
-    width: 200px; /* ehtiyacınıza görə tənzimləyin */
+    width: 200px;
   }
   .marquee,
   .last-seen-container {
     white-space: nowrap;
     overflow: hidden;
   }
-  /* .hovered sinifi animasiyanı aktivləşdirir */
   .user-info-container.hovered .user-name,
   .user-info-container.hovered .last-seen-container p {
     animation: marqueeScroll 8s linear infinite;
-    /* İstəyə bağlı: animasiya başladıqda, element hazırda olan vəziyyətdən axmağa başlasın */
   }
 }
 
-/* Desktop vəziyyəti üçün adi göstərim */
 @media screen and (min-width: 768px) {
   .user-info-container {
     overflow: visible;
@@ -127,7 +131,6 @@
   }
 }
 
-/* Marquee animasiya keyframes – mətni soldan sola axıdır */
 @keyframes marqueeScroll {
   0% {
     transform: translateX(0);
@@ -137,13 +140,6 @@
   }
 }
 
-/* Mövcud digər stil kodlarınız */
-.last-seen-container {
-  font-size: 0.55rem;
-  color: #555;
-}
-
-/* Mövcud digər stil kodlarınız (məsələn, .last-seen-container ölçüsü) */
 .last-seen-container {
   font-size: 0.55rem;
   color: #555;

@@ -34,6 +34,8 @@ import ConfirmModal from "../../components/modals/confirm/ConfirmModal";
 import { UserFriendsDTO } from "../../services/friendship/dto/friendship-dto";
 import ErrorMessage from "../messages/ErrorMessage";
 import SuccessMessage from "../messages/SuccessMessage";
+import { socket } from "../../services/socket/socket-service";
+import { useNavigate } from "react-router-dom";
 
 const AllUsers: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -53,12 +55,22 @@ const AllUsers: React.FC = () => {
 
   const theme = useTheme();
   const isSmallScreen = useMediaQuery(theme.breakpoints.down("sm"));
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchAllUsers();
     fetchAcceptedFriends();
     fetchPendingFriends();
   }, []);
+
+  const handleGoChat = (userId: string) => {
+    socket?.emit("joinRoom", { user2Id: userId });
+    socket?.once("joinRoomSuccess", (data: { roomId: string }) => {
+      if (data && data.roomId) {
+        navigate(`/chat?room=${data.roomId}`);
+      }
+    });
+  };
 
   const fetchAllUsers = async () => {
     setLoading(true);
@@ -262,6 +274,7 @@ const AllUsers: React.FC = () => {
                               variant="contained"
                               color="success"
                               size="small"
+                              onClick={() => handleGoChat(user.id)}
                             >
                               <ChatIcon fontSize="small" />
                             </Button>
@@ -347,6 +360,7 @@ const AllUsers: React.FC = () => {
                               variant="contained"
                               color="success"
                               sx={{ mr: 1 }}
+                              onClick={() => handleGoChat(user.id)}
                             >
                               <ChatIcon />
                             </Button>

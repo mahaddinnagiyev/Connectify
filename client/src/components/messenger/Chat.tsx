@@ -4,7 +4,10 @@ import SendIcon from "@mui/icons-material/Send";
 import AttachFileIcon from "@mui/icons-material/AttachFile";
 import InsertEmoticonIcon from "@mui/icons-material/InsertEmoticon";
 import { Tooltip } from "@mui/material";
-import { MessagesDTO } from "../../services/socket/dto/messages-dto";
+import {
+  MessagesDTO,
+  MessageType,
+} from "../../services/socket/dto/messages-dto";
 import { Users } from "../../services/user/dto/user-dto";
 import no_profile_photo from "../../assets/no-profile-photo.png";
 import LocalPhoneIcon from "@mui/icons-material/LocalPhone";
@@ -277,24 +280,28 @@ const Chat = ({ roomId, otherUser, otherUserAccount, messages }: ChatProps) => {
                   <div
                     key={index}
                     className={`message ${
-                      message.sender_id === otherUser?.id
+                      message.sender_id === otherUser?.id &&
+                      message.message_type !== MessageType.DEFAULT
                         ? "sender"
+                        : message.message_type === MessageType.DEFAULT
+                        ? "default"
                         : "receiver"
                     }`}
                   >
                     <p className="message-text text-right">{message.content}</p>
-                    <div className="flex items-center justify-end gap-1">
-                      <span className="message-time">
-                        {new Date(message.created_at + "Z").toLocaleTimeString(
-                          "az-AZ",
-                          {
+                    {message.message_type !== MessageType.DEFAULT && (
+                      <div className="flex items-center justify-end gap-1">
+                        <span className="message-time">
+                          {new Date(
+                            message.created_at + "Z"
+                          ).toLocaleTimeString("az-AZ", {
                             timeZone: "Asia/Baku",
                             hour: "2-digit",
                             minute: "2-digit",
-                          }
-                        )}
-                      </span>
-                    </div>
+                          })}
+                        </span>
+                      </div>
+                    )}
                   </div>
                 ))}
             </>

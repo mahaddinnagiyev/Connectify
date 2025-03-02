@@ -31,6 +31,8 @@ import { block_and_unblock_user } from "../../services/user/block-list-service";
 import { BlockAction } from "../../services/user/dto/block-list-dto";
 import { UserFriendsDTO } from "../../services/friendship/dto/friendship-dto";
 import { FriendshipStatus } from "../../services/friendship/enum/friendship-status.enum";
+import { useNavigate } from "react-router-dom";
+import { socket } from "../../services/socket/socket-service";
 
 interface UserProfile {
   user: User;
@@ -61,6 +63,8 @@ const ProfileInfo: React.FC<ProfileInfoProps> = ({ userData }) => {
   const [confirmModalText, setConfirmModalText] = useState("");
   const [pendingAction, setPendingAction] = useState<() => void>(() => {});
 
+  const navigate = useNavigate();
+
   const getUrl = (params: string): boolean => {
     return window.location.href.includes(params);
   };
@@ -81,6 +85,15 @@ const ProfileInfo: React.FC<ProfileInfoProps> = ({ userData }) => {
 
   const handleModalClose = () => {
     setModalOpen(false);
+  };
+
+  const handleGoChat = (userId: string) => {
+    socket?.emit("joinRoom", { user2Id: userId });
+    socket?.once("joinRoomSuccess", (data: { roomId: string }) => {
+      if (data && data.roomId) {
+        navigate(`/chat?room=${data.roomId}`);
+      }
+    });
   };
 
   const handleProfilePictureChange = async (file: File) => {
@@ -372,7 +385,14 @@ const ProfileInfo: React.FC<ProfileInfoProps> = ({ userData }) => {
           ) : (
             <Box sx={{ display: "flex", gap: 1, mt: 1 }}>
               <Tooltip title="Go Chat" placement="top">
-                <Button variant="contained" color="success" size="medium">
+                <Button
+                  variant="contained"
+                  color="success"
+                  size="medium"
+                  onClick={() =>
+                    userData?.user?.id && handleGoChat(userData?.user?.id)
+                  }
+                >
                   <ChatIcon fontSize="medium" />
                 </Button>
               </Tooltip>

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Box,
   TextField,
@@ -27,20 +28,20 @@ import { BlockAction } from "../../services/user/dto/block-list-dto";
 import ConfirmModal from "../modals/confirm/ConfirmModal";
 import ErrorMessage from "../messages/ErrorMessage";
 import SuccessMessage from "../messages/SuccessMessage";
+import { socket } from "../../services/socket/socket-service";
 
 const FriendList = () => {
   const [friends, setFriends] = useState<UserFriendsDTO[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
-
   const [errorMessage, setErrorMessage] = useState<string | null>("");
   const [successMessage, setSuccessMessage] = useState<string | null>("");
-
   const [confirmModalOpen, setConfirmModalOpen] = useState(false);
   const [confirmModalTitle, setConfirmModalTitle] = useState("");
   const [confirmModalMessage, setConfirmModalMessage] = useState("");
   const [confirmModalText, setConfirmModalText] = useState("");
   const [pendingAction, setPendingAction] = useState<() => void>(() => {});
+  const navigate = useNavigate();
 
   const theme = useTheme();
   const isSmallScreen = useMediaQuery(theme.breakpoints.down("sm"));
@@ -60,6 +61,15 @@ const FriendList = () => {
     };
     fetchFriends();
   }, []);
+
+  const handleGoChat = (userId: string) => {
+    socket?.emit("joinRoom", { user2Id: userId });
+    socket?.once("joinRoomSuccess", (data: { roomId: string }) => {
+      if (data && data.roomId) {
+        navigate(`/chat?room=${data.roomId}`);
+      }
+    });
+  };
 
   const block_user = async (id: string) => {
     try {
@@ -236,7 +246,12 @@ const FriendList = () => {
                         <Avatar
                           src={friend.profile_picture ?? no_profile_photo}
                           alt={`${friend.first_name} ${friend.last_name}`}
-                          sx={{ width: 56, height: 56, marginBottom: 1, border: "1px solid var(--primary-color)" }}
+                          sx={{
+                            width: 56,
+                            height: 56,
+                            marginBottom: 1,
+                            border: "1px solid var(--primary-color)",
+                          }}
                         />
                       </ListItemAvatar>
                       <ListItemText
@@ -257,6 +272,7 @@ const FriendList = () => {
                           size="small"
                           color="success"
                           sx={{ marginRight: 1 }}
+                          onClick={() => handleGoChat(friend.friend_id)}
                         >
                           <ChatIcon />
                         </Button>
@@ -327,6 +343,7 @@ const FriendList = () => {
                           variant="contained"
                           color="success"
                           sx={{ marginRight: 1 }}
+                          onClick={() => handleGoChat(friend.friend_id)}
                         >
                           <ChatIcon />
                         </Button>

@@ -3,6 +3,8 @@ export enum MessageType {
   IMAGE = "image",
   AUDIO = "audio",
   FILE = "file",
+  VIDEO = "video",
+  DEFAULT = "default",
 }
 
 export enum MessageStatus {
