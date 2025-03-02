@@ -135,7 +135,9 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
       client.join(room.id);
 
-      client.emit('roomJoined', room);
+      client.emit('joinRoomSuccess', { roomId: room.id });
+      this.server.to(`user:${client.data.user.id}`).emit('chatRoomsUpdated');
+      this.server.to(`user:${payload.user2Id}`).emit('chatRoumsUpdated');
       this.logger.log(`User ${client.id} joined room ${room.id}`);
     } catch (error) {
       this.logger.error('Error in joinRoom', error);
@@ -184,7 +186,6 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         payload.content,
         payload.message_type,
       );
-
       const messageToEmit = { ...savedMessage, roomId: savedMessage.room_id };
 
       this.server.to(payload.roomId).emit('newMessage', messageToEmit);
@@ -193,50 +194,57 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       const recipientId = room.user_ids.find(
         (id: string) => id !== client.data.user.id,
       );
+
       if (recipientId) {
-        this.server.to(`user:${recipientId}`).emit('newMessage', messageToEmit);
-      }
-
-      const sockets = await this.server.in(payload.roomId).fetchSockets();
-      const otherSocket = sockets.find(
-        (socket) => socket.data.user.id !== client.data.user.id,
-      );
-
-      if (otherSocket) {
-        await this.messengerService.setMessageRead(
-          payload.roomId,
-          otherSocket.data.user.id,
+        const socketsInRoom = await this.server
+          .in(payload.roomId)
+          .fetchSockets();
+        const recipientSocket = socketsInRoom.find(
+          (socket) => socket.data.user.id === recipientId,
         );
 
-        this.server
-          .to(payload.roomId)
-          .emit('messagesRead', { roomId: payload.roomId });
+        if (recipientSocket) {
+          await this.messengerService.setMessageRead(
+            payload.roomId,
+            recipientId,
+          );
+          this.server.to(`user:${recipientId}`).emit('unreadCountUpdated', {
+            roomId: payload.roomId,
+            count: 0,
+          });
+          return this.server.to(payload.roomId).emit('messagesRead', {
+            roomId: payload.roomId,
+          });
+        }
+
+        // const recipientSocket = Array.from(
+        //   this.server.sockets.sockets.values(),
+        // ).find((socket) => socket.data.user?.id === recipientId);
+
+        // if (recipientSocket) {
+        //   await this.webPushService.sendPushNotification(recipientId, {
+        //     title: `${client.data.user.username} sent you a message`,
+        //     body: payload.content,
+        //     data: { roomId: payload.roomId },
+        //   });
+        // }
+
+        const { count } = await this.supabase
+          .getClient()
+          .from('messages')
+          .select('*', { count: 'exact' })
+          .eq('room_id', payload.roomId)
+          .neq('sender_id', recipientId)
+          .neq('status', MessageStatus.READ);
+        this.server.to(`user:${recipientId}`).emit('unreadCountUpdated', {
+          roomId: payload.roomId,
+          count: count || 0,
+        });
+        this.server.to(`user:${client.data.user.id}`).emit('chatRoomsUpdated');
+        if (recipientId) {
+          this.server.to(`user:${recipientId}`).emit('chatRoomsUpdated');
+        }
       }
-
-      const { count } = await this.supabase
-        .getClient()
-        .from('messages')
-        .select('*', { count: 'exact' })
-        .eq('room_id', payload.roomId)
-        .eq('sender_id', client.data.user.id)
-        .neq('status', MessageStatus.READ);
-
-      this.server.to(`user:${recipientId}`).emit('unreadCountUpdated', {
-        roomId: payload.roomId,
-        count: count || 0,
-      });
-
-      // const recipientSocket = Array.from(
-      //   this.server.sockets.sockets.values(),
-      // ).find((socket) => socket.data.user?.id === recipientId);
-
-      // if (recipientSocket) {
-      //   await this.webPushService.sendPushNotification(recipientId, {
-      //     title: `${client.data.user.username} sent you a message`,
-      //     body: payload.content,
-      //     data: { roomId: payload.roomId },
-      //   });
-      // }
 
       this.logger.debug(
         `Message sent in room ${payload.roomId}: ${JSON.stringify(savedMessage)}`,

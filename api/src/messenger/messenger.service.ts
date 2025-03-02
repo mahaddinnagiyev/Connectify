@@ -88,6 +88,22 @@ export class MessengerService {
         );
       }
 
+      const defaultMessage = {
+        room_id: newChatRoom.id,
+        sender_id: user1,
+        content: 'Chat room has been created',
+        message_type: MessageType.DEFAULT,
+      };
+
+      const { error: messageError } = await this.supabase
+        .getClient()
+        .from('messages')
+        .insert([defaultMessage]);
+
+      if (messageError) {
+        this.logger.error('Error sending default message', messageError);
+      }
+
       this.logger.debug('New chat room created successfully');
       return newChatRoom;
     } catch (error) {
@@ -172,7 +188,7 @@ export class MessengerService {
       const roomsWithDetails = await Promise.all(
         chatRooms.map(async (room) => {
           const lastMessage = room.messages.sort(
-            (a, b) =>
+            (a: any, b: any) =>
               new Date(b.created_at).getTime() -
               new Date(a.created_at).getTime(),
           )[0];
@@ -194,7 +210,6 @@ export class MessengerService {
         }),
       );
 
-      // Son mesaja görə sırala (ən son yazılan otaq birinci gəlsin)
       return roomsWithDetails.sort(
         (a, b) =>
           new Date(b.lastMessageDate || 0).getTime() -
