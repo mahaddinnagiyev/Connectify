@@ -31,14 +31,19 @@
 
 .sender {
   align-self: flex-start;
+  justify-self: flex-end;
   background-color: var(--receiver-bg-color);
   border-bottom-left-radius: 0;
+  padding-bottom: 5px;
 }
 
 .receiver {
+  display: flex;
   align-self: flex-end;
+  justify-self: flex-end;
   background-color: var(--sender-bg-color);
   border-bottom-right-radius: 0;
+  padding-bottom: 5px;
 }
 
 .default {
@@ -51,13 +56,17 @@
 .message-text {
   margin: 0;
   font-size: 0.8rem;
+  margin-right: 25px;
+  white-space: pre-wrap;
+  word-wrap: break-word;
 }
 
 .message-time {
-  display: block;
+  position: absolute;
+  bottom: 7px;
+  right: 5px;
   font-size: xx-small;
-  text-align: right;
-  margin-top: 5px;
+  color: #666;
 }
 
 .send-message-container {

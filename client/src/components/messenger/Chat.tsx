@@ -288,19 +288,18 @@ const Chat = ({ roomId, otherUser, otherUserAccount, messages }: ChatProps) => {
                         : "receiver"
                     }`}
                   >
-                    <p className="message-text text-right">{message.content}</p>
+                    <p className="message-text">{message.content}</p>
                     {message.message_type !== MessageType.DEFAULT && (
-                      <div className="flex items-center justify-end gap-1">
-                        <span className="message-time">
-                          {new Date(
-                            message.created_at + "Z"
-                          ).toLocaleTimeString("az-AZ", {
+                      <span className="message-time">
+                        {new Date(message.created_at + "Z").toLocaleTimeString(
+                          "az-AZ",
+                          {
                             timeZone: "Asia/Baku",
                             hour: "2-digit",
                             minute: "2-digit",
-                          })}
-                        </span>
-                      </div>
+                          }
+                        )}
+                      </span>
                     )}
                   </div>
                 ))}
