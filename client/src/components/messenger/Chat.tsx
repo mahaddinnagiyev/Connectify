@@ -13,11 +13,13 @@ import MoreVertIcon from "@mui/icons-material/MoreVert";
 import AccountBoxIcon from "@mui/icons-material/AccountBox";
 import DeleteIcon from "@mui/icons-material/Delete";
 import BlockIcon from "@mui/icons-material/Block";
+import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import { socket } from "../../services/socket/socket-service";
 import { Account } from "../../services/account/dto/account-dto";
 import { PrivacySettings } from "../../services/account/dto/privacy-settings-dto";
 import { getAllFriendshipRequests } from "../../services/friendship/friendship-service";
 import { FriendshipStatus } from "../../services/friendship/enum/friendship-status.enum";
+import { Link } from "react-router-dom";
 
 interface ChatProps {
   roomId: string;
@@ -185,13 +187,19 @@ const Chat = ({ roomId, otherUser, otherUserAccount, messages }: ChatProps) => {
       {/* Header */}
       <div className="right-header pb-2 px-4 flex items-center justify-between max-h-[57px]">
         <div className="flex items-center gap-5">
-          <img
-            src={otherUserAccount?.profile_picture ?? no_profile_photo}
-            alt="User Profile"
-            className="rounded-full border-2 border-[var(--primary-color)]"
-            style={{ height: "50px", width: "50px" }}
-          />
-          {/* İstifadəçi məlumatlarını sarmalayan konteyner */}
+          <div className="flex items-center gap-2">
+            <Tooltip title="Back" placement="top">
+              <Link to={"/chat"}>
+                <ChevronLeftIcon />
+              </Link>
+            </Tooltip>
+            <img
+              src={otherUserAccount?.profile_picture ?? no_profile_photo}
+              alt="User Profile"
+              className="rounded-full border-2 border-[var(--primary-color)]"
+              style={{ height: "50px", width: "50px" }}
+            />
+          </div>
           <div
             className={`user-info-container ${isHovered ? "hovered" : ""}`}
             onMouseEnter={() => setIsHovered(true)}
