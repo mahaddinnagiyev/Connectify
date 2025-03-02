@@ -84,8 +84,8 @@ export class AuthController {
     default: { limit: 40, ttl: 60 * 1000, blockDuration: 60 * 1000 },
   })
   @Post('logout')
-  async logout(@Req() req: Request) {
-    return this.authService.logout(req);
+  async logout(@Req() req: Request, @Session() session: Record<string, any>) {
+    return this.authService.logout(req, session);
   }
 
   // Forgot Password

@@ -8,6 +8,7 @@ import { LoggerModule } from 'src/logger/logger.module';
 import { AuthModule } from 'src/auth/auth.module';
 import { ChatGateway } from './gateway/messenger-gateway';
 import { JwtModule } from '@nestjs/jwt';
+import { WebpushModule } from 'src/webpush/webpush.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { JwtModule } from '@nestjs/jwt';
     SupabaseModule,
     AuthModule,
     LoggerModule,
+    WebpushModule
   ],
   providers: [MessengerService, JwtStrategy, ChatGateway],
   controllers: [MessengerController],

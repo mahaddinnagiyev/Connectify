@@ -18,6 +18,7 @@ import {
 import { JwtPayload } from 'src/jwt/jwt-payload';
 import { IUser } from 'src/interfaces/user.interface';
 import { MessageStatus } from 'src/enums/message-status.enum';
+import { WebpushService } from 'src/webpush/webpush.service';
 
 @WebSocketGateway(3636, {
   cors: {
@@ -34,6 +35,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     private readonly messengerService: MessengerService,
     private readonly jwtService: JwtService,
     private readonly supabase: SupabaseService,
+    private readonly webPushService: WebpushService,
   ) {}
 
   private extractToken(client: Socket): string | null {
@@ -185,10 +187,8 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
       const messageToEmit = { ...savedMessage, roomId: savedMessage.room_id };
 
-      // Mesajı otağa göndəririk (göndərən otaqda olan istifadəçilər alır)
       this.server.to(payload.roomId).emit('newMessage', messageToEmit);
 
-      // İndi, əgər mesaj qarşı tərəfə aidirsə, həmin istifadəçinin şəxsi kanalına da göndəririk
       const room = await this.messengerService.getChatRoomById(payload.roomId);
       const recipientId = room.user_ids.find(
         (id: string) => id !== client.data.user.id,
@@ -225,6 +225,18 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         roomId: payload.roomId,
         count: count || 0,
       });
+
+      // const recipientSocket = Array.from(
+      //   this.server.sockets.sockets.values(),
+      // ).find((socket) => socket.data.user?.id === recipientId);
+
+      // if (recipientSocket) {
+      //   await this.webPushService.sendPushNotification(recipientId, {
+      //     title: `${client.data.user.username} sent you a message`,
+      //     body: payload.content,
+      //     data: { roomId: payload.roomId },
+      //   });
+      // }
 
       this.logger.debug(
         `Message sent in room ${payload.roomId}: ${JSON.stringify(savedMessage)}`,

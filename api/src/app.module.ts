@@ -13,6 +13,7 @@ import { AccountModule } from './account/account.module';
 import { SupabaseModule } from './supabase/supabase.module';
 import { FriendshipModule } from './friendship/friendship.module';
 import { MessengerModule } from './messenger/messenger.module';
+import { WebpushModule } from './webpush/webpush.module';
 
 @Module({
   imports: [
@@ -41,6 +42,7 @@ import { MessengerModule } from './messenger/messenger.module';
     SupabaseModule,
     FriendshipModule,
     MessengerModule,
+    WebpushModule,
   ],
   controllers: [AppController],
   providers: [

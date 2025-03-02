@@ -378,6 +378,7 @@ export class AuthService {
   // Logout
   async logout(
     req: any,
+    session: Record<string, any>,
   ): Promise<{ success: boolean; message: string } | HttpException> {
     try {
       const token = req.headers.authorization?.split(' ')[1];
@@ -397,6 +398,7 @@ export class AuthService {
         token: token,
       });
 
+      await session.destroy();
       await this.tokenBlackListRepository.save(blackListToken);
       await this.logger.info(
         `User logged out: ${req.user.username}\nToken added to black list: ${token}`,
