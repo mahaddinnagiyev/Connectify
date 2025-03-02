@@ -49,9 +49,13 @@
 
 .default {
   align-self: center;
+  margin: 0 auto;
   background-color: white;
-  border-bottom-left-radius: 0;
-  border-bottom-right-radius: 0;
+}
+
+.default .message-text {
+  margin-left: 25px;
+  padding-top: 5px;
 }
 
 .message-text {

@@ -10,6 +10,8 @@ import "./searchModal.css";
 import no_profile_photo from "../../../assets/no-profile-photo.png";
 import { UserFriendsDTO } from "../../../services/friendship/dto/friendship-dto";
 import { getFriends } from "../../../services/friendship/friendship-service";
+import { socket } from "../../../services/socket/socket-service";
+import { useNavigate } from "react-router-dom";
 
 export default function SearchModal() {
   const [searchQuery, setSearchQuery] = React.useState("");
@@ -17,6 +19,18 @@ export default function SearchModal() {
   const [userFriendData, setUserFriendData] = React.useState<UserFriendsDTO[]>(
     []
   );
+
+  const navigate = useNavigate();
+
+  const handleGoChat = (userId: string) => {
+    socket?.emit("joinRoom", { user2Id: userId });
+    socket?.once("joinRoomSuccess", (data: { roomId: string }) => {
+      if (data && data.roomId) {
+        navigate(`/chat?room=${data.roomId}`);
+        setOpen(false);
+      }
+    });
+  };
 
   const handleClickOpen = () => {
     setOpen(true);
@@ -86,39 +100,48 @@ export default function SearchModal() {
             </div>
 
             {/* User Friends goes here */}
-            <div className="message-users flex flex-col gap-3 my-3">
+            <div className="message-users flex flex-col gap-3 mb-2 mt-6">
               {filterFriends(userFriendData).length > 0 &&
                 filterFriends(userFriendData).map((friend) => (
-                  <div key={friend.id} className="message-user my-2">
-                    <a
-                      href="/help"
-                      className="user-profile-photo flex items-center justify-between pr-4"
-                      onClick={(e) => e.preventDefault()}
-                    >
-                      {/* User Information */}
-                      <div className="flex items-center gap-3">
-                        <img
-                          src={friend.profile_picture ?? no_profile_photo}
-                          alt="User Profile"
-                          width={50}
-                          height={50}
-                          className="border-2 border-[var(--primary-color)] rounded-full"
-                        />
-                        <div className="flex flex-col gap-1">
-                          <a
-                            href={`/user/@${friend.username}`}
-                            className="text-sm"
-                          >
-                            {`${friend.first_name} ${friend.last_name}`} | @
-                            {friend.username}
-                          </a>
-                          <p className="text-xs">
+                  <>
+                    <Tooltip placement="right" title="Go Chat">
+                      <button
+                        key={friend.id}
+                        className="message-user"
+                        onClick={() => handleGoChat(friend.friend_id)}
+                      >
+                        <div className="user-profile-photo flex items-center justify-between pr-4">
+                          {/* User Information */}
+                          <div className="flex items-center gap-3">
+                            <img
+                              src={friend.profile_picture ?? no_profile_photo}
+                              alt="User Profile"
+                              className="border-2 border-[var(--primary-color)] rounded-full"
+                              style={{ width: "50px", height: "50px" }}
+                            />
+                            <div className="flex flex-col gap-1">
+                              <Tooltip
+                                placement="top"
+                                title={`View ${friend.first_name} ${friend.last_name}'s Profile`}
+                              >
+                                <a
+                                  href={`/user/@${friend.username}`}
+                                  className="text-sm text-left hover:underline"
+                                >
+                                  {`${friend.first_name} ${friend.last_name}`}
+                                  <br />@{friend.username}
+                                </a>
+                              </Tooltip>
+                              {/* <p className="text-xs">
                             Hello John Doe, how are you?
-                          </p>
+                          </p> */}
+                            </div>
+                          </div>
                         </div>
-                      </div>
-                    </a>
-                  </div>
+                      </button>
+                    </Tooltip>
+                    <hr />
+                  </>
                 ))}
             </div>
           </DialogContentText>
