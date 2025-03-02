@@ -188,7 +188,7 @@ const Chat = ({ roomId, otherUser, otherUserAccount, messages }: ChatProps) => {
   return (
     <>
       {/* Header */}
-      <div className="right-header pb-2 px-4 flex items-center justify-between max-h-[57px]">
+      <div className="right-header pb-2 pr-4 flex items-center justify-between max-h-[57px]">
         <div className="flex items-center gap-5">
           <div className="flex items-center gap-2">
             <Tooltip title="Back" placement="top">

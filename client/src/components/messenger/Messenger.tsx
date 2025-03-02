@@ -173,6 +173,12 @@ const Messenger = () => {
 
   const currentChat = chats.find((chat) => chat.id === currentRoomId);
 
+  const truncateMessage = (message: string, maxLength: number) => {
+    return message.length > maxLength
+      ? message.substring(0, maxLength) + "..."
+      : message;
+  };
+
   return (
     <>
       <section className="messenger-container">
@@ -219,7 +225,10 @@ const Messenger = () => {
                         | @{chat.otherUser?.username}
                       </p>
                       <p className="text-xs">
-                        {chat?.lastMessage?.content ?? "No message"}
+                        {truncateMessage(
+                          chat?.lastMessage?.content ?? "No message",
+                          30
+                        )}
                       </p>
                     </div>
                     {chat.unreadCount! > 0 && (
