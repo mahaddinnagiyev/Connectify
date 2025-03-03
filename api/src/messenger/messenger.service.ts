@@ -7,6 +7,7 @@ import {
 import { MessageStatus } from 'src/enums/message-status.enum';
 import { MessageType } from 'src/enums/message-type.enum';
 import { SupabaseService } from 'src/supabase/supabase.service';
+import { v4 as uuid } from 'uuid';
 
 @Injectable()
 export class MessengerService {
@@ -273,6 +274,46 @@ export class MessengerService {
       this.logger.error('Exception in updateMessageStatus', error);
       throw new InternalServerErrorException(
         `Error updating message status: ${error.message}`,
+      );
+    }
+  }
+
+  // Send Another Type Messages
+  async uplaodImage(file: Express.Multer.File) {
+    try {
+      let fileOriginalName: string;
+
+      if (file.originalname.includes(' ')) {
+        fileOriginalName = file.originalname.replace(' ', '-');
+      }
+
+      const fileName = `${uuid()}-${Date.now()}-${fileOriginalName}`;
+
+      const { data, error } = await this.supabase
+        .getClient()
+        .storage.from('messages')
+        .upload(`images/${fileName}`, file.buffer, {
+          contentType: file.mimetype,
+        });
+
+      if (error) {
+        this.logger.error(error.message);
+        return new BadRequestException({
+          success: false,
+          error: error.message,
+        });
+      }
+
+      const publicUrl = this.supabase
+        .getClient()
+        .storage.from('messages')
+        .getPublicUrl(`images/${fileName}`);
+
+      return publicUrl.data.publicUrl;
+    } catch (error) {
+      this.logger.error(error.message);
+      return new InternalServerErrorException(
+        'Uploading image failed - Due To Internal Server Error',
       );
     }
   }

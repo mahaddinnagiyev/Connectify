@@ -9,6 +9,7 @@ import { AuthModule } from 'src/auth/auth.module';
 import { ChatGateway } from './gateway/messenger-gateway';
 import { JwtModule } from '@nestjs/jwt';
 import { WebpushModule } from 'src/webpush/webpush.module';
+import { UserModule } from 'src/user/user.module';
 
 @Module({
   imports: [
@@ -17,7 +18,8 @@ import { WebpushModule } from 'src/webpush/webpush.module';
     SupabaseModule,
     AuthModule,
     LoggerModule,
-    WebpushModule
+    WebpushModule,
+    UserModule
   ],
   providers: [MessengerService, JwtStrategy, ChatGateway],
   controllers: [MessengerController],

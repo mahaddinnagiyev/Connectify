@@ -23,5 +23,6 @@ import { SupabaseModule } from 'src/supabase/supabase.module';
   ],
   providers: [UserService, JwtStrategy],
   controllers: [UserController],
+  exports: [UserService],
 })
 export class UserModule {}
