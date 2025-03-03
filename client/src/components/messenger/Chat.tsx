@@ -17,7 +17,7 @@ import AccountBoxIcon from "@mui/icons-material/AccountBox";
 import DeleteIcon from "@mui/icons-material/Delete";
 import BlockIcon from "@mui/icons-material/Block";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
-import { socket } from "../../services/socket/socket-service";
+import { socket, uploadImage } from "../../services/socket/socket-service";
 import { Account } from "../../services/account/dto/account-dto";
 import { PrivacySettings } from "../../services/account/dto/privacy-settings-dto";
 import { getAllFriendshipRequests } from "../../services/friendship/friendship-service";
@@ -25,9 +25,11 @@ import { FriendshipStatus } from "../../services/friendship/enum/friendship-stat
 import { Link } from "react-router-dom";
 import EmojiPicker from "emoji-picker-react";
 import AttachModal from "../modals/chat/AttachModal";
+import SelectedModal from "../modals/chat/SelectedModal";
 
 interface ChatProps {
   roomId: string;
+  currentUser: string;
   otherUser?: Users;
   otherUserAccount?: Account;
   messages: MessagesDTO[];
@@ -38,70 +40,13 @@ interface LastSeenProps {
   otherUserId: string;
 }
 
-const LastSeen = ({ otherUserAccount, otherUserId }: LastSeenProps) => {
-  const [isFriend, setIsFriend] = useState(false);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    if (otherUserAccount.privacy!.last_login === PrivacySettings.my_friends) {
-      getAllFriendshipRequests()
-        .then((response) => {
-          if (response.success) {
-            const acceptedFriend = response.friends.find(
-              (friend) =>
-                (friend.friend_id === otherUserId ||
-                  friend.id === otherUserId) &&
-                friend.status === FriendshipStatus.accepted
-            );
-            setIsFriend(!!acceptedFriend);
-          }
-          setLoading(false);
-        })
-        .catch(() => setLoading(false));
-    } else {
-      setLoading(false);
-    }
-  }, [otherUserAccount, otherUserId]);
-
-  if (otherUserAccount.privacy!.last_login === PrivacySettings.everyone) {
-    return (
-      <p className="text-xs">
-        Last seen at:{" "}
-        {otherUserAccount?.last_login
-          ? new Date(otherUserAccount.last_login).toLocaleString("az-AZ", {
-              timeZone: "Asia/Baku",
-            })
-          : "N/A"}
-      </p>
-    );
-  }
-
-  if (otherUserAccount.privacy!.last_login === PrivacySettings.my_friends) {
-    if (loading) {
-      return <p className="text-xs">Loading last seen...</p>;
-    }
-    return isFriend ? (
-      <p className="text-xs">
-        Last seen at:{" "}
-        {otherUserAccount?.last_login
-          ? new Date(otherUserAccount.last_login).toLocaleString("az-AZ", {
-              timeZone: "Asia/Baku",
-            })
-          : "N/A"}
-      </p>
-    ) : (
-      <p className="text-xs">Last seen at: N/A</p>
-    );
-  }
-
-  if (otherUserAccount.privacy!.last_login === PrivacySettings.nobody) {
-    return null;
-  }
-
-  return <p className="text-xs">Last seen at: N/A</p>;
-};
-
-const Chat = ({ roomId, otherUser, otherUserAccount, messages }: ChatProps) => {
+const Chat = ({
+  roomId,
+  currentUser,
+  otherUser,
+  otherUserAccount,
+  messages,
+}: ChatProps) => {
   const [messageInput, setMessageInput] = useState("");
   const [visibleChatOptions, setVisibleChatOptions] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
@@ -110,7 +55,37 @@ const Chat = ({ roomId, otherUser, otherUserAccount, messages }: ChatProps) => {
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const chatOptionsRef = useRef<HTMLDivElement>(null);
   const emojiPickerRef = useRef<HTMLDivElement>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [showSelectedModal, setShowSelectedModal] = useState(false);
   const screenSize = window.innerWidth;
+
+  const handleFileSelect = (
+    files: FileList | null,
+    type: "file" | "image" | "video"
+  ) => {
+    if (files && files[0]) {
+      setSelectedFile(files[0]);
+      setShowAttachModal(false);
+      setShowSelectedModal(true);
+    }
+  };
+
+  const handleUpload = async () => {
+    if (!selectedFile) return;
+
+    const formData = new FormData();
+    formData.append("message_image", selectedFile as File);
+    const response = await uploadImage(formData, roomId, currentUser);
+    if (
+      response.success === false ||
+      response.response?.success === false ||
+      !response.success
+    ) {
+      return;
+    }
+    setShowSelectedModal(false);
+    setSelectedFile(null);
+  };
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -312,7 +287,17 @@ const Chat = ({ roomId, otherUser, otherUserAccount, messages }: ChatProps) => {
                         : "receiver"
                     }`}
                   >
-                    <p className="message-text">{message.content}</p>
+                    {message.message_type === MessageType.IMAGE && (
+                      <img
+                        src={message.content}
+                        alt=""
+                        className="bg-white rounded-lg"
+                        style={{ padding: "0px !important" }}
+                      />
+                    )}
+                    {message.message_type === MessageType.TEXT && (
+                      <p className="message-text">{message.content}</p>
+                    )}
                     {message.message_type !== MessageType.DEFAULT && (
                       <span className="message-time">
                         {new Date(message.created_at + "Z").toLocaleTimeString(
@@ -378,15 +363,17 @@ const Chat = ({ roomId, otherUser, otherUserAccount, messages }: ChatProps) => {
       {showAttachModal && (
         <AttachModal
           onClose={() => setShowAttachModal(false)}
-          onSelectFile={(files) => {
-            console.log("Selected file(s):", files);
-          }}
-          onSelectVideo={(files) => {
-            console.log("Selected video(s):", files);
-          }}
-          onSelectImage={(files) => {
-            console.log("Selected image(s):", files);
-          }}
+          onSelectFile={(f) => handleFileSelect(f, "file")}
+          onSelectVideo={(f) => handleFileSelect(f, "video")}
+          onSelectImage={(f) => handleFileSelect(f, "image")}
+        />
+      )}
+
+      {showSelectedModal && selectedFile && (
+        <SelectedModal
+          file={selectedFile}
+          onClose={() => setShowSelectedModal(false)}
+          onUpload={handleUpload}
         />
       )}
     </>
@@ -394,3 +381,66 @@ const Chat = ({ roomId, otherUser, otherUserAccount, messages }: ChatProps) => {
 };
 
 export default Chat;
+
+const LastSeen = ({ otherUserAccount, otherUserId }: LastSeenProps) => {
+  const [isFriend, setIsFriend] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (otherUserAccount.privacy!.last_login === PrivacySettings.my_friends) {
+      getAllFriendshipRequests()
+        .then((response) => {
+          if (response.success) {
+            const acceptedFriend = response.friends.find(
+              (friend) =>
+                (friend.friend_id === otherUserId ||
+                  friend.id === otherUserId) &&
+                friend.status === FriendshipStatus.accepted
+            );
+            setIsFriend(!!acceptedFriend);
+          }
+          setLoading(false);
+        })
+        .catch(() => setLoading(false));
+    } else {
+      setLoading(false);
+    }
+  }, [otherUserAccount, otherUserId]);
+
+  if (otherUserAccount.privacy!.last_login === PrivacySettings.everyone) {
+    return (
+      <p className="text-xs">
+        Last seen at:{" "}
+        {otherUserAccount?.last_login
+          ? new Date(otherUserAccount.last_login).toLocaleString("az-AZ", {
+              timeZone: "Asia/Baku",
+            })
+          : "N/A"}
+      </p>
+    );
+  }
+
+  if (otherUserAccount.privacy!.last_login === PrivacySettings.my_friends) {
+    if (loading) {
+      return <p className="text-xs">Loading last seen...</p>;
+    }
+    return isFriend ? (
+      <p className="text-xs">
+        Last seen at:{" "}
+        {otherUserAccount?.last_login
+          ? new Date(otherUserAccount.last_login).toLocaleString("az-AZ", {
+              timeZone: "Asia/Baku",
+            })
+          : "N/A"}
+      </p>
+    ) : (
+      <p className="text-xs">Last seen at: N/A</p>
+    );
+  }
+
+  if (otherUserAccount.privacy!.last_login === PrivacySettings.nobody) {
+    return null;
+  }
+
+  return <p className="text-xs">Last seen at: N/A</p>;
+};

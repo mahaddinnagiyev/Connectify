@@ -11,17 +11,34 @@ import { getToken } from "../../services/auth/token-service";
 import { jwtDecode } from "jwt-decode";
 import { getUserById } from "../../services/user/user-service";
 import { Users } from "../../services/user/dto/user-dto";
-import { MessagesDTO } from "../../services/socket/dto/messages-dto";
+import {
+  MessagesDTO,
+  MessageType,
+} from "../../services/socket/dto/messages-dto";
 import { Account } from "../../services/account/dto/account-dto";
+import DescriptionIcon from "@mui/icons-material/Description";
+import SlideshowIcon from "@mui/icons-material/Slideshow";
+import ImageTwoToneIcon from "@mui/icons-material/ImageTwoTone";
+import KeyboardVoiceTwoToneIcon from "@mui/icons-material/KeyboardVoiceTwoTone";
 
 const Messenger = () => {
   const [chats, setChats] = useState<
     (ChatRoomsDTO & { otherUser?: Users; otherUserAccount?: Account })[]
   >([]);
+  const [currentUser, setCurrentUser] = useState<string | null>(null);
   const [messages, setMessages] = useState<MessagesDTO[]>([]);
   const [searchParams] = useSearchParams();
   const currentRoomId = searchParams.get("room");
   const lastJoinedRoomRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    getToken().then((token) => {
+      if (token) {
+        const decodedToken: { id: string } = jwtDecode(token);
+        setCurrentUser(decodedToken.id);
+      }
+    });
+  }, []);
 
   useEffect(() => {
     if (currentRoomId && chats.length > 0) {
@@ -215,9 +232,52 @@ const Messenger = () => {
                         | @{chat.otherUser?.username}
                       </p>
                       <p className="text-xs">
-                        {truncateMessage(
-                          chat?.lastMessage?.content ?? "No message",
-                          30
+                        {chat?.lastMessage?.message_type ===
+                        MessageType.TEXT ? (
+                          truncateMessage(
+                            chat?.lastMessage?.content ?? "No message",
+                            30
+                          )
+                        ) : (
+                          <span className="inline-flex items-center gap-1">
+                            {chat?.lastMessage?.message_type ===
+                              MessageType.IMAGE && (
+                              <>
+                                <ImageTwoToneIcon /> Image
+                              </>
+                            )}
+                            {chat?.lastMessage?.message_type ===
+                              MessageType.AUDIO && (
+                              <>
+                                <KeyboardVoiceTwoToneIcon />
+                                Voice Message
+                              </>
+                            )}
+                            {chat?.lastMessage?.message_type ===
+                              MessageType.FILE && (
+                              <>
+                                <DescriptionIcon />
+                                File
+                              </>
+                            )}
+                            {chat?.lastMessage?.message_type ===
+                              MessageType.VIDEO && (
+                              <>
+                                <SlideshowIcon />
+                                Video
+                              </>
+                            )}
+
+                            {![
+                              MessageType.IMAGE,
+                              MessageType.AUDIO,
+                              MessageType.FILE,
+                              MessageType.VIDEO,
+                            ].includes(
+                              chat?.lastMessage?.message_type ??
+                                MessageType.DEFAULT
+                            ) && <span>Media</span>}
+                          </span>
                         )}
                       </p>
                     </div>
@@ -242,6 +302,7 @@ const Messenger = () => {
             {currentRoomId && currentChat && (
               <Chat
                 key={currentRoomId}
+                currentUser={currentUser ?? ""}
                 roomId={currentRoomId}
                 otherUser={currentChat.otherUser}
                 otherUserAccount={currentChat.otherUserAccount}
