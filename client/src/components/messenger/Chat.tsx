@@ -23,6 +23,7 @@ import { PrivacySettings } from "../../services/account/dto/privacy-settings-dto
 import { getAllFriendshipRequests } from "../../services/friendship/friendship-service";
 import { FriendshipStatus } from "../../services/friendship/enum/friendship-status.enum";
 import { Link } from "react-router-dom";
+import EmojiPicker from "emoji-picker-react";
 
 interface ChatProps {
   roomId: string;
@@ -103,9 +104,10 @@ const Chat = ({ roomId, otherUser, otherUserAccount, messages }: ChatProps) => {
   const [messageInput, setMessageInput] = useState("");
   const [visibleChatOptions, setVisibleChatOptions] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const chatOptionsRef = useRef<HTMLDivElement>(null);
-
+  const emojiPickerRef = useRef<HTMLDivElement>(null);
   const screenSize = window.innerWidth;
 
   useEffect(() => {
@@ -124,9 +126,29 @@ const Chat = ({ roomId, otherUser, otherUserAccount, messages }: ChatProps) => {
     };
   }, []);
 
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        emojiPickerRef.current &&
+        !emojiPickerRef.current.contains(event.target as Node)
+      ) {
+        setShowEmojiPicker(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
   const toggleChatOptions = (e: React.MouseEvent) => {
     e.stopPropagation();
     setVisibleChatOptions(!visibleChatOptions);
+  };
+
+  const handleEmojiPicker = (emojiObject: { emoji: string }) => {
+    setMessageInput((prevInput) => prevInput + emojiObject.emoji);
   };
 
   const handleSendMessage = () => {
@@ -309,10 +331,18 @@ const Chat = ({ roomId, otherUser, otherUserAccount, messages }: ChatProps) => {
         {/* Send Message Form */}
         <div className="send-message-container mt-2">
           <Tooltip title="Emotes" placement="top">
-            <button className="insert-emoticon-button">
+            <button
+              className="insert-emoticon-button"
+              onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+            >
               <InsertEmoticonIcon />
             </button>
           </Tooltip>
+          {showEmojiPicker && (
+            <div className="emoji-picker-container" ref={emojiPickerRef}>
+              <EmojiPicker onEmojiClick={handleEmojiPicker} />
+            </div>
+          )}
           <Tooltip title="Attach File" placement="top">
             <button className="attach-file-button">
               <AttachFileIcon />

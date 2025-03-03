@@ -81,6 +81,18 @@
   gap: 1%;
   background-color: var(--receiver-bg-color);
   border-top: 1px solid #ccc;
+  position: relative;
+}
+
+.emoji-picker-container {
+  position: absolute;
+  bottom: 68px;
+  left: 0;
+  z-index: 1000;
+}
+
+.emoji-picker-container .EmojiPickerReact {
+  width: 300px !important;
 }
 
 .message-input {
@@ -132,6 +144,11 @@
   .user-info-container.hovered .user-name,
   .user-info-container.hovered .last-seen-container p {
     animation: marqueeScroll 8s linear infinite;
+  }
+  .emoji-picker-container .EmojiPickerReact {
+    width: 95% !important;
+    max-width: 400px !important;
+    margin: 0 auto;
   }
 }
 
