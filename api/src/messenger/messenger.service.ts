@@ -317,4 +317,43 @@ export class MessengerService {
       );
     }
   }
+
+  async uplaodVideo(file: Express.Multer.File) {
+    try {
+      let fileOriginalName: string;
+
+      if (file.originalname.includes(' ')) {
+        fileOriginalName = file.originalname.replace(' ', '-');
+      }
+
+      const fileName = `${uuid()}-${Date.now()}-${fileOriginalName}`;
+
+      const { data, error } = await this.supabase
+        .getClient()
+        .storage.from('messages')
+        .upload(`videos/${fileName}`, file.buffer, {
+          contentType: file.mimetype,
+        });
+
+      if (error) {
+        this.logger.error(error.message);
+        return new BadRequestException({
+          success: false,
+          error: error.message,
+        });
+      }
+
+      const publicUrl = this.supabase
+        .getClient()
+        .storage.from('messages')
+        .getPublicUrl(`videos/${fileName}`);
+
+      return publicUrl.data.publicUrl;
+    } catch (error) {
+      this.logger.error(error.message);
+      return new InternalServerErrorException(
+        'Uploading image failed - Due To Internal Server Error',
+      );
+    }
+  }
 }

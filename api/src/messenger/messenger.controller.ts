@@ -20,7 +20,10 @@ import { JwtAuthGuard } from 'src/jwt/jwt-auth-guard';
 import { IUser } from 'src/interfaces/user.interface';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ChatGateway } from './gateway/messenger-gateway';
-import { MulterImageConfig } from 'src/supabase/utils/multer-config';
+import {
+  MulterImageConfig,
+  MulterVideoConfig,
+} from 'src/supabase/utils/multer-config';
 import { UserService } from 'src/user/user.service';
 
 @Controller('messenger')
@@ -69,12 +72,26 @@ export class MessengerController {
     @Query('roomId') roomId: string,
     @Query('senderId') senderId: string,
   ) {
+    if (!roomId || !senderId) {
+      return new BadRequestException('Missing roomId or senderId');
+    }
+
     if (!file) {
       return new BadRequestException('No file uploaded');
     }
 
-    if (!roomId || !senderId) {
-      return new BadRequestException('Missing roomId or senderId');
+    if (!file.mimetype.match(/\/(jpg|jpeg|png|gif|webp|ico|svg|tiff)$/)) {
+      return new BadRequestException({
+        success: false,
+        error: 'Invalid file type. Only JPG, JPEG, and PNG are allowed',
+      });
+    }
+
+    if (file.size > 25 * 1024 * 1024) {
+      return new BadRequestException({
+        success: false,
+        error: 'File size is too large. Maximum size is 25MB',
+      });
     }
 
     const isRoomExist = await this.messengerService.getChatRoomById(roomId);
@@ -91,21 +108,62 @@ export class MessengerController {
 
     const imageUrl = await this.messengerService.uplaodImage(file);
 
-    const message = await this.messengerService.sendMessage(
-      roomId,
-      senderId,
-      imageUrl as string,
-      MessageType.IMAGE,
-    );
-
-    this.chatGateway.server
-      .to(roomId)
-      .emit('newMessage', { ...message, roomId: message.room_id });
-
     return {
       success: true,
       message: 'Image uploaded successfully',
       publicUrl: imageUrl,
+    };
+  }
+
+  // Upload Video
+  @Post('upload-video')
+  @UseGuards(JwtAuthGuard)
+  @UseInterceptors(FileInterceptor('message_video'))
+  async uploadVideo(
+    @UploadedFile() file: Express.Multer.File,
+    @Query('roomId') roomId: string,
+    @Query('senderId') senderId: string,
+  ) {
+    if (!roomId || !senderId) {
+      return new BadRequestException('Missing roomId or senderId');
+    }
+
+    if (!file) {
+      return new BadRequestException('No file uploaded');
+    }
+
+    if (!file.mimetype.match(/\/(mp4|mov|avi|wmv|flv)$/)) {
+      return new BadRequestException({
+        success: false,
+        error: 'Invalid file type. Only MP4, MOV, AVI, WMV, and FLV are allowed',
+      });
+    }
+
+    if (file.size > 50 * 1024 * 1024) {
+      return new BadRequestException({
+        success: false,
+        error: 'File size is too large. Maximum size is 50MB',
+      });
+    }
+
+    const isRoomExist = await this.messengerService.getChatRoomById(roomId);
+
+    if (!isRoomExist || isRoomExist instanceof HttpException) {
+      return new BadRequestException('Room not found');
+    }
+
+    const isUserExist = await this.userService.get_user_by_id(senderId);
+
+    if (!isUserExist || isUserExist instanceof HttpException) {
+      return new BadRequestException('User not found');
+    }
+
+    const videoUrl = await this.messengerService.uplaodVideo(file);
+
+    return {
+      success: true,
+      message: 'Image uploaded successfully',
+      publicUrl: videoUrl,
     };
   }
 }
