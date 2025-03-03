@@ -17,7 +17,11 @@ import AccountBoxIcon from "@mui/icons-material/AccountBox";
 import DeleteIcon from "@mui/icons-material/Delete";
 import BlockIcon from "@mui/icons-material/Block";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
-import { socket, uploadImage } from "../../services/socket/socket-service";
+import {
+  socket,
+  uploadImage,
+  uploadVideo,
+} from "../../services/socket/socket-service";
 import { Account } from "../../services/account/dto/account-dto";
 import { PrivacySettings } from "../../services/account/dto/privacy-settings-dto";
 import { getAllFriendshipRequests } from "../../services/friendship/friendship-service";
@@ -74,15 +78,34 @@ const Chat = ({
     if (!selectedFile) return;
 
     const formData = new FormData();
-    formData.append("message_image", selectedFile as File);
-    const response = await uploadImage(formData, roomId, currentUser);
-    if (
-      response.success === false ||
-      response.response?.success === false ||
-      !response.success
-    ) {
+    let response: {
+      success: boolean;
+      message?: string;
+      publicUrl?: string;
+      error?: string;
+      response?: { success: boolean; message?: string; error?: string };
+    };
+    const fileType = selectedFile.type;
+    if (fileType.startsWith("image/")) {
+      formData.append("message_image", selectedFile);
+      response = await uploadImage(formData, roomId, currentUser);
+    } else if (fileType.startsWith("video/")) {
+      formData.append("message_video", selectedFile);
+      response = await uploadVideo(formData, roomId, currentUser);
+    } else {
       return;
     }
+
+    if (!response.success) {
+      return;
+    }
+
+    socket?.emit("sendMessage", {
+      roomId: roomId,
+      content: response.publicUrl,
+      message_type: fileType.startsWith("image/") ? "image" : "video",
+    })
+
     setShowSelectedModal(false);
     setSelectedFile(null);
   };
@@ -291,6 +314,14 @@ const Chat = ({
                       <img
                         src={message.content}
                         alt=""
+                        className="bg-white rounded-lg"
+                        style={{ padding: "0px !important" }}
+                      />
+                    )}
+                    {message.message_type === MessageType.VIDEO && (
+                      <video
+                        src={message.content}
+                        controls
                         className="bg-white rounded-lg"
                         style={{ padding: "0px !important" }}
                       />
