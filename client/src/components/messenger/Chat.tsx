@@ -24,6 +24,7 @@ import { getAllFriendshipRequests } from "../../services/friendship/friendship-s
 import { FriendshipStatus } from "../../services/friendship/enum/friendship-status.enum";
 import { Link } from "react-router-dom";
 import EmojiPicker from "emoji-picker-react";
+import AttachModal from "../modals/chat/AttachModal";
 
 interface ChatProps {
   roomId: string;
@@ -105,6 +106,7 @@ const Chat = ({ roomId, otherUser, otherUserAccount, messages }: ChatProps) => {
   const [visibleChatOptions, setVisibleChatOptions] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [showAttachModal, setShowAttachModal] = useState(false);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const chatOptionsRef = useRef<HTMLDivElement>(null);
   const emojiPickerRef = useRef<HTMLDivElement>(null);
@@ -344,7 +346,10 @@ const Chat = ({ roomId, otherUser, otherUserAccount, messages }: ChatProps) => {
             </div>
           )}
           <Tooltip title="Attach File" placement="top">
-            <button className="attach-file-button">
+            <button
+              className="attach-file-button"
+              onClick={() => setShowAttachModal(true)}
+            >
               <AttachFileIcon />
             </button>
           </Tooltip>
@@ -369,6 +374,21 @@ const Chat = ({ roomId, otherUser, otherUserAccount, messages }: ChatProps) => {
           </button>
         </div>
       </section>
+
+      {showAttachModal && (
+        <AttachModal
+          onClose={() => setShowAttachModal(false)}
+          onSelectFile={(files) => {
+            console.log("Selected file(s):", files);
+          }}
+          onSelectVideo={(files) => {
+            console.log("Selected video(s):", files);
+          }}
+          onSelectImage={(files) => {
+            console.log("Selected image(s):", files);
+          }}
+        />
+      )}
     </>
   );
 };

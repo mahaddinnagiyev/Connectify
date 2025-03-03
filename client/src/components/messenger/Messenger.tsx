@@ -5,9 +5,6 @@ import "./style.css";
 import Chat from "./Chat";
 import SearchModal from "../modals/search/SearchModal";
 import no_profile_photo from "../../assets/no-profile-photo.png";
-import DeleteIcon from "@mui/icons-material/Delete";
-import BlockIcon from "@mui/icons-material/Block";
-import AccountBoxIcon from "@mui/icons-material/AccountBox";
 import { socket } from "../../services/socket/socket-service";
 import { ChatRoomsDTO } from "../../services/socket/dto/ChatRoom-dto";
 import { getToken } from "../../services/auth/token-service";
@@ -18,7 +15,6 @@ import { MessagesDTO } from "../../services/socket/dto/messages-dto";
 import { Account } from "../../services/account/dto/account-dto";
 
 const Messenger = () => {
-  const [visibleUserIndex, setVisibleUserIndex] = useState<number | null>(null);
   const [chats, setChats] = useState<
     (ChatRoomsDTO & { otherUser?: Users; otherUserAccount?: Account })[]
   >([]);
@@ -202,12 +198,6 @@ const Messenger = () => {
                   to={`?room=${chat.id}`}
                   key={index}
                   className="message-user px-2 py-2 hover:bg-[var(--secondary-color)] hover:rounded-lg cursor-pointer transition-all duration-500"
-                  onContextMenu={(e) => {
-                    e.preventDefault();
-                    setVisibleUserIndex(
-                      visibleUserIndex === index ? null : index
-                    );
-                  }}
                 >
                   <div className="flex items-center gap-3 relative">
                     <img
@@ -237,19 +227,6 @@ const Messenger = () => {
                       </span>
                     )}
                   </div>
-                  {visibleUserIndex === index && (
-                    <div className="action-buttons">
-                      <button className="user-profile-btn">
-                        <AccountBoxIcon className="profile-icon" /> User Profile
-                      </button>
-                      <button className="delete-btn">
-                        <DeleteIcon className="delete-icon" /> Delete Chat
-                      </button>
-                      <button className="block-btn">
-                        <BlockIcon /> Block User
-                      </button>
-                    </div>
-                  )}
                 </Link>
               ))}
             </div>
