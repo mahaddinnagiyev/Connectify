@@ -176,6 +176,14 @@ const Chat = ({
     }
   }, [messages]);
 
+  const scrollToBottom = () => {
+    if (messagesContainerRef.current) {
+      messagesContainerRef.current.scrollTop =
+        messagesContainerRef.current.scrollHeight;
+    }
+  };
+  
+
   const groupMessagesByDate = (messages: MessagesDTO[]) => {
     const groupedMessages: { [key: string]: MessagesDTO[] } = {};
 
@@ -325,6 +333,7 @@ const Chat = ({
                         alt=""
                         className="bg-white rounded-lg"
                         style={{ padding: "0px !important" }}
+                        onLoad={scrollToBottom}
                       />
                     )}
                     {message.message_type === MessageType.VIDEO && (
@@ -333,6 +342,7 @@ const Chat = ({
                         controls
                         className="bg-white rounded-lg"
                         style={{ padding: "0px !important" }}
+                        onLoadedData={scrollToBottom}
                       />
                     )}
                     {message.message_type === MessageType.TEXT && (

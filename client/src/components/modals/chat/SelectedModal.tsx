@@ -110,7 +110,9 @@ const SelectedModal: React.FC<SelectedModalProps> = ({
           </button>
           <button className="upload-btn" onClick={onUpload}>
             <CloseIcon className="upload-icon" />
-            Upload File
+            {getFileType() === "image" && "Upload Image"}
+            {getFileType() === "video" && "Upload Video"}
+            {getFileType() === "file" && "Upload File"}
           </button>
         </div>
       </div>
