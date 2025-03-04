@@ -1,8 +1,5 @@
 import { useState, useEffect, useRef } from "react";
 import "./chat-style.css";
-import SendIcon from "@mui/icons-material/Send";
-import AttachFileIcon from "@mui/icons-material/AttachFile";
-import InsertEmoticonIcon from "@mui/icons-material/InsertEmoticon";
 import { Tooltip } from "@mui/material";
 import {
   MessagesDTO,
@@ -10,15 +7,28 @@ import {
 } from "../../services/socket/dto/messages-dto";
 import { Users } from "../../services/user/dto/user-dto";
 import no_profile_photo from "../../assets/no-profile-photo.png";
-import LocalPhoneIcon from "@mui/icons-material/LocalPhone";
-import VideocamIcon from "@mui/icons-material/Videocam";
-import MoreVertIcon from "@mui/icons-material/MoreVert";
-import AccountBoxIcon from "@mui/icons-material/AccountBox";
-import DeleteIcon from "@mui/icons-material/Delete";
-import BlockIcon from "@mui/icons-material/Block";
-import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
+import {
+  Send as SendIcon,
+  AttachFile as AttachFileIcon,
+  InsertEmoticon as InsertEmoticonIcon,
+  LocalPhone as LocalPhoneIcon,
+  Videocam as VideocamIcon,
+  MoreVert as MoreVertIcon,
+  AccountBox as AccountBoxIcon,
+  Delete as DeleteIcon,
+  Block as BlockIcon,
+  ChevronLeft as ChevronLeftIcon,
+  PictureAsPdf as PictureAsPdfIcon,
+  Description as DescriptionIcon,
+  TableChart as TableChartIcon,
+  FolderZip as FolderZipIcon,
+  Slideshow as SlideshowIcon,
+  GridOn as GridOnIcon,
+  InsertDriveFile as InsertDriveFileIcon,
+} from "@mui/icons-material";
 import {
   socket,
+  uploadFile,
   uploadImage,
   uploadVideo,
 } from "../../services/socket/socket-service";
@@ -67,10 +77,7 @@ const Chat = ({
   const emojiPickerRef = useRef<HTMLDivElement>(null);
   const screenSize = window.innerWidth;
 
-  const handleFileSelect = (
-    files: FileList | null,
-    type: "file" | "image" | "video"
-  ) => {
+  const handleFileSelect = (files: FileList | null) => {
     if (files && files[0]) {
       setSelectedFile(files[0]);
       setShowAttachModal(false);
@@ -88,23 +95,36 @@ const Chat = ({
       success: boolean;
       message?: string;
       publicUrl?: string;
+      message_name?: string;
+      message_size?: number;
       error?: string;
       response?: { success: boolean; message?: string; error?: string };
     };
     const fileType = selectedFile.type;
+
     if (fileType.startsWith("image/")) {
       formData.append("message_image", selectedFile);
       response = await uploadImage(formData, roomId, currentUser);
     } else if (fileType.startsWith("video/")) {
       formData.append("message_video", selectedFile);
       response = await uploadVideo(formData, roomId, currentUser);
+    } else if (
+      fileType.startsWith("file/") ||
+      fileType.startsWith("application/") ||
+      fileType.startsWith("image/") ||
+      fileType.startsWith("video/")
+    ) {
+      formData.append("message_file", selectedFile);
+      response = await uploadFile(formData, roomId, currentUser);
     } else {
       setIsLoading(false);
+      setErrorMessage("System doesn't support this type of file");
       return;
     }
 
     if (!response.success) {
       setIsLoading(false);
+      setShowSelectedModal(false);
       setErrorMessage(
         response.response?.message ??
           response.response?.error ??
@@ -118,7 +138,13 @@ const Chat = ({
     socket?.emit("sendMessage", {
       roomId: roomId,
       content: response.publicUrl,
-      message_type: fileType.startsWith("image/") ? "image" : "video",
+      message_type: fileType.startsWith("image/")
+        ? MessageType.IMAGE
+        : fileType.startsWith("video/")
+        ? MessageType.VIDEO
+        : MessageType.FILE,
+      message_name: response.message_name,
+      message_size: Number(response.message_size),
     });
 
     setIsLoading(false);
@@ -230,12 +256,51 @@ const Chat = ({
 
   const groupedMessages = groupMessagesByDate(messages);
 
+  const formatFileSize = (bytes: number) => {
+    if (bytes === 0) return "0 Bytes";
+    const k = 1024;
+    const sizes = ["Bytes", "KB", "MB", "GB"];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
+  };
+
+  const getFileIcon = (fileName: string) => {
+    if (!fileName) {
+      return <InsertDriveFileIcon sx={{ color: "#757575" }} />;
+    }
+
+    const extension = fileName.split(".").pop()?.toLowerCase();
+    switch (extension) {
+      case "pdf":
+        return <PictureAsPdfIcon sx={{ color: "#FF0000", fontSize: "36px" }} />;
+      case "doc":
+      case "docx":
+        return <DescriptionIcon sx={{ color: "#2B579A", fontSize: "36px" }} />;
+      case "xls":
+      case "xlsx":
+        return <TableChartIcon sx={{ color: "#217346", fontSize: "36px" }} />;
+      case "zip":
+      case "rar":
+        return <FolderZipIcon sx={{ color: "#FFA500", fontSize: "36px" }} />;
+      case "pptx":
+      case "ppt":
+        return <SlideshowIcon sx={{ color: "#D24726", fontSize: "36px" }} />;
+      case "csv":
+        return <GridOnIcon sx={{ color: "#1E6E42", fontSize: "36px" }} />;
+      default:
+        return <InsertDriveFileIcon sx={{ color: "#757575", fontSize: "36px" }} />;
+    }
+  };
+
   return (
     <>
       {isLoading && <CheckModal message="Uploading..." />}
 
       {errorMessage && (
-        <ErrorMessage message={errorMessage} onClose={() => setErrorMessage(null)} />
+        <ErrorMessage
+          message={errorMessage}
+          onClose={() => setErrorMessage(null)}
+        />
       )}
 
       {/* Header */}
@@ -357,6 +422,28 @@ const Chat = ({
                         onLoadedData={scrollToBottom}
                       />
                     )}
+                    {message.message_type === MessageType.FILE && (
+                      <div className="file-message-container">
+                        <div className="file-icon">
+                          {getFileIcon(message.message_name)}
+                        </div>
+                        <div className="file-info">
+                          <a
+                            href={message.content}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="file-name"
+                            title={message.message_name || "Download File"}
+                          >
+                            {message.message_name || "Download File"}
+                          </a>
+                          <span className="file-size">
+                            {formatFileSize(Number(message.message_size))}
+                          </span>
+                        </div>
+                      </div>
+                    )}
+
                     {message.message_type === MessageType.TEXT && (
                       <p className="message-text">{message.content}</p>
                     )}
@@ -425,9 +512,9 @@ const Chat = ({
       {showAttachModal && (
         <AttachModal
           onClose={() => setShowAttachModal(false)}
-          onSelectFile={(f) => handleFileSelect(f, "file")}
-          onSelectVideo={(f) => handleFileSelect(f, "video")}
-          onSelectImage={(f) => handleFileSelect(f, "image")}
+          onSelectFile={(f) => handleFileSelect(f)}
+          onSelectVideo={(f) => handleFileSelect(f)}
+          onSelectImage={(f) => handleFileSelect(f)}
         />
       )}
 

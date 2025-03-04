@@ -58,3 +58,24 @@ export const uploadVideo = async (
   const data = await response.json();
   return data;
 };
+
+export const uploadFile = async (
+  formData: FormData,
+  roomId: string,
+  senderId: string
+) => {
+  const response = await fetch(
+    `${process.env.SERVER_USER_URL}/messenger/upload-file?roomId=${roomId}&senderId=${senderId}`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${await getToken()}`,
+      },
+      credentials: "include",
+      body: formData,
+    }
+  );
+
+  const data = await response.json();
+  return data;
+};

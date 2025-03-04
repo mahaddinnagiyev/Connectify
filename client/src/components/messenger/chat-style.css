@@ -131,6 +131,49 @@
   transition: transform 0.5s ease-out;
 }
 
+.file-message-container {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  background: linear-gradient(135deg, #f5f7fa, #c3cfe2);
+  border-radius: 10px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  max-width: 400px;
+  transition: transform 0.2s ease;
+}
+
+.file-message-container:hover {
+  transform: scale(1.02);
+}
+
+.file-info {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  margin-top: 0px !important;
+}
+
+.file-name {
+  font-weight: 500;
+  color: #1976d2;
+  text-decoration: none;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 250px; 
+  transition: .6s all ease-in-out;
+}
+
+.file-name:hover {
+  text-decoration: underline;
+}
+
+.file-size {
+  font-size: 0.8rem;
+  color: #666;
+}
+
 @media screen and (max-width: 768px) {
   .user-info-container {
     overflow: hidden;
@@ -151,7 +194,8 @@
     margin: 0 auto;
   }
 
-  .sender, .receiver {
+  .sender,
+  .receiver {
     max-width: 70%;
   }
 }
