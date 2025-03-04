@@ -31,6 +31,7 @@ import EmojiPicker from "emoji-picker-react";
 import AttachModal from "../modals/chat/AttachModal";
 import SelectedModal from "../modals/chat/SelectedModal";
 import CheckModal from "../modals/spinner/CheckModal";
+import ErrorMessage from "../messages/ErrorMessage";
 
 interface ChatProps {
   roomId: string;
@@ -53,6 +54,7 @@ const Chat = ({
   messages,
 }: ChatProps) => {
   const [messageInput, setMessageInput] = useState("");
+  const [errorMessage, setErrorMessage] = useState<string | null>("");
   const [visibleChatOptions, setVisibleChatOptions] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
@@ -103,6 +105,13 @@ const Chat = ({
 
     if (!response.success) {
       setIsLoading(false);
+      setErrorMessage(
+        response.response?.message ??
+          response.response?.error ??
+          response.message ??
+          response.error ??
+          "Failed To Upload"
+      );
       return;
     }
 
@@ -182,7 +191,6 @@ const Chat = ({
         messagesContainerRef.current.scrollHeight;
     }
   };
-  
 
   const groupMessagesByDate = (messages: MessagesDTO[]) => {
     const groupedMessages: { [key: string]: MessagesDTO[] } = {};
@@ -225,6 +233,10 @@ const Chat = ({
   return (
     <>
       {isLoading && <CheckModal message="Uploading..." />}
+
+      {errorMessage && (
+        <ErrorMessage message={errorMessage} onClose={() => setErrorMessage(null)} />
+      )}
 
       {/* Header */}
       <div className="right-header pb-2 pr-4 flex items-center justify-between max-h-[57px]">

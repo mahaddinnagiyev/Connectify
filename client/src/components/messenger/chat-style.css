@@ -35,7 +35,7 @@
   background-color: var(--receiver-bg-color);
   border-bottom-left-radius: 0;
   padding-bottom: 5px;
-  max-width: 45%;
+  max-width: 55%;
 }
 
 .receiver {
@@ -44,7 +44,7 @@
   background-color: var(--sender-bg-color);
   border-bottom-right-radius: 0;
   padding-bottom: 5px;
-  max-width: 45%;
+  max-width: 55%;
 }
 
 .default {
@@ -149,6 +149,10 @@
     width: 95% !important;
     max-width: 400px !important;
     margin: 0 auto;
+  }
+
+  .sender, .receiver {
+    max-width: 70%;
   }
 }
 
