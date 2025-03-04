@@ -123,6 +123,8 @@ export class MessengerService {
     senderId: string,
     content: string,
     messageType: MessageType,
+    message_name?: string,
+    message_size?: number,
   ) {
     try {
       const { data, error } = await this.supabase
@@ -134,6 +136,8 @@ export class MessengerService {
             sender_id: senderId,
             content,
             message_type: messageType,
+            message_name,
+            message_size,
           },
         ])
         .select()
@@ -309,7 +313,11 @@ export class MessengerService {
         .storage.from('messages')
         .getPublicUrl(`images/${fileName}`);
 
-      return publicUrl.data.publicUrl;
+      return {
+        publicUrl: publicUrl.data.publicUrl,
+        file_name: fileOriginalName,
+        file_size: file.size,
+      };
     } catch (error) {
       this.logger.error(error.message);
       return new InternalServerErrorException(
@@ -348,7 +356,54 @@ export class MessengerService {
         .storage.from('messages')
         .getPublicUrl(`videos/${fileName}`);
 
-      return publicUrl.data.publicUrl;
+      return {
+        publicUrl: publicUrl.data.publicUrl,
+        file_name: fileOriginalName,
+        file_size: file.size,
+      };
+    } catch (error) {
+      this.logger.error(error.message);
+      return new InternalServerErrorException(
+        'Uploading image failed - Due To Internal Server Error',
+      );
+    }
+  }
+
+  async uplaodFile(file: Express.Multer.File) {
+    try {
+      let fileOriginalName: string;
+
+      if (file.originalname.includes(' ')) {
+        fileOriginalName = file.originalname.replace(' ', '-');
+      }
+
+      const fileName = `${uuid()}-${Date.now()}-${fileOriginalName}`;
+
+      const { data, error } = await this.supabase
+        .getClient()
+        .storage.from('messages')
+        .upload(`files/${fileName}`, file.buffer, {
+          contentType: file.mimetype,
+        });
+
+      if (error) {
+        this.logger.error(error.message);
+        return new BadRequestException({
+          success: false,
+          error: error.message,
+        });
+      }
+
+      const publicUrl = this.supabase
+        .getClient()
+        .storage.from('messages')
+        .getPublicUrl(`files/${fileName}`);
+
+      return {
+        publicUrl: publicUrl.data.publicUrl,
+        file_name: fileOriginalName,
+        file_size: file.size,
+      };
     } catch (error) {
       this.logger.error(error.message);
       return new InternalServerErrorException(

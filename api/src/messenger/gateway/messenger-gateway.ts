@@ -158,7 +158,13 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @SubscribeMessage('sendMessage')
   async handleSendMessage(
     client: Socket,
-    payload: { roomId: string; content: string; message_type: MessageType },
+    payload: {
+      roomId: string;
+      content: string;
+      message_type: MessageType;
+      message_name?: string;
+      message_size?: number;
+    },
   ) {
     try {
       if (
@@ -185,6 +191,8 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         client.data.user.id,
         payload.content,
         payload.message_type,
+        payload.message_name,
+        payload.message_size,
       );
       const messageToEmit = { ...savedMessage, roomId: savedMessage.room_id };
 

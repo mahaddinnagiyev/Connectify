@@ -106,12 +106,18 @@ export class MessengerController {
       return new BadRequestException('User not found');
     }
 
-    const imageUrl = await this.messengerService.uplaodImage(file);
+    const uploadedImage = await this.messengerService.uplaodFile(file);
+
+    if (uploadedImage instanceof HttpException) {
+      return uploadedImage
+    }
 
     return {
       success: true,
-      message: 'Image uploaded successfully',
-      publicUrl: imageUrl,
+      message: 'File uploaded successfully',
+      publicUrl: uploadedImage.publicUrl,
+      message_name: uploadedImage.file_name,
+      message_size: uploadedImage.file_size
     };
   }
 
@@ -135,7 +141,8 @@ export class MessengerController {
     if (!file.mimetype.match(/\/(mp4|mov|avi|wmv|flv)$/)) {
       return new BadRequestException({
         success: false,
-        error: 'Invalid file type. Only MP4, MOV, AVI, WMV, and FLV are allowed',
+        error:
+          'Invalid file type. Only MP4, MOV, AVI, WMV, and FLV are allowed',
       });
     }
 
@@ -158,12 +165,103 @@ export class MessengerController {
       return new BadRequestException('User not found');
     }
 
-    const videoUrl = await this.messengerService.uplaodVideo(file);
+    const uploadedVideo = await this.messengerService.uplaodFile(file);
+
+    if (uploadedVideo instanceof HttpException) {
+      return uploadedVideo
+    }
 
     return {
       success: true,
-      message: 'Image uploaded successfully',
-      publicUrl: videoUrl,
+      message: 'File uploaded successfully',
+      publicUrl: uploadedVideo.publicUrl,
+      message_name: uploadedVideo.file_name,
+      message_size: uploadedVideo.file_size
     };
   }
+  // Upload File
+  @Post('upload-file')
+  @UseGuards(JwtAuthGuard)
+  @UseInterceptors(FileInterceptor('message_file'))
+  async uploadFile(
+    @UploadedFile() file: Express.Multer.File,
+    @Query('roomId') roomId: string,
+    @Query('senderId') senderId: string,
+  ) {
+    if (!roomId || !senderId) {
+      return new BadRequestException('Missing roomId or senderId');
+    }
+
+    if (!file) {
+      return new BadRequestException('No file uploaded');
+    }
+
+    if (!this.allowedMimeTypes.includes(file.mimetype)) {
+      return new BadRequestException({
+        success: false,
+        error:
+          `Invalid file type: ${file.mimetype}. Allowed types: ` +
+          'TXT, DOC/DOCX, PDF, PPT/PPTX, XLS/XLSX, ' +
+          'JPG, PNG, GIF, WEBP, ICO, SVG, MP3, MP4',
+      });
+    }
+
+    if (file.size > 50 * 1024 * 1024) {
+      return new BadRequestException({
+        success: false,
+        error: 'File size is too large. Maximum size is 50MB',
+      });
+    }
+
+    const isRoomExist = await this.messengerService.getChatRoomById(roomId);
+
+    if (!isRoomExist || isRoomExist instanceof HttpException) {
+      return new BadRequestException('Room not found');
+    }
+
+    const isUserExist = await this.userService.get_user_by_id(senderId);
+
+    if (!isUserExist || isUserExist instanceof HttpException) {
+      return new BadRequestException('User not found');
+    }
+
+    const uploadedFile = await this.messengerService.uplaodFile(file);
+
+    if (uploadedFile instanceof HttpException) {
+      return uploadedFile
+    }
+
+    return {
+      success: true,
+      message: 'File uploaded successfully',
+      publicUrl: uploadedFile.publicUrl,
+      message_name: uploadedFile.file_name,
+      message_size: uploadedFile.file_size
+    };
+  }
+
+  private allowedMimeTypes = [
+    'text/plain',
+    'application/msword',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    'application/pdf',
+    'application/vnd.ms-powerpoint',
+    'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+    'application/vnd.ms-excel',
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+
+    'image/jpeg',
+    'image/png',
+    'image/gif',
+    'image/webp',
+    'image/x-icon',
+    'image/svg+xml',
+
+    'audio/mpeg',
+    'video/mp4',
+    'video/mov',
+    'video/avi',
+    'video/wmv',
+    'video/flv',
+  ];
 }
