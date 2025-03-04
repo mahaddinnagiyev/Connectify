@@ -30,6 +30,7 @@ import { Link } from "react-router-dom";
 import EmojiPicker from "emoji-picker-react";
 import AttachModal from "../modals/chat/AttachModal";
 import SelectedModal from "../modals/chat/SelectedModal";
+import CheckModal from "../modals/spinner/CheckModal";
 
 interface ChatProps {
   roomId: string;
@@ -56,11 +57,12 @@ const Chat = ({
   const [isHovered, setIsHovered] = useState(false);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [showAttachModal, setShowAttachModal] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [showSelectedModal, setShowSelectedModal] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const chatOptionsRef = useRef<HTMLDivElement>(null);
   const emojiPickerRef = useRef<HTMLDivElement>(null);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [showSelectedModal, setShowSelectedModal] = useState(false);
   const screenSize = window.innerWidth;
 
   const handleFileSelect = (
@@ -76,6 +78,8 @@ const Chat = ({
 
   const handleUpload = async () => {
     if (!selectedFile) return;
+
+    setIsLoading(true);
 
     const formData = new FormData();
     let response: {
@@ -93,10 +97,12 @@ const Chat = ({
       formData.append("message_video", selectedFile);
       response = await uploadVideo(formData, roomId, currentUser);
     } else {
+      setIsLoading(false);
       return;
     }
 
     if (!response.success) {
+      setIsLoading(false);
       return;
     }
 
@@ -104,8 +110,9 @@ const Chat = ({
       roomId: roomId,
       content: response.publicUrl,
       message_type: fileType.startsWith("image/") ? "image" : "video",
-    })
+    });
 
+    setIsLoading(false);
     setShowSelectedModal(false);
     setSelectedFile(null);
   };
@@ -209,6 +216,8 @@ const Chat = ({
 
   return (
     <>
+      {isLoading && <CheckModal message="Uploading..." />}
+
       {/* Header */}
       <div className="right-header pb-2 pr-4 flex items-center justify-between max-h-[57px]">
         <div className="flex items-center gap-5">

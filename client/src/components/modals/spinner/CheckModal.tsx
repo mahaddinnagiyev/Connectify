@@ -4,7 +4,7 @@ import Box from "@mui/material/Box";
 
 const CheckModal = ({ message = "Loading..." }: { message?: string }) => {
   return (
-    <div className="modal-overlay">
+    <div className="check-modal-overlay">
       <div className="modal">
         <Box
           sx={{

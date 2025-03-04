@@ -1,6 +1,7 @@
 .selected-modal-overlay {
   background: rgba(0, 0, 0, 0.8);
   backdrop-filter: blur(8px);
+  z-index: 99999;
 }
 
 .selected-modal {
@@ -9,7 +10,7 @@
   padding: 24px;
   width: 90%;
   max-width: 600px;
-  height: 95vh;       
+  height: 95vh;
   overflow-y: auto;
   animation: scaleUp 0.3s ease-out;
 }
