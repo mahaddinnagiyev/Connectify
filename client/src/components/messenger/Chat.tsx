@@ -16,7 +16,6 @@ import {
   MoreVert as MoreVertIcon,
   AccountBox as AccountBoxIcon,
   Delete as DeleteIcon,
-  Block as BlockIcon,
   ChevronLeft as ChevronLeftIcon,
   PictureAsPdf as PictureAsPdfIcon,
   Description as DescriptionIcon,
@@ -42,6 +41,7 @@ import AttachModal from "../modals/chat/AttachModal";
 import SelectedModal from "../modals/chat/SelectedModal";
 import CheckModal from "../modals/spinner/CheckModal";
 import ErrorMessage from "../messages/ErrorMessage";
+import { get_block_list } from "../../services/user/block-list-service";
 
 interface ChatProps {
   roomId: string;
@@ -72,6 +72,7 @@ const Chat = ({
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [showSelectedModal, setShowSelectedModal] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isBlocked, setIsBlocked] = useState(false);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const chatOptionsRef = useRef<HTMLDivElement>(null);
   const emojiPickerRef = useRef<HTMLDivElement>(null);
@@ -84,6 +85,15 @@ const Chat = ({
       setShowSelectedModal(true);
     }
   };
+
+  useEffect(() => {
+    get_block_list().then((response) => {
+      if (response.success) {
+        const blockedUsers = response.blockList.map((user) => user.id);
+        setIsBlocked(blockedUsers.includes(otherUser!.id));
+      }
+    });
+  }, [otherUser]);
 
   const handleUpload = async () => {
     if (!selectedFile) return;
@@ -360,7 +370,12 @@ const Chat = ({
             </button>
             {visibleChatOptions && (
               <div ref={chatOptionsRef} className="action-buttons-2">
-                <button className="user-profile-btn">
+                <button
+                  className="user-profile-btn"
+                  onClick={() =>
+                    (window.location.href = `/user/@${otherUser?.username}`)
+                  }
+                >
                   <AccountBoxIcon className="profile-icon" /> User Profile
                 </button>
                 {screenSize < 768 && (
@@ -375,9 +390,6 @@ const Chat = ({
                 )}
                 <button className="delete-btn">
                   <DeleteIcon className="delete-icon" /> Delete Chat
-                </button>
-                <button className="block-btn">
-                  <BlockIcon /> Block User
                 </button>
               </div>
             )}
@@ -468,46 +480,92 @@ const Chat = ({
         </div>
         {/* Send Message Form */}
         <div className="send-message-container mt-2">
-          <Tooltip title="Emotes" placement="top">
-            <button
-              className="insert-emoticon-button"
-              onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-            >
-              <InsertEmoticonIcon />
-            </button>
-          </Tooltip>
-          {showEmojiPicker && (
-            <div className="emoji-picker-container" ref={emojiPickerRef}>
-              <EmojiPicker onEmojiClick={handleEmojiPicker} />
-            </div>
+          {isBlocked ? (
+            <>
+              <Tooltip title="Emotes" placement="top">
+                <button
+                  className="insert-emoticon-button cursor-not-allowed"
+                  disabled
+                >
+                  <InsertEmoticonIcon />
+                </button>
+              </Tooltip>
+              <Tooltip title="Attach File" placement="top">
+                <button
+                  className="attach-file-button cursor-not-allowed"
+                  disabled
+                >
+                  <AttachFileIcon />
+                </button>
+              </Tooltip>
+              <Tooltip title="You are blocked" placement="top">
+                <textarea
+                  value={messageInput}
+                  onChange={(e) => setMessageInput(e.target.value)}
+                  placeholder="Type your message..."
+                  className="message-input cursor-not-allowed"
+                  onKeyPress={(e) => {
+                    if (e.key === "Enter" && !e.shiftKey) {
+                      e.preventDefault();
+                      handleSendMessage();
+                    }
+                  }}
+                  disabled
+                ></textarea>
+              </Tooltip>
+              <button
+                type="submit"
+                className="send-button"
+                style={{ cursor: "not-allowed" }}
+                disabled
+              >
+                <SendIcon />
+              </button>
+            </>
+          ) : (
+            <>
+              <Tooltip title="Emotes" placement="top">
+                <button
+                  className="insert-emoticon-button"
+                  onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                >
+                  <InsertEmoticonIcon />
+                </button>
+              </Tooltip>
+              {showEmojiPicker && (
+                <div className="emoji-picker-container" ref={emojiPickerRef}>
+                  <EmojiPicker onEmojiClick={handleEmojiPicker} />
+                </div>
+              )}
+              <Tooltip title="Attach File" placement="top">
+                <button
+                  className="attach-file-button"
+                  onClick={() => setShowAttachModal(true)}
+                >
+                  <AttachFileIcon />
+                </button>
+              </Tooltip>
+              <textarea
+                value={messageInput}
+                onChange={(e) => setMessageInput(e.target.value)}
+                placeholder="Type your message..."
+                className="message-input"
+                onKeyPress={(e) => {
+                  if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
+                    handleSendMessage();
+                  }
+                }}
+              ></textarea>
+              <button
+                type="submit"
+                className="send-button"
+                onClick={handleSendMessage}
+              >
+                <SendIcon />
+              </button>
+            </>
           )}
-          <Tooltip title="Attach File" placement="top">
-            <button
-              className="attach-file-button"
-              onClick={() => setShowAttachModal(true)}
-            >
-              <AttachFileIcon />
-            </button>
-          </Tooltip>
-          <textarea
-            value={messageInput}
-            onChange={(e) => setMessageInput(e.target.value)}
-            placeholder="Type your message..."
-            className="message-input"
-            onKeyPress={(e) => {
-              if (e.key === "Enter" && !e.shiftKey) {
-                e.preventDefault();
-                handleSendMessage();
-              }
-            }}
-          ></textarea>
-          <button
-            type="submit"
-            className="send-button"
-            onClick={handleSendMessage}
-          >
-            <SendIcon />
-          </button>
         </div>
       </section>
 

@@ -27,10 +27,10 @@ const ChatPage = () => {
       localStorage.removeItem("successMessage");
     }
 
-    const infoMesssage = localStorage.getItem("infoMessage");
+    const infoMesssages = localStorage.getItem("infoMessage");
 
-    if (infoMesssage) {
-      setInfoMessage(infoMesssage);
+    if (infoMesssages) {
+      setInfoMessage(infoMesssages);
       localStorage.removeItem("infoMessage");
     }
   }, []);
