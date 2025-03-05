@@ -109,7 +109,7 @@ export class MessengerController {
     const uploadedImage = await this.messengerService.uplaodFile(file);
 
     if (uploadedImage instanceof HttpException) {
-      return uploadedImage
+      return uploadedImage;
     }
 
     return {
@@ -117,7 +117,7 @@ export class MessengerController {
       message: 'File uploaded successfully',
       publicUrl: uploadedImage.publicUrl,
       message_name: uploadedImage.file_name,
-      message_size: uploadedImage.file_size
+      message_size: uploadedImage.file_size,
     };
   }
 
@@ -168,7 +168,7 @@ export class MessengerController {
     const uploadedVideo = await this.messengerService.uplaodFile(file);
 
     if (uploadedVideo instanceof HttpException) {
-      return uploadedVideo
+      return uploadedVideo;
     }
 
     return {
@@ -176,7 +176,7 @@ export class MessengerController {
       message: 'File uploaded successfully',
       publicUrl: uploadedVideo.publicUrl,
       message_name: uploadedVideo.file_name,
-      message_size: uploadedVideo.file_size
+      message_size: uploadedVideo.file_size,
     };
   }
   // Upload File
@@ -228,7 +228,7 @@ export class MessengerController {
     const uploadedFile = await this.messengerService.uplaodFile(file);
 
     if (uploadedFile instanceof HttpException) {
-      return uploadedFile
+      return uploadedFile;
     }
 
     return {
@@ -236,12 +236,14 @@ export class MessengerController {
       message: 'File uploaded successfully',
       publicUrl: uploadedFile.publicUrl,
       message_name: uploadedFile.file_name,
-      message_size: uploadedFile.file_size
+      message_size: uploadedFile.file_size,
     };
   }
 
   private allowedMimeTypes = [
     'text/plain',
+    'text/csv',
+    'application/x-zip-compressed',
     'application/msword',
     'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
     'application/pdf',
