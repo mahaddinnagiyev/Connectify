@@ -30,7 +30,7 @@ const MessageContainer = styled("div")<{ exiting: boolean }>(({ exiting }) => ({
   top: "20px",
   right: "20px",
   width: "350px",
-  zIndex: 9999,
+  zIndex: 9999999,
   animation: exiting
     ? `${slideOut} 0.5s ease-in forwards`
     : `${slideIn} 0.5s ease-out forwards`,

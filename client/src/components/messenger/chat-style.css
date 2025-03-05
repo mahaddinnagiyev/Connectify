@@ -22,8 +22,7 @@
   align-items: center;
   gap: 10px;
   max-width: 70%;
-  padding: 10px;
-  padding-top: 5px;
+  padding: 5px;
   border-radius: 10px;
   color: var(--text-color);
   position: relative;
@@ -69,9 +68,10 @@
 
 .message-time {
   position: absolute;
-  bottom: 7px;
+  bottom: 4px;
   right: 5px;
-  font-size: xx-small;
+  font-size: 7px;
+  font-weight: 700;
   color: #666;
 }
 
@@ -133,36 +133,30 @@
 
 .file-message-container {
   display: flex;
-  align-items: center;
   gap: 10px;
-  padding: 12px 16px;
-  background: linear-gradient(135deg, #f5f7fa, #c3cfe2);
+  align-items: center;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  padding: 15px 20px;
+}
+
+.doc-file-icon {
+  padding: 0px 15px;
+  margin: 0 auto;
+  background-color: white;
+  padding: 20px;
   border-radius: 10px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  max-width: 400px;
-  transition: transform 0.2s ease;
 }
 
-.file-message-container:hover {
-  transform: scale(1.02);
-}
-
-.file-info {
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
+.doc-file-info {
   margin-top: 0px !important;
+  display: flex;
+  gap: 2px;
+  flex-direction: column;
+  align-items: flex-start;
 }
 
 .file-name {
-  font-weight: 500;
   color: #1976d2;
-  text-decoration: none;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 250px; 
-  transition: .6s all ease-in-out;
 }
 
 .file-name:hover {
@@ -170,8 +164,7 @@
 }
 
 .file-size {
-  font-size: 0.8rem;
-  color: #666;
+  font-size: small;
 }
 
 @media screen and (max-width: 768px) {
@@ -197,6 +190,19 @@
   .sender,
   .receiver {
     max-width: 70%;
+  }
+
+  .file-message-container {
+    flex-direction: column;
+    gap: 15px;
+  }
+  
+  .file-name {
+    font-size: small;
+  }
+
+  .file-size {
+    font-size: xx-small;
   }
 }
 

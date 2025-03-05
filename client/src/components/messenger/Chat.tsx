@@ -111,6 +111,7 @@ const Chat = ({
     } else if (
       fileType.startsWith("file/") ||
       fileType.startsWith("application/") ||
+      fileType.startsWith("text/") ||
       fileType.startsWith("image/") ||
       fileType.startsWith("video/")
     ) {
@@ -121,7 +122,6 @@ const Chat = ({
       setErrorMessage("System doesn't support this type of file");
       return;
     }
-
     if (!response.success) {
       setIsLoading(false);
       setShowSelectedModal(false);
@@ -288,7 +288,9 @@ const Chat = ({
       case "csv":
         return <GridOnIcon sx={{ color: "#1E6E42", fontSize: "36px" }} />;
       default:
-        return <InsertDriveFileIcon sx={{ color: "#757575", fontSize: "36px" }} />;
+        return (
+          <InsertDriveFileIcon sx={{ color: "#757575", fontSize: "36px" }} />
+        );
     }
   };
 
@@ -424,10 +426,10 @@ const Chat = ({
                     )}
                     {message.message_type === MessageType.FILE && (
                       <div className="file-message-container">
-                        <div className="file-icon">
+                        <div className="doc-file-icon">
                           {getFileIcon(message.message_name)}
                         </div>
-                        <div className="file-info">
+                        <div className="doc-file-info">
                           <a
                             href={message.content}
                             target="_blank"
@@ -438,14 +440,14 @@ const Chat = ({
                             {message.message_name || "Download File"}
                           </a>
                           <span className="file-size">
-                            {formatFileSize(Number(message.message_size))}
+                            Size: {formatFileSize(Number(message.message_size))}
                           </span>
                         </div>
                       </div>
                     )}
 
                     {message.message_type === MessageType.TEXT && (
-                      <p className="message-text">{message.content}</p>
+                      <p className="message-text px-1">{message.content}</p>
                     )}
                     {message.message_type !== MessageType.DEFAULT && (
                       <span className="message-time">

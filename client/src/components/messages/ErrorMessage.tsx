@@ -35,7 +35,7 @@ const MessageContainer = styled("div")<{ isExiting: boolean }>(
     top: "20px",
     right: "20px",
     width: "350px",
-    zIndex: 9999,
+    zIndex: 9999999,
     animation: `${isExiting ? slideOut : slideIn} 0.5s ease-in-out forwards`,
   })
 );
