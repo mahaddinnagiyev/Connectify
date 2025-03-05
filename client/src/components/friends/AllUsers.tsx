@@ -24,8 +24,14 @@ import {
   getAllFriendshipRequests,
   sendFriendshipRequest,
 } from "../../services/friendship/friendship-service";
-import { block_and_unblock_user } from "../../services/user/block-list-service";
-import { BlockAction } from "../../services/user/dto/block-list-dto";
+import {
+  block_and_unblock_user,
+  get_block_list,
+} from "../../services/user/block-list-service";
+import {
+  BlockAction,
+  BlockListDTO,
+} from "../../services/user/dto/block-list-dto";
 import { getToken } from "../../services/auth/token-service";
 import { jwtDecode } from "jwt-decode";
 import { Users } from "../../services/user/dto/user-dto";
@@ -43,6 +49,7 @@ const AllUsers: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [acceptedFriends, setAcceptedFriends] = useState<string[]>([]);
   const [pendingFriends, setPendingFriends] = useState<string[]>([]);
+  const [blockedUsers, setBlockedUsers] = useState<string[]>([]);
 
   const [errorMessage, setErrorMessage] = useState<string | null>("");
   const [successMessage, setSuccessMessage] = useState<string | null>("");
@@ -61,7 +68,20 @@ const AllUsers: React.FC = () => {
     fetchAllUsers();
     fetchAcceptedFriends();
     fetchPendingFriends();
+    fetchBlockedUsers();
   }, []);
+
+  const fetchBlockedUsers = async () => {
+    try {
+      const result = await get_block_list();
+      if (result.success) {
+        const blocked = result.blockList.map((item: BlockListDTO) => item.id);
+        setBlockedUsers(blocked);
+      }
+    } catch (error) {
+      console.error("Failed to fetch block list:", error);
+    }
+  };
 
   const handleGoChat = (userId: string) => {
     socket?.emit("joinRoom", { user2Id: userId });
@@ -135,9 +155,22 @@ const AllUsers: React.FC = () => {
       const response = await block_and_unblock_user(id, BlockAction.block);
       if (response.success) {
         fetchAllUsers();
+        fetchBlockedUsers();
       }
     } catch (error) {
       console.error("Failed to block user:", error);
+    }
+  };
+
+  const unblock_user = async (id: string) => {
+    try {
+      const response = await block_and_unblock_user(id, BlockAction.unblock);
+      if (response.success) {
+        fetchAllUsers();
+        fetchBlockedUsers();
+      }
+    } catch (error) {
+      console.error("Failed to unblock user:", error);
     }
   };
 
@@ -309,23 +342,43 @@ const AllUsers: React.FC = () => {
                               </Button>
                             )}
                           </Tooltip>
-                          <Tooltip title="Block User" placement="top">
-                            <Button
-                              variant="contained"
-                              color="warning"
-                              size="small"
-                              onClick={() =>
-                                openConfirmModal(
-                                  "Block User",
-                                  `Are you sure you want to block ${user.username}?`,
-                                  "Block",
-                                  () => block_user(user.id)
-                                )
-                              }
-                            >
-                              <GppBadIcon fontSize="small" />
-                            </Button>
-                          </Tooltip>
+                          {blockedUsers.includes(user.id) ? (
+                            <Tooltip title="Unblock User" placement="top">
+                              <Button
+                                variant="contained"
+                                color="info"
+                                size="small"
+                                onClick={() =>
+                                  openConfirmModal(
+                                    "Unblock User",
+                                    `Are you sure you want to unblock ${user.username}?`,
+                                    "Unblock",
+                                    () => unblock_user(user.id)
+                                  )
+                                }
+                              >
+                                <GppBadIcon fontSize="small" />
+                              </Button>
+                            </Tooltip>
+                          ) : (
+                            <Tooltip title="Block User" placement="top">
+                              <Button
+                                variant="contained"
+                                color="warning"
+                                size="small"
+                                onClick={() =>
+                                  openConfirmModal(
+                                    "Block User",
+                                    `Are you sure you want to block ${user.username}?`,
+                                    "Block",
+                                    () => block_user(user.id)
+                                  )
+                                }
+                              >
+                                <GppBadIcon fontSize="small" />
+                              </Button>
+                            </Tooltip>
+                          )}
                         </Box>
                       </Box>
                     ) : (
@@ -395,22 +448,43 @@ const AllUsers: React.FC = () => {
                               </Button>
                             )}
                           </Tooltip>
-                          <Tooltip title="Block User" placement="top">
-                            <Button
-                              variant="contained"
-                              color="warning"
-                              onClick={() =>
-                                openConfirmModal(
-                                  "Block User",
-                                  `Are you sure you want to block ${user.username}?`,
-                                  "Block",
-                                  () => block_user(user.id)
-                                )
-                              }
-                            >
-                              <GppBadIcon />
-                            </Button>
-                          </Tooltip>
+                          {blockedUsers.includes(user.id) ? (
+                            <Tooltip title="Unblock User" placement="top">
+                              <Button
+                                variant="contained"
+                                color="info"
+                                sx={{ marginRight: 1 }}
+                                onClick={() =>
+                                  openConfirmModal(
+                                    "Unblock User",
+                                    `Are you sure you want to unblock ${user.username}?`,
+                                    "Unblock",
+                                    () => unblock_user(user.id)
+                                  )
+                                }
+                              >
+                                <GppBadIcon />
+                              </Button>
+                            </Tooltip>
+                          ) : (
+                            <Tooltip title="Block User" placement="top">
+                              <Button
+                                variant="contained"
+                                color="warning"
+                                sx={{ marginRight: 1 }}
+                                onClick={() =>
+                                  openConfirmModal(
+                                    "Block User",
+                                    `Are you sure you want to block ${user.username}?`,
+                                    "Block",
+                                    () => block_user(user.id)
+                                  )
+                                }
+                              >
+                                <GppBadIcon />
+                              </Button>
+                            </Tooltip>
+                          )}
                         </Box>
                       </>
                     )}

@@ -27,8 +27,14 @@ import {
   removeFriendship,
   sendFriendshipRequest,
 } from "../../services/friendship/friendship-service";
-import { block_and_unblock_user } from "../../services/user/block-list-service";
-import { BlockAction } from "../../services/user/dto/block-list-dto";
+import {
+  block_and_unblock_user,
+  get_block_list,
+} from "../../services/user/block-list-service";
+import {
+  BlockAction,
+  BlockListDTO,
+} from "../../services/user/dto/block-list-dto";
 import { UserFriendsDTO } from "../../services/friendship/dto/friendship-dto";
 import { FriendshipStatus } from "../../services/friendship/enum/friendship-status.enum";
 import { useNavigate } from "react-router-dom";
@@ -62,12 +68,17 @@ const ProfileInfo: React.FC<ProfileInfoProps> = ({ userData }) => {
   const [confirmModalMessage, setConfirmModalMessage] = useState("");
   const [confirmModalText, setConfirmModalText] = useState("");
   const [pendingAction, setPendingAction] = useState<() => void>(() => {});
+  const [blockedUsers, setBlockedUsers] = useState<string[]>([]);
 
   const navigate = useNavigate();
 
   const getUrl = (params: string): boolean => {
     return window.location.href.includes(params);
   };
+
+  useEffect(() => {
+    fetchBlockedUsers();
+  }, []);
 
   const copy_soical_link = (link: string) => {
     try {
@@ -85,6 +96,18 @@ const ProfileInfo: React.FC<ProfileInfoProps> = ({ userData }) => {
 
   const handleModalClose = () => {
     setModalOpen(false);
+  };
+
+  const fetchBlockedUsers = async () => {
+    try {
+      const result = await get_block_list();
+      if (result.success) {
+        const blocked = result.blockList.map((item: BlockListDTO) => item.id);
+        setBlockedUsers(blocked);
+      }
+    } catch (error) {
+      console.error("Failed to fetch block list:", error);
+    }
   };
 
   const handleGoChat = (userId: string) => {
@@ -255,6 +278,31 @@ const ProfileInfo: React.FC<ProfileInfoProps> = ({ userData }) => {
     } catch (error) {
       console.error("Failed to block user:", error);
       setErrorMessage("Failed to block user");
+    }
+  };
+
+  const unblock_user = async (id: string) => {
+    try {
+      const response = await block_and_unblock_user(id, BlockAction.unblock);
+      if (response.success) {
+        localStorage.setItem("successMessage", response.message);
+      } else {
+        if (Array.isArray(response.message)) {
+          localStorage.setItem("errorMessage", response.message[0]);
+        } else {
+          localStorage.setItem(
+            "errorMessage",
+            response.response?.error ??
+              response.message ??
+              response.error ??
+              "Failed to unblock user."
+          );
+        }
+      }
+      window.location.reload();
+    } catch (error) {
+      console.error(error);
+      localStorage.setItem("errorMessage", "Failed to unblock user.");
     }
   };
 
@@ -435,23 +483,46 @@ const ProfileInfo: React.FC<ProfileInfoProps> = ({ userData }) => {
                   </Button>
                 </Tooltip>
               )}
-              <Tooltip title="Block User" placement="top">
-                <Button
-                  variant="contained"
-                  color="warning"
-                  size="medium"
-                  onClick={() =>
-                    openConfirmModal(
-                      "Block User",
-                      `Are you sure you want to block ${userData?.user.username}?`,
-                      "Block",
-                      block_user
-                    )
-                  }
-                >
-                  <GppBadIcon fontSize="medium" />
-                </Button>
-              </Tooltip>
+              {userData &&
+                (blockedUsers.includes(userData.user.id) ? (
+                  <Tooltip title="Unblock User" placement="top">
+                    <Button
+                      variant="contained"
+                      color="info"
+                      size="medium"
+                      sx={{ marginRight: 1 }}
+                      onClick={() =>
+                        openConfirmModal(
+                          "Unblock User",
+                          `Are you sure you want to unblock ${userData.user.username}?`,
+                          "Unblock",
+                          () => unblock_user(userData.user.id)
+                        )
+                      }
+                    >
+                      <GppBadIcon fontSize="medium" />
+                    </Button>
+                  </Tooltip>
+                ) : (
+                  <Tooltip title="Block User" placement="top">
+                    <Button
+                      variant="contained"
+                      color="warning"
+                      size="medium"
+                      sx={{ marginRight: 1 }}
+                      onClick={() =>
+                        openConfirmModal(
+                          "Block User",
+                          `Are you sure you want to block ${userData.user.username}?`,
+                          "Block",
+                          () => block_user()
+                        )
+                      }
+                    >
+                      <GppBadIcon fontSize="medium" />
+                    </Button>
+                  </Tooltip>
+                ))}
             </Box>
           )}
         </Box>
