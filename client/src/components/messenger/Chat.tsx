@@ -41,7 +41,10 @@ import AttachModal from "../modals/chat/AttachModal";
 import SelectedModal from "../modals/chat/SelectedModal";
 import CheckModal from "../modals/spinner/CheckModal";
 import ErrorMessage from "../messages/ErrorMessage";
-import { get_block_list } from "../../services/user/block-list-service";
+import {
+  get_block_list,
+  get_blocker_list,
+} from "../../services/user/block-list-service";
 
 interface ChatProps {
   roomId: string;
@@ -73,6 +76,7 @@ const Chat = ({
   const [showSelectedModal, setShowSelectedModal] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isBlocked, setIsBlocked] = useState(false);
+  const [isBlocker, setIsBlocker] = useState(false);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const chatOptionsRef = useRef<HTMLDivElement>(null);
   const emojiPickerRef = useRef<HTMLDivElement>(null);
@@ -91,6 +95,13 @@ const Chat = ({
       if (response.success) {
         const blockedUsers = response.blockList.map((user) => user.id);
         setIsBlocked(blockedUsers.includes(otherUser!.id));
+      }
+    });
+
+    get_blocker_list().then((response) => {
+      if (response.success) {
+        const blockUsers = response.blockerList.map((user) => user.id);
+        setIsBlocker(blockUsers.includes(otherUser!.id));
       }
     });
   }, [otherUser]);
@@ -498,7 +509,55 @@ const Chat = ({
                   <AttachFileIcon />
                 </button>
               </Tooltip>
-              <Tooltip title="You are blocked" placement="top">
+              <Tooltip
+                title={`You has blocked ${otherUser?.username}!`}
+                placement="top"
+              >
+                <textarea
+                  value={messageInput}
+                  onChange={(e) => setMessageInput(e.target.value)}
+                  placeholder="Type your message..."
+                  className="message-input cursor-not-allowed"
+                  onKeyPress={(e) => {
+                    if (e.key === "Enter" && !e.shiftKey) {
+                      e.preventDefault();
+                      handleSendMessage();
+                    }
+                  }}
+                  disabled
+                ></textarea>
+              </Tooltip>
+              <button
+                type="submit"
+                className="send-button"
+                style={{ cursor: "not-allowed" }}
+                disabled
+              >
+                <SendIcon />
+              </button>
+            </>
+          ) : isBlocker ? (
+            <>
+              <Tooltip title="Emotes" placement="top">
+                <button
+                  className="insert-emoticon-button cursor-not-allowed"
+                  disabled
+                >
+                  <InsertEmoticonIcon />
+                </button>
+              </Tooltip>
+              <Tooltip title="Attach File" placement="top">
+                <button
+                  className="attach-file-button cursor-not-allowed"
+                  disabled
+                >
+                  <AttachFileIcon />
+                </button>
+              </Tooltip>
+              <Tooltip
+                title={`${otherUser?.username} has blocked you!`}
+                placement="top"
+              >
                 <textarea
                   value={messageInput}
                   onChange={(e) => setMessageInput(e.target.value)}
