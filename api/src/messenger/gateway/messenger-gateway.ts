@@ -99,7 +99,12 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     }
   }
 
-  handleDisconnect(client: Socket) {
+  async handleDisconnect(client: Socket) {
+    await this.supabase
+      .getClient()
+      .from('accounts')
+      .update({ last_login: new Date() })
+      .eq('user_id', client.data.user.id);
     this.logger.log(`User disconnected: ${client.id}`);
   }
 
