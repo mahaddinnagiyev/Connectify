@@ -282,6 +282,52 @@ export class UserService {
     }
   }
 
+  async get_blocker_list(req_user: User) {
+    try {
+      const blockList = await this.blockListRepository.find({
+        where: [{ blocked: { id: req_user.id } }],
+        relations: ['blocker'],
+        select: ['id', 'blocker', 'created_at'],
+      });
+
+      const mappedBlockList = [];
+
+      for (const block of blockList) {
+        const account = await this.accountRepository.findOne({
+          where: { user: { id: block.blocker.id } },
+        });
+
+        const blockedUser = {
+          id: block.blocker.id,
+          blocked_id: block.blocker.id,
+          first_name: block.blocker.first_name,
+          last_name: block.blocker.last_name,
+          username: block.blocker.username,
+          profile_picture: account ? account.profile_picture : null,
+          created_at: block.created_at,
+        };
+
+        mappedBlockList.push(blockedUser);
+      }
+
+      return {
+        success: true,
+        blockerList: mappedBlockList,
+      };
+    } catch (error) {
+      console.log(error);
+      await this.logger.error(
+        `Error getting block list by id\nError: ${error}`,
+        'user',
+        `User: ${req_user.id}`,
+        error.stack,
+      );
+      return new InternalServerErrorException(
+        'Failed to get block list - Due To Internal Server Error',
+      );
+    }
+  }
+
   async block_user(id: string, req_user: User) {
     try {
       const userResponse = await this.get_user_by_id(id);

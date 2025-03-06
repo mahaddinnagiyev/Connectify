@@ -11,7 +11,7 @@ import {
 import { UserService } from './user.service';
 import { JwtAuthGuard } from 'src/jwt/jwt-auth-guard';
 import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
-import { Request } from 'express';
+import { query, Request } from 'express';
 import { User } from 'src/entities/user.entity';
 import { EditUserInfoDTO } from './dto/user-info-dto';
 
@@ -66,7 +66,11 @@ export class UserController {
     default: { limit: 240, ttl: 60 * 1000, blockDuration: 60 * 1000 },
   })
   @Get('/block-list')
-  async get_block_list(@Req() req: Request) {
+  async get_block_list(@Req() req: Request, @Query('by') query: string) {
+    if (query) {
+      return await this.userService.get_blocker_list(req.user as User);
+    }
+
     return await this.userService.get_block_list(req.user as User);
   }
 
