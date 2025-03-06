@@ -52,11 +52,7 @@ const AccountInfo: React.FC<AccountInfoProps> = ({
             <TextField
               id="bio"
               label="Bio"
-              value={
-                userData?.account.bio
-                  ? userData.account.bio
-                  : "There is no bio yet"
-              }
+              value={userData?.account.bio ?? "There is no bio yet"}
               variant="outlined"
               fullWidth
               margin="normal"

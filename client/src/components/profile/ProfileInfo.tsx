@@ -39,10 +39,12 @@ import { UserFriendsDTO } from "../../services/friendship/dto/friendship-dto";
 import { FriendshipStatus } from "../../services/friendship/enum/friendship-status.enum";
 import { useNavigate } from "react-router-dom";
 import { socket } from "../../services/socket/socket-service";
+import { PrivacySettingsDTO } from "../../services/account/dto/privacy-settings-dto";
 
 interface UserProfile {
   user: User;
   account: Account;
+  privacy_settings: PrivacySettingsDTO;
 }
 
 interface ProfileInfoProps {
@@ -361,7 +363,7 @@ const ProfileInfo: React.FC<ProfileInfoProps> = ({ userData }) => {
       localStorage.removeItem("successMessage");
     }
   }, []);
-
+  
   return (
     <>
       {errorMessage && (
@@ -530,13 +532,13 @@ const ProfileInfo: React.FC<ProfileInfoProps> = ({ userData }) => {
         <PersonalInfo
           userData={userData}
           onEdit={() => setEditPersonalInfoModalOpen(true)}
-          privacy_settings={userData?.account.privacy ?? null}
+          privacy_settings={userData?.privacy_settings ?? null}
           accepted={accepted}
         />
         {/* Account Information Section */}
         <AccountInfo
           userData={userData}
-          privacy_settings={userData?.account.privacy ?? null}
+          privacy_settings={userData?.privacy_settings ?? null}
           onEdit={() => setEditProfileInfoModalOpen(true)}
           copySocialLink={copy_soical_link}
           accepted={accepted}

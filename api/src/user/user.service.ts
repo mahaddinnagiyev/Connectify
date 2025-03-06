@@ -35,9 +35,7 @@ export class UserService {
         const { data: account } = (await this.supabase
           .getClient()
           .from('accounts')
-          .select(
-            'id, first_name, last_name, username, email, gender, created_at',
-          )
+          .select('*')
           .eq('user_id', user.id)
           .single()) as { data: IAccount };
 
@@ -48,6 +46,7 @@ export class UserService {
           },
         };
       });
+
       return {
         success: true,
         users: await Promise.all(mapped_users),
@@ -141,18 +140,19 @@ export class UserService {
         .eq('username', username)
         .single()) as { data: IUser };
 
-      const { data: account } = await this.supabase
+      const { data: account } = (await this.supabase
         .getClient()
-        .from('account')
+        .from('accounts')
         .select('*')
         .eq('user_id', user.id)
-        .single();
+        .single()) as { data: IAccount };
 
       const { data: privacy_settings } = (await this.supabase
         .getClient()
         .from('privacy_settings')
         .select('*')
-        .eq('account_id', account.id)) as { data: IPrivacySettings };
+        .eq('account_id', account.id)
+        .single()) as { data: IPrivacySettings };
 
       if (!(user && account && privacy_settings)) {
         return new NotFoundException({
