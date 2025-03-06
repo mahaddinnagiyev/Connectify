@@ -1,15 +1,13 @@
 import { ExecutionContext, Injectable } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
-import { TokenBlackList } from 'src/entities/token-black-list.entity';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
 import { UnauthorizedException } from '@nestjs/common';
+import { SupabaseService } from 'src/supabase/supabase.service';
+import { ITokenBlackList } from 'src/interfaces/token-black-list.interface';
 
 @Injectable()
 export class JwtAuthGuard extends AuthGuard('jwt') {
   constructor(
-    @InjectRepository(TokenBlackList)
-    private tokenBlackListRepository: Repository<TokenBlackList>,
+    private readonly supabase: SupabaseService,
   ) {
     super();
   }
@@ -28,9 +26,12 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
     const token = request.headers.authorization?.split(' ')[1];
 
     if (token) {
-      const blackListedToken = await this.tokenBlackListRepository.findOne({
-        where: { token: token },
-      });
+      const { data: blackListedToken } = (await this.supabase
+        .getClient()
+        .from('token_black_list')
+        .select('*')
+        .eq('token', token)
+        .single()) as { data: ITokenBlackList };
 
       if (blackListedToken) {
         throw new UnauthorizedException({

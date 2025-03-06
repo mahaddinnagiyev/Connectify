@@ -2,15 +2,13 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { JwtPayload } from './jwt-payload';
-import { User } from 'src/entities/user.entity';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { SupabaseService } from 'src/supabase/supabase.service';
+import { IUser } from 'src/interfaces/user.interface';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor(
-    @InjectRepository(User)
-    private userRepository: Repository<User>,
+    private readonly supabase: SupabaseService,
   ) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
@@ -19,7 +17,6 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   }
 
   async validate(payload: JwtPayload) {
-
     const { id } = payload;
 
     if (!id) {
@@ -29,10 +26,13 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       });
     }
 
-    const user = await this.userRepository.findOne({
-      where: { id: payload.id },
-    });
-    
+    const { data: user } = (await this.supabase
+      .getClient()
+      .from('users')
+      .select('*')
+      .eq('id', id)
+      .single()) as { data: IUser };
+
     if (!user) {
       return new UnauthorizedException({
         success: false,
