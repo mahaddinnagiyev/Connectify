@@ -4,7 +4,6 @@ import {
   Delete,
   Get,
   Post,
-  HttpException,
   Patch,
   Req,
   UseGuards,
@@ -16,10 +15,10 @@ import { JwtAuthGuard } from 'src/jwt/jwt-auth-guard';
 import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
 import { EditSocialLinkDTO, SocialLinkDTO } from './dto/social-link-dto';
 import { Request } from 'express';
-import { User } from 'src/entities/user.entity';
 import { EditAccountDTO } from './dto/account-info-dto';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { UpdatePrivacySettingsDTO } from './dto/privacy-settings-dto';
+import { IUser } from 'src/interfaces/user.interface';
 
 @Controller('account')
 export class AccountController {
@@ -32,7 +31,7 @@ export class AccountController {
   })
   @Patch('/my-info')
   async edit_account(@Body() userDTO: EditAccountDTO, @Req() req: Request) {
-    return await this.accountService.edit_account(userDTO, req.user as User);
+    return await this.accountService.edit_account(userDTO, req.user as IUser);
   }
 
   // Get Social Link By Id
@@ -44,7 +43,7 @@ export class AccountController {
   async get_social_by_id(@Req() req: Request) {
     return await this.accountService.get_social_by_id(
       String(req.params.id),
-      req.user as User,
+      req.user as IUser,
     );
   }
 
@@ -60,7 +59,7 @@ export class AccountController {
   ) {
     return await this.accountService.add_social_link(
       socialLinkDTO,
-      req.user as User,
+      req.user as IUser,
     );
   }
 
@@ -77,7 +76,7 @@ export class AccountController {
     return await this.accountService.edit_social_link(
       socialLinkDTO,
       String(req.params.id),
-      req.user as User,
+      req.user as IUser,
     );
   }
 
@@ -90,7 +89,7 @@ export class AccountController {
   async delete_social_link(@Req() req: Request) {
     return await this.accountService.delete_social_link(
       String(req.params.id),
-      req.user as User,
+      req.user as IUser,
     );
   }
 
@@ -102,7 +101,10 @@ export class AccountController {
     @Req() req: Request,
     @UploadedFile() file: Express.Multer.File,
   ) {
-    return await this.accountService.update_profile_pic(req.user as User, file);
+    return await this.accountService.update_profile_pic(
+      req.user as IUser,
+      file,
+    );
   }
 
   // Update Privacy Settings
@@ -118,7 +120,7 @@ export class AccountController {
   ) {
     return await this.accountService.update_privacy_settings(
       privacy_settings,
-      req.user as User,
+      req.user as IUser,
     );
   }
 }

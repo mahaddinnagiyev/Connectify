@@ -4,7 +4,6 @@ import {
   Controller,
   Delete,
   Get,
-  HttpException,
   Patch,
   Post,
   Query,
@@ -25,7 +24,7 @@ import {
   SetNewPasswordDTO,
 } from './dto/forgot-passsword-dto';
 import { Request } from 'express';
-import { User } from 'src/entities/user.entity';
+import { IUser } from 'src/interfaces/user.interface';
 
 @Controller('auth')
 export class AuthController {
@@ -135,7 +134,7 @@ export class AuthController {
   })
   @Post('delete')
   async deleteAccount(@Req() req: Request) {
-    return this.authService.delete_account(req.user as User);
+    return this.authService.delete_account(req.user as IUser);
   }
 
   // Confirm Delete Account

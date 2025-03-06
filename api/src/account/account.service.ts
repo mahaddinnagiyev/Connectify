@@ -5,36 +5,31 @@ import {
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Account } from 'src/entities/account.entity';
 import { LoggerService } from 'src/logger/logger.service';
-import { Repository } from 'typeorm';
 import { EditSocialLinkDTO, SocialLinkDTO } from './dto/social-link-dto';
-import { User } from 'src/entities/user.entity';
 import { v4 as uuid } from 'uuid';
 import { EditAccountDTO } from './dto/account-info-dto';
 import { SupabaseService } from 'src/supabase/supabase.service';
-import { PrivacySettings } from 'src/entities/privacy-settings.entity';
 import { UpdatePrivacySettingsDTO } from './dto/privacy-settings-dto';
+import { IAccount } from 'src/interfaces/account.interface';
+import { IUser } from 'src/interfaces/user.interface';
 
 @Injectable()
 export class AccountService {
   constructor(
-    @InjectRepository(Account)
-    private accountRepository: Repository<Account>,
-    @InjectRepository(PrivacySettings)
-    private privacySettingsRepository: Repository<PrivacySettings>,
-
     private readonly logger: LoggerService,
     private readonly supabase: SupabaseService,
   ) {}
 
   // Find Account By User
-  async get_account_by_user(user: User): Promise<Account | HttpException> {
+  async get_account_by_user(user: IUser): Promise<IAccount | HttpException> {
     try {
-      const account = await this.accountRepository.findOne({
-        where: { user: { id: user.id } },
-      });
+      const { data: account } = (await this.supabase
+        .getClient()
+        .from('accounts')
+        .select('*')
+        .eq('user_id', user.id)
+        .single()) as { data: IAccount };
 
       if (!account) {
         return new NotFoundException({
@@ -54,10 +49,10 @@ export class AccountService {
   // Edit Account
   async edit_account(
     accountDTO: EditAccountDTO,
-    user: User,
+    user: IUser,
   ): Promise<{ success: boolean; message: string } | HttpException> {
     try {
-      const account = (await this.get_account_by_user(user)) as Account;
+      const account = (await this.get_account_by_user(user)) as IAccount;
 
       if (account instanceof HttpException) {
         return new NotFoundException({
@@ -66,7 +61,11 @@ export class AccountService {
         });
       }
 
-      await this.accountRepository.update(account.id, accountDTO);
+      await this.supabase
+        .getClient()
+        .from('accounts')
+        .update(accountDTO)
+        .eq('id', account.id);
 
       return {
         success: true,
@@ -88,7 +87,7 @@ export class AccountService {
   // Get Social Link By Id
   async get_social_by_id(
     id: string,
-    user: User,
+    user: IUser,
   ): Promise<
     | {
         success: boolean;
@@ -97,7 +96,7 @@ export class AccountService {
     | HttpException
   > {
     try {
-      const account = (await this.get_account_by_user(user)) as Account;
+      const account = (await this.get_account_by_user(user)) as IAccount;
 
       const social_link = account.social_links.find((link) => link.id === id);
 
@@ -132,12 +131,12 @@ export class AccountService {
   // Add New Social Links
   async add_social_link(
     socialLinkDTO: SocialLinkDTO,
-    user: User,
+    user: IUser,
   ): Promise<{ success: boolean; message: string } | HttpException> {
     try {
       const { name, link } = socialLinkDTO;
 
-      const account = (await this.get_account_by_user(user)) as Account;
+      const account = (await this.get_account_by_user(user)) as IAccount;
 
       if (!Array.isArray(account?.social_links)) {
         account.social_links = [];
@@ -172,7 +171,12 @@ export class AccountService {
         link: link,
       });
 
-      await this.accountRepository.save(account);
+      await this.supabase
+        .getClient()
+        .from('accounts')
+        .update({ social_links: account.social_links })
+        .eq('id', account.id);
+
       await this.logger.info(
         `Social link added: ${JSON.stringify(socialLinkDTO)} by user: ${user.username}`,
         'account',
@@ -201,12 +205,12 @@ export class AccountService {
   async edit_social_link(
     socialLinkDTO: EditSocialLinkDTO,
     id: string,
-    user: User,
+    user: IUser,
   ): Promise<{ success: boolean; message: string } | HttpException> {
     try {
       const { name, link } = socialLinkDTO;
 
-      const account = (await this.get_account_by_user(user)) as Account;
+      const account = (await this.get_account_by_user(user)) as IAccount;
       if (!account) {
         return new NotFoundException({
           success: false,
@@ -256,7 +260,11 @@ export class AccountService {
         link,
       };
 
-      await this.accountRepository.save(account);
+      await this.supabase
+        .getClient()
+        .from('accounts')
+        .update({ social_links: account.social_links })
+        .eq('id', account.id);
 
       await this.logger.info(
         `Social link edited: ${JSON.stringify(socialLinkDTO)} by user: ${user.username}`,
@@ -282,9 +290,12 @@ export class AccountService {
   }
 
   // Remove Social Link
-  async delete_social_link(id: string, user: User) {
+  async delete_social_link(
+    id: string,
+    user: IUser,
+  ): Promise<{ success: boolean; message: string } | HttpException> {
     try {
-      const account = (await this.get_account_by_user(user)) as Account;
+      const account = (await this.get_account_by_user(user)) as IAccount;
 
       if (!Array.isArray(account.social_links)) {
         account.social_links = [];
@@ -310,10 +321,12 @@ export class AccountService {
         (linkObj) => linkObj.id !== id,
       );
 
-      await this.accountRepository.save({
-        ...account,
-        social_links: new_social_links,
-      });
+      await this.supabase
+        .getClient()
+        .from('accounts')
+        .update({ social_links: new_social_links })
+        .eq('id', account.id);
+
       await this.logger.info(
         `Social link deleted: ${id} by user: ${user.username}`,
         'account',
@@ -338,7 +351,9 @@ export class AccountService {
   }
 
   // Upload Image
-  async upload_image(file: Express.Multer.File) {
+  async upload_image(
+    file: Express.Multer.File,
+  ): Promise<string | HttpException> {
     try {
       let fileOriginalName: string;
 
@@ -389,11 +404,11 @@ export class AccountService {
 
   // Update Profile Photo
   async update_profile_pic(
-    req_user: User,
+    req_user: IUser,
     file: Express.Multer.File,
   ): Promise<{ success: boolean; message: string } | HttpException> {
     try {
-      const account = (await this.get_account_by_user(req_user)) as Account;
+      const account = (await this.get_account_by_user(req_user)) as IAccount;
 
       if (account instanceof HttpException) {
         await this.logger.warn(
@@ -444,9 +459,11 @@ export class AccountService {
         }
       }
 
-      await this.accountRepository.update(account.id, {
-        profile_picture: imageUrl,
-      });
+      await this.supabase
+        .getClient()
+        .from('accounts')
+        .update({ profile_picture: imageUrl })
+        .eq('id', account.id);
 
       await this.logger.info(
         `Profile photo updated by user: ${req_user.username}`,
@@ -474,7 +491,7 @@ export class AccountService {
   // Update Privacy Settings
   async update_privacy_settings(
     privacy_settings: UpdatePrivacySettingsDTO,
-    req_user: User,
+    req_user: IUser,
   ) {
     try {
       const account = await this.get_account_by_user(req_user);
@@ -483,9 +500,12 @@ export class AccountService {
         return account;
       }
 
-      const privacy = await this.privacySettingsRepository.findOne({
-        where: { account: { id: account.id } },
-      });
+      const privacy = await this.supabase
+        .getClient()
+        .from('privacy_settings')
+        .select('*')
+        .eq('account_id', account.id)
+        .single();
 
       if (!privacy) {
         await this.logger.warn(
@@ -499,7 +519,11 @@ export class AccountService {
         });
       }
 
-      await this.privacySettingsRepository.update(privacy.id, privacy_settings);
+      await this.supabase
+        .getClient()
+        .from('privacy_settings')
+        .update(privacy_settings)
+        .eq('account_id', account.id);
 
       await this.logger.info(
         `${req_user.username} updated privacy settings`,

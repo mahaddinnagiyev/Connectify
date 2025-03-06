@@ -11,7 +11,6 @@ import * as bcrypt from 'bcrypt';
 import * as jwt from 'jsonwebtoken';
 import * as crypto from 'crypto';
 import { v4 as uuid } from 'uuid';
-import { User } from 'src/entities/user.entity';
 import { SignupDTO } from './dto/signup-dto';
 import { MailerService } from '@nestjs-modules/mailer';
 import { signup_confirm_message } from './utils/messages/signup-confirm';
@@ -611,7 +610,7 @@ export class AuthService {
 
   // Delete Account
   async delete_account(
-    req_user: User,
+    req_user: IUser,
   ): Promise<{ success: boolean; message: string } | HttpException> {
     try {
       const { data: user } = (await this.supabase
