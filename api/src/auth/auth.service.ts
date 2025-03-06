@@ -13,16 +13,12 @@ import * as crypto from 'crypto';
 import { v4 as uuid } from 'uuid';
 import { User } from 'src/entities/user.entity';
 import { SignupDTO } from './dto/signup-dto';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { Account } from 'src/entities/account.entity';
 import { MailerService } from '@nestjs-modules/mailer';
 import { signup_confirm_message } from './utils/messages/signup-confirm';
 import { generate_confirm_code } from './utils/generate-codes';
 import { ConfirmAccountDTO } from './dto/confirm-account-dto';
 import { LoginDTO } from './dto/login-dto';
 import { JwtPayload } from '../jwt/jwt-payload';
-import { TokenBlackList } from 'src/entities/token-black-list.entity';
 import { LoggerService } from 'src/logger/logger.service';
 import { Gender } from 'src/enums/gender.enum';
 import { Provider } from 'src/enums/provider.enum';
@@ -33,23 +29,18 @@ import {
 import {
   emailNotFoundMessage,
   forgotPasswordMessage,
+  googleSignInMessage,
 } from './utils/messages/forgot-password-message';
-import { PrivacySettings } from 'src/entities/privacy-settings.entity';
 import { deleteAccountMessage } from './utils/messages/delete-account-message';
 import { SupabaseService } from 'src/supabase/supabase.service';
+import { IUser } from 'src/interfaces/user.interface';
+import { IAccount } from 'src/interfaces/account.interface';
+import { IPrivacySettings } from 'src/interfaces/privacy-settings.interface';
+import { ITokenBlackList } from 'src/interfaces/token-black-list.interface';
 
 @Injectable()
 export class AuthService {
   constructor(
-    @InjectRepository(User)
-    private userRepository: Repository<User>,
-    @InjectRepository(Account)
-    private accountRepository: Repository<Account>,
-    @InjectRepository(TokenBlackList)
-    private tokenBlackListRepository: Repository<TokenBlackList>,
-    @InjectRepository(PrivacySettings)
-    private privacySettingsRepository: Repository<PrivacySettings>,
-
     private readonly mailService: MailerService,
     private readonly logger: LoggerService,
     private readonly supabase: SupabaseService,
@@ -76,9 +67,12 @@ export class AuthService {
         'auth',
       );
 
-      const isUsernameExist = await this.userRepository.findOne({
-        where: { username: username },
-      });
+      const { data: isUsernameExist } = await this.supabase
+        .getClient()
+        .from('users')
+        .select('id, first_name, last_name, email, username')
+        .eq('username', username)
+        .single();
 
       if (isUsernameExist) {
         await this.logger.warn(
@@ -98,9 +92,12 @@ export class AuthService {
         });
       }
 
-      const checkEmailExist = await this.userRepository.findOne({
-        where: { email: email },
-      });
+      const { data: checkEmailExist } = await this.supabase
+        .getClient()
+        .from('users')
+        .select('id, first_name, last_name, email, username')
+        .eq('email', email)
+        .single();
 
       if (checkEmailExist) {
         await this.logger.warn(
@@ -207,20 +204,22 @@ export class AuthService {
       const salt = await bcrypt.genSalt(10);
       const hashedPassword = await bcrypt.hash(unconfirmed_user.password, salt);
 
-      const newUser: User = this.userRepository.create({
-        first_name: unconfirmed_user.first_name,
-        last_name: unconfirmed_user.last_name,
-        username: unconfirmed_user.username,
-        email: unconfirmed_user.email,
-        gender: unconfirmed_user.gender,
-        password: hashedPassword,
-      });
-
-      await this.userRepository.save(newUser);
+      const { data: newUser } = (await this.supabase
+        .getClient()
+        .from('users')
+        .insert({
+          first_name: unconfirmed_user.first_name,
+          last_name: unconfirmed_user.last_name,
+          username: unconfirmed_user.username,
+          email: unconfirmed_user.email,
+          gender: unconfirmed_user.gender,
+          password: hashedPassword,
+        })
+        .single()) as { data: IUser };
 
       let userProfilePicture = '';
 
-      switch (newUser.gender) {
+      switch (unconfirmed_user.gender) {
         case Gender.male:
           userProfilePicture = `https://avatar.iran.liara.run/public/boy?username=${newUser.username}`;
           break;
@@ -232,18 +231,22 @@ export class AuthService {
           break;
       }
 
-      const newAccount: Account = this.accountRepository.create({
-        user: newUser,
-        profile_picture: userProfilePicture,
-      });
+      const { data: newAccount } = (await this.supabase
+        .getClient()
+        .from('accounts')
+        .insert({
+          user: newUser.id,
+          profile_picture: userProfilePicture,
+        })
+        .single()) as { data: IAccount };
 
-      await this.accountRepository.save(newAccount);
-
-      const newPrivacySettings: PrivacySettings =
-        this.privacySettingsRepository.create({
-          account: newAccount,
-        });
-      await this.privacySettingsRepository.save(newPrivacySettings);
+      const { data: newPrivacySettings } = (await this.supabase
+        .getClient()
+        .from('privacy_settings')
+        .insert({
+          account: newAccount.id,
+        })
+        .single()) as { data: IPrivacySettings };
 
       delete session.unconfirmed_user;
       delete session.confirm_code;
@@ -294,13 +297,19 @@ export class AuthService {
     try {
       const { username_or_email, password } = loginDTO;
 
-      const check_email_exist = await this.userRepository.findOne({
-        where: { email: username_or_email },
-      });
+      const { data: check_email_exist } = (await this.supabase
+        .getClient()
+        .from('users')
+        .select('*')
+        .eq('email', username_or_email)
+        .single()) as { data: IUser };
 
-      const check_username_exist = await this.userRepository.findOne({
-        where: { username: username_or_email },
-      });
+      const { data: check_username_exist } = (await this.supabase
+        .getClient()
+        .from('users')
+        .select('*')
+        .eq('email', username_or_email)
+        .single()) as { data: IUser };
 
       if (!check_email_exist && !check_username_exist) {
         await this.logger.warn(
@@ -363,6 +372,7 @@ export class AuthService {
         success: true,
       };
     } catch (error) {
+      console.log(error);
       await this.logger.error(
         error.message,
         'auth',
@@ -383,9 +393,12 @@ export class AuthService {
     try {
       const token = req.headers.authorization?.split(' ')[1];
 
-      const isTokenInBlackList = await this.tokenBlackListRepository.findOne({
-        where: { token: token },
-      });
+      const { data: isTokenInBlackList } = (await this.supabase
+        .getClient()
+        .from('token_black_list')
+        .select('*')
+        .eq('token', token)
+        .single()) as { data: ITokenBlackList };
 
       if (isTokenInBlackList) {
         return new BadRequestException({
@@ -394,12 +407,13 @@ export class AuthService {
         });
       }
 
-      const blackListToken = this.tokenBlackListRepository.create({
-        token: token,
-      });
+      await this.supabase
+        .getClient()
+        .from('token_black_list')
+        .insert({ token: token })
+        .single();
 
       await session.destroy();
-      await this.tokenBlackListRepository.save(blackListToken);
       await this.logger.info(
         `User logged out: ${req.user.username}\nToken added to black list: ${token}`,
         'auth',
@@ -429,9 +443,12 @@ export class AuthService {
     try {
       const { email } = forgotPasswordDTO;
 
-      const existUser = await this.userRepository.findOne({
-        where: { email: email },
-      });
+      const { data: existUser } = (await this.supabase
+        .getClient()
+        .from('users')
+        .select('id, first_name, last_name, email, username')
+        .eq('email', email)
+        .single()) as { data: IUser };
 
       if (!existUser) {
         await this.mailService.sendMail({
@@ -452,7 +469,7 @@ export class AuthService {
           from: process.env.EMAIL_USER,
           to: email,
           subject: 'Password Reset - Account provided by Google',
-          text: emailNotFoundMessage(email),
+          text: googleSignInMessage(email),
         });
 
         return {
@@ -464,10 +481,15 @@ export class AuthService {
       const reset_token = crypto.randomBytes(32).toString('hex');
       const reset_token_expiration = new Date(Date.now() + 3600000);
 
-      existUser.reset_token = reset_token;
-      existUser.reset_token_expiration = reset_token_expiration;
-
-      await this.userRepository.save(existUser);
+      await this.supabase
+        .getClient()
+        .from('users')
+        .update({
+          reset_token: reset_token,
+          reset_token_expiration: reset_token_expiration,
+        })
+        .eq('email', email)
+        .single();
 
       await this.mailService.sendMail({
         from: process.env.EMAIL_USER,
@@ -506,9 +528,11 @@ export class AuthService {
     try {
       const { password } = resetTokenDTO;
 
-      const user = await this.userRepository.findOne({
-        where: { reset_token: token },
-      });
+      const { data: user } = (await this.supabase
+        .getClient()
+        .from('users')
+        .select('*')
+        .eq('reset_token', token)) as { data: IUser };
 
       if (!user || user.reset_token_expiration < new Date()) {
         return new NotFoundException({
@@ -529,11 +553,15 @@ export class AuthService {
       const salt = await bcrypt.genSalt();
       const hashedPassword = await bcrypt.hash(password, salt);
 
-      user.password = hashedPassword;
-      user.reset_token = null;
-      user.reset_token_expiration = null;
-
-      await this.userRepository.save(user);
+      await this.supabase
+        .getClient()
+        .from('users')
+        .update({
+          password: hashedPassword,
+          reset_token: null,
+          reset_token_expiration: null,
+        })
+        .eq('id', user.id);
 
       await this.logger.info(
         `Password reset successfully for user: ${user.username}`,
@@ -565,9 +593,12 @@ export class AuthService {
       };
     }
 
-    const user = await this.userRepository.findOne({
-      where: { reset_token: token },
-    });
+    const { data: user } = (await this.supabase
+      .getClient()
+      .from('users')
+      .select('*')
+      .eq('reset_token', token)
+      .single()) as { data: IUser };
 
     if (!user || user.reset_token_expiration < new Date()) {
       return {
@@ -583,9 +614,12 @@ export class AuthService {
     req_user: User,
   ): Promise<{ success: boolean; message: string } | HttpException> {
     try {
-      const user = await this.userRepository.findOne({
-        where: { id: req_user.id },
-      });
+      const { data: user } = (await this.supabase
+        .getClient()
+        .from('*')
+        .select('*')
+        .eq('id', req_user.id)
+        .single()) as { data: IUser };
 
       if (!user) {
         return new NotFoundException({
@@ -595,10 +629,15 @@ export class AuthService {
       }
 
       const delete_token = crypto.randomBytes(32).toString('hex');
-      user.reset_token = delete_token;
-      user.reset_token_expiration = new Date(Date.now() + 3600000);
 
-      await this.userRepository.save(user);
+      await this.supabase
+        .getClient()
+        .from('users')
+        .update({
+          reset_token: delete_token,
+          reset_token_expiration: new Date(Date.now() + 3600000),
+        })
+        .eq('id', user.id);
 
       await this.mailService.sendMail({
         from: process.env.EMAIL_USER,
@@ -634,10 +673,12 @@ export class AuthService {
     token: string,
   ): Promise<{ success: boolean; message: string } | HttpException> {
     try {
-      const user = await this.userRepository.findOne({
-        where: { reset_token: token },
-        relations: ['account'],
-      });
+      const { data: user } = (await this.supabase
+        .getClient()
+        .from('users')
+        .select('*, account!inner(*)')
+        .eq('reset_token', token)
+        .single()) as { data: IUser };
 
       if (!user || user.reset_token_expiration < new Date()) {
         return new NotFoundException({
@@ -672,7 +713,7 @@ export class AuthService {
         }
       }
 
-      await this.userRepository.remove(user);
+      await this.supabase.getClient().from('users').delete().eq('id', user.id);
 
       await this.logger.info(
         `Account deleted successfully for user:
@@ -706,40 +747,53 @@ export class AuthService {
     user: any,
   ): Promise<{ success: boolean; access_token?: string } | HttpException> {
     try {
-      let existUser = await this.userRepository.findOne({
-        where: { email: user.email },
-      });
+      let { data: existUser } =
+        ((await this.supabase
+          .getClient()
+          .from('users')
+          .select('*')
+          .eq('email', user.email)
+          .single()) as { data: IUser }) || null;
 
       if (!existUser) {
-        existUser = this.userRepository.create({
-          first_name: user.firstName,
-          last_name: user.lastName,
-          username: this.generateUsername(user.email),
-          email: user.email,
-          gender: Gender.notProvided,
-          provider: Provider.google,
-          password: 'signed_up_with_google',
-        });
+        const { data: newUser } = (await this.supabase
+          .getClient()
+          .from('users')
+          .insert({
+            first_name: user.firstName,
+            last_name: user.lastName,
+            username: this.generateUsername(user.email),
+            email: user.email,
+            gender: Gender.notProvided,
+            provider: Provider.google,
+            password: 'signed_up_with_google',
+          })
+          .single()) as { data: IUser };
 
-        await this.userRepository.save(existUser);
+        const { data: newAccount } = (await this.supabase
+          .getClient()
+          .from('account')
+          .insert({
+            user: newUser.id,
+            profile_picture:
+              'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQUy9s7L2aRDadM1KxmVNkNQ9Edar2APzIeHw&s',
+          })
+          .single()) as { data: IAccount };
 
-        const newAccount = this.accountRepository.create({
-          user: existUser,
-          profile_picture:
-            'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQUy9s7L2aRDadM1KxmVNkNQ9Edar2APzIeHw&s',
-        });
-        await this.accountRepository.save(newAccount);
-
-        const newPrivacySettings: PrivacySettings =
-          this.privacySettingsRepository.create({
-            account: newAccount,
-          });
-        await this.privacySettingsRepository.save(newPrivacySettings);
+        await this.supabase
+          .getClient()
+          .from('privacy_settings')
+          .insert({
+            account: newAccount.id,
+          })
+          .single();
 
         await this.logger.info(
-          `New user created:\nFull name: ${existUser.first_name} ${existUser.last_name},\nusername: ${existUser.username},\nemail: ${existUser.email}`,
+          `New user created:\nFull name: ${newUser.first_name} ${newUser.last_name},\nusername: ${newUser.username},\nemail: ${newUser.email}`,
           'auth',
         );
+
+        existUser = newUser;
       }
 
       if (existUser.provider !== Provider.google) {
