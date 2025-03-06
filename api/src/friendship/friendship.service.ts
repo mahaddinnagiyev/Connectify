@@ -4,39 +4,31 @@ import {
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Friendship } from 'src/entities/friendship.entity';
 import { LoggerService } from 'src/logger/logger.service';
-import { Repository } from 'typeorm';
 import { User } from 'src/entities/user.entity';
 import { FriendshipStatus } from 'src/enums/friendship-status.enum';
-import { BlockList } from 'src/entities/blocklist.entity';
-import { Account } from 'src/entities/account.entity';
+import { SupabaseService } from 'src/supabase/supabase.service';
+import { IUser } from 'src/interfaces/user.interface';
+import { IFriendship } from 'src/interfaces/friendship.interface';
+import { IBlockList } from 'src/interfaces/blocklist.interface';
+import { IAccount } from 'src/interfaces/account.interface';
 
 @Injectable()
 export class FriendshipService {
   constructor(
-    @InjectRepository(Friendship)
-    private friendshipRepository: Repository<Friendship>,
-    @InjectRepository(User)
-    private userRepository: Repository<User>,
-    @InjectRepository(Account)
-    private accountRepository: Repository<Account>,
-    @InjectRepository(BlockList)
-    private blockListRepository: Repository<BlockList>,
     private readonly logger: LoggerService,
+    private readonly supabase: SupabaseService,
   ) {}
 
   // Get All User's Friendship Requests
-  async getAllFriendshipRequests(req_user: User) {
+  async getAllFriendshipRequests(req_user: IUser) {
     try {
-      const friendships = await this.friendshipRepository.find({
-        where: [
-          { requester: { id: req_user.id } },
-          { requestee: { id: req_user.id } },
-        ],
-        relations: ['requester', 'requestee'],
-      });
+      const { data: friendships } = (await this.supabase
+        .getClient()
+        .from('friendships')
+        .select('*')
+        .eq('requester_id', req_user.id)
+        .or('requestee_id.eq.' + req_user.id)) as { data: IFriendship[] };
 
       let mappedFriendships = [];
 
@@ -45,9 +37,14 @@ export class FriendshipService {
           friendship.requester.id === req_user.id
             ? friendship.requestee
             : friendship.requester;
-        const account = await this.accountRepository.findOne({
-          where: { user: { id: requestee.id } },
-        });
+
+        const { data: account } = (await this.supabase
+          .getClient()
+          .from('accounts')
+          .select('*')
+          .eq('user_id', requestee.id)
+          .single()) as { data: IAccount };
+
         const mappedFriendship = {
           id: friendship.id,
           friend_id: requestee.id,
@@ -82,23 +79,24 @@ export class FriendshipService {
   }
 
   // Get User Friends
-  async getFriends(req_user: User) {
+  async getFriends(req_user: IUser) {
     try {
-      const friendships = await this.friendshipRepository.find({
-        where: [
-          { requester: { id: req_user.id }, status: FriendshipStatus.accepted },
-          { requestee: { id: req_user.id }, status: FriendshipStatus.accepted },
-        ],
-        relations: ['requester', 'requestee'],
-        select: [
-          'id',
-          'status',
-          'requester',
-          'requestee',
-          'created_at',
-          'updated_at',
-        ],
-      });
+      const { data: friendships } = (await this.supabase
+        .getClient()
+        .from('friendships')
+        .select(
+          `
+            id,
+            status,
+            created_at,
+            updated_at,
+            requester:requester_id(*),
+            requestee:requestee_id(*)
+          `,
+        )
+        .or(
+          `and(requester_id.eq.${req_user.id},requestee_id.eq.${req_user.id}), and(requester_id.eq.${req_user.id},requestee_id.eq.${req_user.id})`,
+        )) as { data: IFriendship[] };
 
       const mappedFriends = [];
 
@@ -108,9 +106,12 @@ export class FriendshipService {
             ? friendship.requestee
             : friendship.requester;
 
-        const account = await this.accountRepository.findOne({
-          where: { user: { id: friendUser.id } },
-        });
+        const { data: account } = (await this.supabase
+          .getClient()
+          .from('accounts')
+          .select('*')
+          .eq('user_id', friendUser.id)
+          .single()) as { data: IAccount };
 
         const friend = {
           id: friendship.id,
@@ -147,15 +148,15 @@ export class FriendshipService {
   }
 
   // Get User Friendships Requests
-  async getFriendshipRequests(req_user: User) {
+  async getFriendshipRequests(req_user: IUser) {
     try {
-      const friendRequests = await this.friendshipRepository.find({
-        where: [
-          { requester: { id: req_user.id }, status: FriendshipStatus.pending },
-          { requestee: { id: req_user.id }, status: FriendshipStatus.pending },
-        ],
-        relations: ['requester', 'requestee'],
-      });
+      const { data: friendRequests } = (await this.supabase
+        .getClient()
+        .from('friendships')
+        .select('*')
+        .or(
+          `and(requester_id.eq.${req_user.id},status.eq.${FriendshipStatus.pending}),and(requestee_id.eq.${req_user.id},status.eq.${FriendshipStatus.pending})`,
+        )) as { data: IFriendship[] };
 
       if (!friendRequests) {
         return new NotFoundException({
@@ -164,8 +165,8 @@ export class FriendshipService {
         });
       }
 
-      let sentRequest: Friendship[] = [];
-      let receivedRequest: Friendship[] = [];
+      let sentRequest: IFriendship[] = [];
+      let receivedRequest: IFriendship[] = [];
 
       friendRequests.forEach((friendship) => {
         if (friendship.requester.id === req_user.id) {
@@ -177,9 +178,12 @@ export class FriendshipService {
 
       const mappedSentRequest = await Promise.all(
         sentRequest.map(async (friendship) => {
-          const requesteeAccount = await this.accountRepository.findOne({
-            where: { user: { id: friendship.requestee.id } },
-          });
+          const { data: requesteeAccount } = (await this.supabase
+            .getClient()
+            .from('accounts')
+            .select('*')
+            .eq('user_id', friendship.requestee.id)
+            .single()) as { data: IAccount };
 
           return {
             id: friendship.id,
@@ -205,9 +209,12 @@ export class FriendshipService {
 
       const mappedReceivedRequest = await Promise.all(
         receivedRequest.map(async (friendship) => {
-          const requesterAccount = await this.accountRepository.findOne({
-            where: { user: { id: friendship.requester.id } },
-          });
+          const { data: requesterAccount } = (await this.supabase
+            .getClient()
+            .from('accounts')
+            .select('*')
+            .eq('user_id', friendship.requester.id)
+            .single()) as { data: IAccount };
 
           return {
             id: friendship.id,
@@ -250,7 +257,7 @@ export class FriendshipService {
   }
 
   // Create Friendship
-  async createFriendship(requestee: string, req_user: User) {
+  async createFriendship(requestee: string, req_user: IUser) {
     try {
       if (req_user.id === requestee) {
         return new BadRequestException({
@@ -259,19 +266,25 @@ export class FriendshipService {
         });
       }
 
-      const isRequesteeBlocked = await this.blockListRepository.findOne({
-        where: {
-          blocker: { id: req_user.id },
-          blocked: { id: requestee },
-        },
-      });
+      const { data: isRequesteeBlocked } = (await this.supabase
+        .getClient()
+        .from('block_list')
+        .select(
+          '*, blocker_id!inner(id, first_name, last_name, username), blocked_id!inner(id, first_name, last_name, username)',
+        )
+        .eq('blocker_id', req_user.id)
+        .eq('blocked_id', requestee)
+        .single()) as { data: IBlockList };
 
-      const isRequesterBlocked = await this.blockListRepository.findOne({
-        where: {
-          blocker: { id: requestee },
-          blocked: { id: req_user.id },
-        },
-      });
+      const { data: isRequesterBlocked } = (await this.supabase
+        .getClient()
+        .from('block_list')
+        .select(
+          '*, blocker_id!inner(id, first_name, last_name, username), blocked_id!inner(id, first_name, last_name, username)',
+        )
+        .eq('blocker_id', requestee)
+        .eq('blocked_id', req_user.id)
+        .single()) as { data: IBlockList };
 
       if (isRequesteeBlocked) {
         return new BadRequestException({
@@ -287,20 +300,25 @@ export class FriendshipService {
         });
       }
 
-      const requesteeUser = await this.userRepository.findOne({
-        where: { id: requestee },
-      });
+      const { data: requesteeUser } = (await this.supabase
+        .getClient()
+        .from('users')
+        .select('id, first_name, last_name, username')
+        .eq('id', requestee)
+        .single()) as { data: IUser };
 
       if (!requesteeUser) {
         throw new NotFoundException('Requestee user not found');
       }
 
-      const isFriendshipExists = await this.friendshipRepository.findOne({
-        where: [
-          { requester: { id: req_user.id }, requestee: { id: requestee } },
-          { requester: { id: requestee }, requestee: { id: req_user.id } },
-        ],
-      });
+      const { data: isFriendshipExists } = (await this.supabase
+        .getClient()
+        .from('friendships')
+        .select('*')
+        .or(
+          `and(requester_id.eq.${req_user.id},requestee_id.eq.${requestee}),and(requester_id.eq.${requestee},requestee_id.eq.${req_user.id})`,
+        )
+        .single()) as { data: IFriendship };
 
       if (isFriendshipExists) {
         return new BadRequestException({
@@ -309,12 +327,14 @@ export class FriendshipService {
         });
       }
 
-      const newFriendship = this.friendshipRepository.create({
-        requester: req_user,
-        requestee: requesteeUser,
-      });
-
-      await this.friendshipRepository.save(newFriendship);
+      const { data: newFriendship } = (await this.supabase
+        .getClient()
+        .from('friendships')
+        .insert({
+          requester_id: req_user.id,
+          requestee_id: requestee,
+        })
+        .single()) as { data: IFriendship };
 
       await this.logger.info(
         `Friendship has been created: ${JSON.stringify(newFriendship)}`,
@@ -340,12 +360,16 @@ export class FriendshipService {
   }
 
   // Accept Friendship Request
-  async acceptFriendship(id: string, req_user: User) {
+  async acceptFriendship(id: string, req_user: IUser) {
     try {
-      const friendship = await this.friendshipRepository.findOne({
-        where: [{ id: id, requestee: { id: req_user.id } }],
-        relations: ['requester', 'requestee'],
-      });
+      const { data: friendship } = (await this.supabase
+        .getClient()
+        .from('friendships')
+        .select(
+          '*, requester!inner(id, first_name, last_name, username), requestee!inner(id, first_name, last_name, username)',
+        )
+        .or(`and(id.eq.${id},requestee_id.eq.${req_user.id})`)
+        .single()) as { data: IFriendship };
 
       if (!friendship) {
         return new NotFoundException({
@@ -373,9 +397,13 @@ export class FriendshipService {
         }
       }
 
-      await this.friendshipRepository.update(id, {
-        status: FriendshipStatus.accepted,
-      });
+      await this.supabase
+        .getClient()
+        .from('friendships')
+        .update({
+          status: FriendshipStatus.accepted,
+        })
+        .eq('id', id);
 
       await this.logger.info(
         `Friendship has been accepted: ${JSON.stringify(friendship)}`,
@@ -402,12 +430,16 @@ export class FriendshipService {
   }
 
   // Reject Friendship Request
-  async rejectFriendship(id: string, req_user: User) {
+  async rejectFriendship(id: string, req_user: IUser) {
     try {
-      const friendship = await this.friendshipRepository.findOne({
-        where: [{ id: id, requestee: { id: req_user.id } }],
-        relations: ['requester', 'requestee'],
-      });
+      const { data: friendship } = (await this.supabase
+        .getClient()
+        .from('friendships')
+        .select(
+          '*, requester!inner(id, first_name, last_name, username), requestee!inner(id, first_name, last_name, username)',
+        )
+        .or(`and(id.eq.${id},requestee_id.eq.${req_user.id})`)
+        .single()) as { data: IFriendship };
 
       if (!friendship) {
         return new NotFoundException({
@@ -430,7 +462,7 @@ export class FriendshipService {
         }
       }
 
-      await this.friendshipRepository.remove(friendship);
+      await this.supabase.getClient().from('friendships').delete().eq('id', id);
 
       await this.logger.info(
         `Friendship has been rejected: ${JSON.stringify(friendship)}`,
@@ -456,23 +488,18 @@ export class FriendshipService {
   }
 
   // Remove Friendship
-  async removeFriendship(id: string, req_user: User) {
+  async removeFriendship(id: string, req_user: IUser) {
     try {
-      const friendship = await this.friendshipRepository.findOne({
-        where: [
-          {
-            id: id,
-            requester: { id: req_user.id },
-            status: FriendshipStatus.accepted,
-          },
-          {
-            id: id,
-            requestee: { id: req_user.id },
-            status: FriendshipStatus.accepted,
-          },
-        ],
-        relations: ['requester', 'requestee'],
-      });
+      const { data: friendship } = (await this.supabase
+        .getClient()
+        .from('friendships')
+        .select(
+          '*, requester!inner(id, first_name, last_name, username), requestee!inner(id, first_name, last_name, username)',
+        )
+        .or(
+          `and(id.eq.${id},requestee_id.eq.${req_user.id},status.eq.${FriendshipStatus.accepted}), and(id.eq.${id},requester_id.eq.${req_user.id},status.eq.${FriendshipStatus.accepted})`,
+        )
+        .single()) as { data: IFriendship };
 
       if (!friendship) {
         return new NotFoundException({
@@ -481,7 +508,7 @@ export class FriendshipService {
         });
       }
 
-      await this.friendshipRepository.remove(friendship);
+      await this.supabase.getClient().from('friendships').delete().eq('id', id);
 
       await this.logger.info(
         `Friendship has been removed: ${JSON.stringify(friendship)}`,

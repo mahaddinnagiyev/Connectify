@@ -10,9 +10,9 @@ import {
 } from '@nestjs/common';
 import { FriendshipService } from './friendship.service';
 import { Request } from 'express';
-import { User } from 'src/entities/user.entity';
 import { JwtAuthGuard } from 'src/jwt/jwt-auth-guard';
 import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
+import { IUser } from 'src/interfaces/user.interface';
 
 @Controller('friendship')
 export class FriendshipController {
@@ -26,7 +26,7 @@ export class FriendshipController {
   @Get('/requests/all')
   async getAllFriendshipRequests(@Req() req: Request) {
     return await this.friendshipService.getAllFriendshipRequests(
-      req.user as User,
+      req.user as IUser,
     );
   }
 
@@ -37,7 +37,7 @@ export class FriendshipController {
   })
   @Get('/my-friends')
   async getFriends(@Req() req: Request) {
-    return await this.friendshipService.getFriends(req.user as User);
+    return await this.friendshipService.getFriends(req.user as IUser);
   }
 
   @UseGuards(JwtAuthGuard)
@@ -47,7 +47,9 @@ export class FriendshipController {
   })
   @Get('/requests')
   async getFriendshipRequests(@Req() req: Request) {
-    return await this.friendshipService.getFriendshipRequests(req.user as User);
+    return await this.friendshipService.getFriendshipRequests(
+      req.user as IUser,
+    );
   }
 
   @UseGuards(JwtAuthGuard)
@@ -62,7 +64,7 @@ export class FriendshipController {
   ) {
     return await this.friendshipService.createFriendship(
       requestee,
-      req.user as User,
+      req.user as IUser,
     );
   }
 
@@ -80,12 +82,12 @@ export class FriendshipController {
     if (status === 'accept') {
       return await this.friendshipService.acceptFriendship(
         id,
-        req.user as User,
+        req.user as IUser,
       );
     } else if (status === 'reject') {
       return await this.friendshipService.rejectFriendship(
         id,
-        req.user as User,
+        req.user as IUser,
       );
     }
   }
@@ -97,6 +99,6 @@ export class FriendshipController {
   })
   @Delete('/request/remove')
   async removeFriendship(@Req() req: Request, @Query('request') id: string) {
-    return await this.friendshipService.removeFriendship(id, req.user as User);
+    return await this.friendshipService.removeFriendship(id, req.user as IUser);
   }
 }
