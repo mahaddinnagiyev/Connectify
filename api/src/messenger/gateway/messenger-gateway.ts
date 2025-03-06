@@ -100,11 +100,20 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   async handleDisconnect(client: Socket) {
+    const token = this.extractToken(client);
+    if (!token) {
+      throw new UnauthorizedException('Missing token');
+    }
+    const payload = await this.jwtService.verifyAsync<JwtPayload>(token, {
+      secret: process.env.JWT_ACCESS_SECRET_KEY,
+    });
+    const user = await this.validateUser(payload.id);
+
     await this.supabase
       .getClient()
       .from('accounts')
       .update({ last_login: new Date() })
-      .eq('user_id', client.data.user.id);
+      .eq('user_id', user.id);
     this.logger.log(`User disconnected: ${client.id}`);
   }
 

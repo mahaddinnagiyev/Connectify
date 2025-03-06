@@ -5,54 +5,52 @@ import {
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Account } from 'src/entities/account.entity';
-import { User } from 'src/entities/user.entity';
 import { LoggerService } from 'src/logger/logger.service';
-import { Repository } from 'typeorm';
 import { EditUserInfoDTO } from './dto/user-info-dto';
-import { BlockList } from 'src/entities/blocklist.entity';
-import { Friendship } from 'src/entities/friendship.entity';
-import { PrivacySettings } from 'src/entities/privacy-settings.entity';
+import { SupabaseService } from 'src/supabase/supabase.service';
+import { IUser } from 'src/interfaces/user.interface';
+import { IAccount } from 'src/interfaces/account.interface';
+import { IPrivacySettings } from 'src/interfaces/privacy-settings.interface';
+import { IBlockList } from 'src/interfaces/blocklist.interface';
+import { IFriendship } from 'src/interfaces/friendship.interface';
 
 @Injectable()
 export class UserService {
   constructor(
-    @InjectRepository(User)
-    private userRepository: Repository<User>,
-    @InjectRepository(Account)
-    private accountRepository: Repository<Account>,
-    @InjectRepository(BlockList)
-    private blockListRepository: Repository<BlockList>,
-    @InjectRepository(Friendship)
-    private friendshipRepository: Repository<Friendship>,
-    @InjectRepository(PrivacySettings)
-    private privacySettingsRepository: Repository<PrivacySettings>,
-
     private readonly logger: LoggerService,
+    private readonly supabase: SupabaseService,
   ) {}
 
   // User Information Functions
   async gel_all_users(): Promise<
-    { success: boolean; users: User[] } | HttpException
+    { success: boolean; users: IUser[] } | HttpException
   > {
     try {
-      const users = await this.userRepository.find({
-        select: [
-          'id',
-          'first_name',
-          'last_name',
-          'username',
-          'email',
-          'gender',
-          'created_at',
-        ],
-        relations: ['account'],
-      });
+      const { data: users } = (await this.supabase
+        .getClient()
+        .from('users')
+        .select('*')) as { data: IUser[] };
 
+      const mapped_users = users.map(async (user) => {
+        const { data: account } = (await this.supabase
+          .getClient()
+          .from('accounts')
+          .select(
+            'id, first_name, last_name, username, email, gender, created_at',
+          )
+          .eq('user_id', user.id)
+          .single()) as { data: IAccount };
+
+        return {
+          ...user,
+          account: {
+            ...account,
+          },
+        };
+      });
       return {
         success: true,
-        users,
+        users: await Promise.all(mapped_users),
       };
     } catch (error) {
       await this.logger.error(
@@ -70,34 +68,34 @@ export class UserService {
   async get_user_by_id(id: string): Promise<
     | {
         success: boolean;
-        user: User;
-        account: Account;
-        privacy_settings: PrivacySettings;
+        user: IUser;
+        account: IAccount;
+        privacy_settings: IPrivacySettings;
       }
     | HttpException
   > {
     try {
-      const user: User = await this.userRepository.findOne({
-        where: { id: id },
-        select: [
-          'id',
-          'first_name',
-          'last_name',
-          'username',
-          'email',
-          'gender',
-          'created_at',
-        ],
-      });
+      const { data: user } = (await this.supabase
+        .getClient()
+        .from('users')
+        .select(
+          'id, first_name, last_name, username, email, gender, created_at',
+        )
+        .eq('id', id)
+        .single()) as { data: IUser };
 
-      const account: Account = await this.accountRepository.findOne({
-        where: { user: { id: id } },
-      });
+      const { data: account } = (await this.supabase
+        .getClient()
+        .from('accounts')
+        .select('*')
+        .eq('user_id', user.id)
+        .single()) as { data: IAccount };
 
-      const privacy_settings: PrivacySettings =
-        await this.privacySettingsRepository.findOne({
-          where: { account: { id: account.id } },
-        });
+      const { data: privacy_settings } = (await this.supabase
+        .getClient()
+        .from('privacy_settings')
+        .select('*')
+        .eq('account_id', account.id)) as { data: IPrivacySettings };
 
       if (!(user && account && privacy_settings)) {
         return new NotFoundException({
@@ -113,6 +111,7 @@ export class UserService {
         privacy_settings,
       };
     } catch (error) {
+      console.log(error);
       await this.logger.error(
         `Error getting user by id: ${id}\nError: ${error}`,
         'user',
@@ -126,34 +125,34 @@ export class UserService {
   async get_user_by_username(username: string): Promise<
     | {
         success: boolean;
-        user: User;
-        account: Account;
-        privacy_settings: PrivacySettings;
+        user: IUser;
+        account: IAccount;
+        privacy_settings: IPrivacySettings;
       }
     | HttpException
   > {
     try {
-      const user: User = await this.userRepository.findOne({
-        where: { username: username },
-        select: [
-          'id',
-          'first_name',
-          'last_name',
-          'username',
-          'email',
-          'gender',
-          'created_at',
-        ],
-      });
+      const { data: user } = (await this.supabase
+        .getClient()
+        .from('users')
+        .select(
+          'id, first_name, last_name, username, email, gender, created_at',
+        )
+        .eq('username', username)
+        .single()) as { data: IUser };
 
-      const account: Account = await this.accountRepository.findOne({
-        where: { user: { id: user.id } },
-      });
+      const { data: account } = await this.supabase
+        .getClient()
+        .from('account')
+        .select('*')
+        .eq('user_id', user.id)
+        .single();
 
-      const privacy_settings: PrivacySettings =
-        await this.privacySettingsRepository.findOne({
-          where: { account: { id: account.id } },
-        });
+      const { data: privacy_settings } = (await this.supabase
+        .getClient()
+        .from('privacy_settings')
+        .select('*')
+        .eq('account_id', account.id)) as { data: IPrivacySettings };
 
       if (!(user && account && privacy_settings)) {
         return new NotFoundException({
@@ -181,7 +180,7 @@ export class UserService {
 
   async edit_user_informations(
     userDTO: EditUserInfoDTO,
-    req_user: User,
+    req_user: IUser,
   ): Promise<{ success: boolean; message: string } | HttpException> {
     try {
       const { username } = userDTO;
@@ -190,7 +189,7 @@ export class UserService {
       if (userResponse instanceof HttpException) {
         return userResponse;
       }
-      const user: User = userResponse.user;
+      const user: IUser = userResponse.user;
 
       if (username) {
         const usernameResponse = await this.get_user_by_username(username);
@@ -210,7 +209,11 @@ export class UserService {
         }
       }
 
-      await this.userRepository.update(user.id, userDTO);
+      await this.supabase
+        .getClient()
+        .from('users')
+        .update(userDTO)
+        .eq('id', user.id);
 
       await this.logger.info(
         `User informations edited: ${JSON.stringify(userDTO)}`,
@@ -236,20 +239,24 @@ export class UserService {
   }
 
   // Block List Functions
-  async get_block_list(req_user: User) {
+  async get_block_list(req_user: IUser) {
     try {
-      const blockList = await this.blockListRepository.find({
-        where: { blocker: { id: req_user.id } },
-        relations: ['blocked'],
-        select: ['id', 'blocked', 'created_at'],
-      });
+      const { data: blockList } = await this.supabase
+        .getClient()
+        .from('block_lists')
+        .select('*, blocked!inner(*)')
+        .eq('blocker_id', req_user.id);
 
+      const blocks: IBlockList[] = blockList ?? [];
       const mappedBlockList = [];
 
-      for (const block of blockList) {
-        const account = await this.accountRepository.findOne({
-          where: { user: { id: block.blocked.id } },
-        });
+      for (const block of blocks) {
+        const { data: account } = (await this.supabase
+          .getClient()
+          .from('account')
+          .select('*')
+          .eq('user_id', block.blocked.id)
+          .single()) as { data: IAccount };
 
         const blockedUser = {
           id: block.blocked.id,
@@ -282,20 +289,24 @@ export class UserService {
     }
   }
 
-  async get_blocker_list(req_user: User) {
+  async get_blocker_list(req_user: IUser) {
     try {
-      const blockList = await this.blockListRepository.find({
-        where: [{ blocked: { id: req_user.id } }],
-        relations: ['blocker'],
-        select: ['id', 'blocker', 'created_at'],
-      });
+      const { data: blockList } = await this.supabase
+        .getClient()
+        .from('block_lists')
+        .select('*, blocker!inner(*)')
+        .eq('blocked_id', req_user.id);
 
+      const blocks: IBlockList[] = blockList ?? [];
       const mappedBlockList = [];
 
-      for (const block of blockList) {
-        const account = await this.accountRepository.findOne({
-          where: { user: { id: block.blocker.id } },
-        });
+      for (const block of blocks) {
+        const { data: account } = (await this.supabase
+          .getClient()
+          .from('accounts')
+          .select('*')
+          .eq('user_id', block.blocker.id)
+          .single()) as { data: IAccount };
 
         const blockedUser = {
           id: block.blocker.id,
@@ -328,13 +339,13 @@ export class UserService {
     }
   }
 
-  async block_user(id: string, req_user: User) {
+  async block_user(id: string, req_user: IUser) {
     try {
       const userResponse = await this.get_user_by_id(id);
       if (userResponse instanceof HttpException) {
         return userResponse;
       }
-      const user: User = userResponse.user;
+      const user: IUser = userResponse.user;
 
       if (user.id === req_user.id) {
         return new BadRequestException({
@@ -343,12 +354,13 @@ export class UserService {
         });
       }
 
-      const isBlocked = await this.blockListRepository.findOne({
-        where: {
-          blocker: { id: req_user.id },
-          blocked: { id: user.id },
-        },
-      });
+      const { data: isBlocked } = (await this.supabase
+        .getClient()
+        .from('block_lists')
+        .select('*')
+        .eq('blocker_id', req_user.id)
+        .eq('blocked_id', user.id)
+        .single()) as { data: IBlockList };
 
       if (isBlocked) {
         return new BadRequestException({
@@ -357,27 +369,27 @@ export class UserService {
         });
       }
 
-      const isFriend = await this.friendshipRepository.findOne({
-        where: [
-          {
-            requester: { id: req_user.id },
-            requestee: { id: user.id },
-          },
-          {
-            requester: { id: user.id },
-            requestee: { id: req_user.id },
-          },
-        ],
-      });
+      const { data: isFriend } = (await this.supabase
+        .getClient()
+        .from('friendships')
+        .select('*')
+        .or(`requester_id = ${req_user.id} AND requestee_id = ${user.id}`)
+        .or(`requester_id = ${user.id} AND requestee_id = ${req_user.id}`)
+        .single()) as { data: IFriendship };
 
       if (isFriend) {
-        await this.friendshipRepository.remove(isFriend);
+        await this.supabase
+          .getClient()
+          .from('friendships')
+          .delete()
+          .eq('id', isFriend.id);
       }
 
-      await this.blockListRepository.save({
-        blocker: { id: req_user.id },
-        blocked: { id: user.id },
-      });
+      await this.supabase
+        .getClient()
+        .from('block_lists')
+        .insert({ blocker_id: req_user.id, blocked_id: user.id })
+        .single();
 
       await this.logger.info(
         `User blocked: ${user.username}`,
@@ -402,20 +414,20 @@ export class UserService {
     }
   }
 
-  async unblock_user(id: string, req_user: User) {
+  async unblock_user(id: string, req_user: IUser) {
     try {
       const userResponse = await this.get_user_by_id(id);
       if (userResponse instanceof HttpException) {
         return userResponse;
       }
-      const user: User = userResponse.user;
+      const user: IUser = userResponse.user;
 
-      const isBlocked = await this.blockListRepository.findOne({
-        where: {
-          blocker: { id: req_user.id },
-          blocked: { id: user.id },
-        },
-      });
+      const { data: isBlocked } = (await this.supabase
+        .getClient()
+        .from('block_lists')
+        .select('*')
+        .eq('blocker_id', req_user.id)
+        .eq('blocked_id', user.id)) as { data: IBlockList };
 
       if (!isBlocked) {
         return new BadRequestException({
@@ -424,10 +436,12 @@ export class UserService {
         });
       }
 
-      await this.blockListRepository.delete({
-        blocker: { id: req_user.id },
-        blocked: { id: user.id },
-      });
+      await this.supabase
+        .getClient()
+        .from('block_lists')
+        .delete()
+        .eq('blocked_id', user.id)
+        .eq('blocker_id', req_user.id);
 
       await this.logger.info(
         `User unblocked: ${user.username}`,

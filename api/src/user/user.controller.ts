@@ -10,10 +10,10 @@ import {
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { JwtAuthGuard } from 'src/jwt/jwt-auth-guard';
-import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
-import { query, Request } from 'express';
-import { User } from 'src/entities/user.entity';
+import { Throttle } from '@nestjs/throttler';
+import { Request } from 'express';
 import { EditUserInfoDTO } from './dto/user-info-dto';
+import { IUser } from 'src/interfaces/user.interface';
 
 @Controller('user')
 export class UserController {
@@ -45,7 +45,7 @@ export class UserController {
     if (query.id) {
       return await this.userService.get_user_by_id(query.id.toString());
     }
-    return await this.userService.get_user_by_id((req.user as User).id);
+    return await this.userService.get_user_by_id((req.user as IUser).id);
   }
 
   @UseGuards(JwtAuthGuard)
@@ -56,7 +56,7 @@ export class UserController {
   async edit_user_info(@Body() userDTO: EditUserInfoDTO, @Req() req: Request) {
     return await this.userService.edit_user_informations(
       userDTO,
-      req.user as User,
+      req.user as IUser,
     );
   }
 
@@ -68,10 +68,10 @@ export class UserController {
   @Get('/block-list')
   async get_block_list(@Req() req: Request, @Query('by') query: string) {
     if (query) {
-      return await this.userService.get_blocker_list(req.user as User);
+      return await this.userService.get_blocker_list(req.user as IUser);
     }
 
-    return await this.userService.get_block_list(req.user as User);
+    return await this.userService.get_block_list(req.user as IUser);
   }
 
   @UseGuards(JwtAuthGuard)
@@ -85,8 +85,8 @@ export class UserController {
     @Query('id') id: string,
   ) {
     if (action === 'add')
-      return await this.userService.block_user(id, req.user as User);
+      return await this.userService.block_user(id, req.user as IUser);
     if (action === 'remove')
-      return await this.userService.unblock_user(id, req.user as User);
+      return await this.userService.unblock_user(id, req.user as IUser);
   }
 }
