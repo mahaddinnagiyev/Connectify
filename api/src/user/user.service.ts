@@ -244,7 +244,7 @@ export class UserService {
       const { data: blockList } = await this.supabase
         .getClient()
         .from('block_lists')
-        .select('*, blocked!inner(*)')
+        .select('*, blocked_id!inner(id, first_name, last_name, username)')
         .eq('blocker_id', req_user.id);
 
       const blocks: IBlockList[] = blockList ?? [];
@@ -253,17 +253,17 @@ export class UserService {
       for (const block of blocks) {
         const { data: account } = (await this.supabase
           .getClient()
-          .from('account')
+          .from('accounts')
           .select('*')
-          .eq('user_id', block.blocked.id)
+          .eq('user_id', block.blocked_id)
           .single()) as { data: IAccount };
 
         const blockedUser = {
-          id: block.blocked.id,
-          blocked_id: block.blocked.id,
-          first_name: block.blocked.first_name,
-          last_name: block.blocked.last_name,
-          username: block.blocked.username,
+          id: block.id,
+          blocked_id: block.blocked_id.id,
+          first_name: block.blocked_id.first_name,
+          last_name: block.blocked_id.last_name,
+          username: block.blocked_id.username,
           profile_picture: account ? account.profile_picture : null,
           created_at: block.created_at,
         };
@@ -294,7 +294,7 @@ export class UserService {
       const { data: blockList } = await this.supabase
         .getClient()
         .from('block_lists')
-        .select('*, blocker!inner(*)')
+        .select('*, blocker!inner(id, first_name, last_name, username)')
         .eq('blocked_id', req_user.id);
 
       const blocks: IBlockList[] = blockList ?? [];
@@ -305,15 +305,15 @@ export class UserService {
           .getClient()
           .from('accounts')
           .select('*')
-          .eq('user_id', block.blocker.id)
+          .eq('user_id', block.blocker_id)
           .single()) as { data: IAccount };
 
         const blockedUser = {
-          id: block.blocker.id,
-          blocked_id: block.blocker.id,
-          first_name: block.blocker.first_name,
-          last_name: block.blocker.last_name,
-          username: block.blocker.username,
+          id: block.id,
+          blocked_id: block.blocker_id.id,
+          first_name: block.blocker_id.first_name,
+          last_name: block.blocker_id.last_name,
+          username: block.blocker_id.username,
           profile_picture: account ? account.profile_picture : null,
           created_at: block.created_at,
         };

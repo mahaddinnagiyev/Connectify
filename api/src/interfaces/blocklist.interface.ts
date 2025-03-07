@@ -2,7 +2,7 @@ import { IUser } from './user.interface';
 
 export interface IBlockList {
   id: string;
-  blocker: IUser;
-  blocked: IUser;
+  blocker_id: IUser;
+  blocked_id: IUser;
   created_at: Date;
 }

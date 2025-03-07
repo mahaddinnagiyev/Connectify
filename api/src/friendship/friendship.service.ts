@@ -26,17 +26,20 @@ export class FriendshipService {
       const { data: friendships } = (await this.supabase
         .getClient()
         .from('friendships')
-        .select('*')
-        .eq('requester_id', req_user.id)
-        .or('requestee_id.eq.' + req_user.id)) as { data: IFriendship[] };
+        .select(
+          '*, requester_id!inner(id, first_name, last_name, username), requestee_id!inner(id, first_name, last_name, username)',
+        )
+        .or(
+          `or(requester_id.eq.${req_user.id}), or(requestee_id.eq.${req_user.id})`,
+        )) as { data: IFriendship[] };
 
       let mappedFriendships = [];
 
       for (const friendship of friendships) {
         const requestee =
-          friendship.requester.id === req_user.id
-            ? friendship.requestee
-            : friendship.requester;
+          friendship.requester_id.id === req_user.id
+            ? friendship.requestee_id
+            : friendship.requester_id;
 
         const { data: account } = (await this.supabase
           .getClient()
@@ -66,6 +69,7 @@ export class FriendshipService {
         friends: mappedFriendships,
       };
     } catch (error) {
+      console.log(error);
       await this.logger.error(
         error,
         'friendship',
@@ -85,26 +89,19 @@ export class FriendshipService {
         .getClient()
         .from('friendships')
         .select(
-          `
-            id,
-            status,
-            created_at,
-            updated_at,
-            requester:requester_id(*),
-            requestee:requestee_id(*)
-          `,
+          `*, requester_id!inner(id, first_name, last_name, username), requestee_id!inner(id, first_name, last_name, username)`,
         )
         .or(
-          `and(requester_id.eq.${req_user.id},requestee_id.eq.${req_user.id}), and(requester_id.eq.${req_user.id},requestee_id.eq.${req_user.id})`,
+          `requester_id.eq.${req_user.id},requestee_id.eq.${req_user.id}`,
         )) as { data: IFriendship[] };
 
       const mappedFriends = [];
 
       for (const friendship of friendships) {
         const friendUser =
-          friendship.requester.id === req_user.id
-            ? friendship.requestee
-            : friendship.requester;
+          friendship.requester_id.id === req_user.id
+            ? friendship.requestee_id
+            : friendship.requester_id;
 
         const { data: account } = (await this.supabase
           .getClient()
@@ -135,6 +132,7 @@ export class FriendshipService {
         friends: mappedFriends,
       };
     } catch (error) {
+      console.log(error);
       await this.logger.error(
         error,
         'friendship',
@@ -153,7 +151,9 @@ export class FriendshipService {
       const { data: friendRequests } = (await this.supabase
         .getClient()
         .from('friendships')
-        .select('*')
+        .select(
+          '*, requester_id!inner(id, first_name, last_name, username), requestee_id!inner(id, first_name, last_name, username)',
+        )
         .or(
           `and(requester_id.eq.${req_user.id},status.eq.${FriendshipStatus.pending}),and(requestee_id.eq.${req_user.id},status.eq.${FriendshipStatus.pending})`,
         )) as { data: IFriendship[] };
@@ -169,9 +169,9 @@ export class FriendshipService {
       let receivedRequest: IFriendship[] = [];
 
       friendRequests.forEach((friendship) => {
-        if (friendship.requester.id === req_user.id) {
+        if (friendship.requester_id.id === req_user.id) {
           sentRequest.push(friendship);
-        } else if (friendship.requestee.id === req_user.id) {
+        } else if (friendship.requestee_id.id === req_user.id) {
           receivedRequest.push(friendship);
         }
       });
@@ -182,22 +182,22 @@ export class FriendshipService {
             .getClient()
             .from('accounts')
             .select('*')
-            .eq('user_id', friendship.requestee.id)
+            .eq('user_id', friendship.requestee_id.id)
             .single()) as { data: IAccount };
 
           return {
             id: friendship.id,
             requester: {
-              id: friendship.requester.id,
-              first_name: friendship.requester.first_name,
-              last_name: friendship.requester.last_name,
-              username: friendship.requester.username,
+              id: friendship.requester_id.id,
+              first_name: friendship.requester_id.first_name,
+              last_name: friendship.requester_id.last_name,
+              username: friendship.requester_id.username,
             },
             requestee: {
-              id: friendship.requestee.id,
-              first_name: friendship.requestee.first_name,
-              last_name: friendship.requestee.last_name,
-              username: friendship.requestee.username,
+              id: friendship.requestee_id.id,
+              first_name: friendship.requestee_id.first_name,
+              last_name: friendship.requestee_id.last_name,
+              username: friendship.requestee_id.username,
               profile_picture: requesteeAccount?.profile_picture || null,
             },
             status: friendship.status,
@@ -213,23 +213,23 @@ export class FriendshipService {
             .getClient()
             .from('accounts')
             .select('*')
-            .eq('user_id', friendship.requester.id)
+            .eq('user_id', friendship.requester_id.id)
             .single()) as { data: IAccount };
 
           return {
             id: friendship.id,
             requester: {
-              id: friendship.requester.id,
-              first_name: friendship.requester.first_name,
-              last_name: friendship.requester.last_name,
-              username: friendship.requester.username,
+              id: friendship.requester_id.id,
+              first_name: friendship.requester_id.first_name,
+              last_name: friendship.requester_id.last_name,
+              username: friendship.requester_id.username,
               profile_picture: requesterAccount?.profile_picture || null,
             },
             requestee: {
-              id: friendship.requestee.id,
-              first_name: friendship.requestee.first_name,
-              last_name: friendship.requestee.last_name,
-              username: friendship.requestee.username,
+              id: friendship.requestee_id.id,
+              first_name: friendship.requestee_id.first_name,
+              last_name: friendship.requestee_id.last_name,
+              username: friendship.requestee_id.username,
             },
             status: friendship.status,
             created_at: friendship.created_at,
@@ -366,7 +366,7 @@ export class FriendshipService {
         .getClient()
         .from('friendships')
         .select(
-          '*, requester!inner(id, first_name, last_name, username), requestee!inner(id, first_name, last_name, username)',
+          '*, requester_id!inner(id, first_name, last_name, username), requestee_id!inner(id, first_name, last_name, username)',
         )
         .or(`and(id.eq.${id},requestee_id.eq.${req_user.id})`)
         .single()) as { data: IFriendship };
@@ -408,12 +408,12 @@ export class FriendshipService {
       await this.logger.info(
         `Friendship has been accepted: ${JSON.stringify(friendship)}`,
         'friendship',
-        `${friendship.requestee.username} accepted a friendship request from ${friendship.requester.username}`,
+        `${friendship.requestee_id.username} accepted a friendship request from ${friendship.requester_id.username}`,
       );
 
       return {
         success: true,
-        message: `${friendship.requester.username} now is your friend`,
+        message: `${friendship.requester_id.username} now is your friend`,
       };
     } catch (error) {
       console.log(error);
@@ -436,7 +436,7 @@ export class FriendshipService {
         .getClient()
         .from('friendships')
         .select(
-          '*, requester!inner(id, first_name, last_name, username), requestee!inner(id, first_name, last_name, username)',
+          '*, requester_id!inner(id, first_name, last_name, username), requestee_id!inner(id, first_name, last_name, username)',
         )
         .or(`and(id.eq.${id},requestee_id.eq.${req_user.id})`)
         .single()) as { data: IFriendship };
@@ -467,12 +467,12 @@ export class FriendshipService {
       await this.logger.info(
         `Friendship has been rejected: ${JSON.stringify(friendship)}`,
         'friendship',
-        `${friendship.requestee.username} rejected a friendship request from ${friendship.requester.username}`,
+        `${friendship.requestee_id.username} rejected a friendship request from ${friendship.requester_id.username}`,
       );
 
       return {
         success: true,
-        message: `${friendship.requester.username}'s friend request rejected`,
+        message: `${friendship.requester_id.username}'s friend request rejected`,
       };
     } catch (error) {
       await this.logger.error(
@@ -494,7 +494,7 @@ export class FriendshipService {
         .getClient()
         .from('friendships')
         .select(
-          '*, requester!inner(id, first_name, last_name, username), requestee!inner(id, first_name, last_name, username)',
+          '*, requester_id!inner(id, first_name, last_name, username), requestee_id!inner(id, first_name, last_name, username)',
         )
         .or(
           `and(id.eq.${id},requestee_id.eq.${req_user.id},status.eq.${FriendshipStatus.accepted}), and(id.eq.${id},requester_id.eq.${req_user.id},status.eq.${FriendshipStatus.accepted})`,
@@ -513,12 +513,12 @@ export class FriendshipService {
       await this.logger.info(
         `Friendship has been removed: ${JSON.stringify(friendship)}`,
         'friendship',
-        `${friendship.requester.username} removed a friendship with ${friendship.requestee.username}`,
+        `${friendship.requester_id.username} removed a friendship with ${friendship.requestee_id.username}`,
       );
 
       return {
         success: true,
-        message: `${friendship.requester.id === req_user.id ? friendship.requestee.username : friendship.requester.username} removed from your friends list`,
+        message: `${friendship.requester_id.id === req_user.id ? friendship.requestee_id.username : friendship.requester_id.username} removed from your friends list`,
       };
     } catch (error) {
       await this.logger.error(
