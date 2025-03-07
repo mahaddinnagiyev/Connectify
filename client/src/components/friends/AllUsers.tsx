@@ -75,7 +75,9 @@ const AllUsers: React.FC = () => {
     try {
       const result = await get_block_list();
       if (result.success) {
-        const blocked = result.blockList.map((item: BlockListDTO) => item.id);
+        const blocked = result.blockList.map(
+          (item: BlockListDTO) => item.blocked_id
+        );
         setBlockedUsers(blocked);
       }
     } catch (error) {
@@ -156,6 +158,15 @@ const AllUsers: React.FC = () => {
       if (response.success) {
         fetchAllUsers();
         fetchBlockedUsers();
+        setSuccessMessage(response.message);
+      } else {
+        setErrorMessage(
+          response.response.message ??
+            response.response.error ??
+            response.message ??
+            response.error ??
+            "Failed to block user"
+        );
       }
     } catch (error) {
       console.error("Failed to block user:", error);
@@ -168,6 +179,15 @@ const AllUsers: React.FC = () => {
       if (response.success) {
         fetchAllUsers();
         fetchBlockedUsers();
+        setSuccessMessage(response.message);
+      } else {
+        setErrorMessage(
+          response.response.message ??
+            response.response.error ??
+            response.message ??
+            response.error ??
+            "Failed to unblock user"
+        );
       }
     } catch (error) {
       console.error("Failed to unblock user:", error);
@@ -262,8 +282,11 @@ const AllUsers: React.FC = () => {
             />
             <List>
               {filterUsers(users).map((user) => {
+                console.log(pendingFriends);
                 const isPending = pendingFriends.includes(user.id);
+                console.log(isPending);
                 const isAccepted = acceptedFriends.includes(user.id);
+                console.log(isAccepted);
                 return (
                   <ListItem key={user.id} divider>
                     {isSmallScreen ? (
@@ -313,34 +336,36 @@ const AllUsers: React.FC = () => {
                             </Button>
                           </Tooltip>
                           <Tooltip title="Add Friend" placement="top">
-                            {isPending ? (
-                              <Button
-                                variant="contained"
-                                color="success"
-                                size="small"
-                                disabled
-                              >
-                                <TimerIcon fontSize="small" />
-                              </Button>
-                            ) : isAccepted ? (
-                              <Button
-                                variant="contained"
-                                color="success"
-                                size="small"
-                                disabled
-                              >
-                                <CheckIcon fontSize="small" />
-                              </Button>
-                            ) : (
-                              <Button
-                                variant="contained"
-                                color="success"
-                                size="small"
-                                onClick={() => send_friend_request(user.id)}
-                              >
-                                <PersonAddIcon fontSize="small" />
-                              </Button>
-                            )}
+                            <>
+                              {isPending ? (
+                                <Button
+                                  variant="contained"
+                                  color="success"
+                                  size="small"
+                                  disabled
+                                >
+                                  <TimerIcon fontSize="small" />
+                                </Button>
+                              ) : isAccepted ? (
+                                <Button
+                                  variant="contained"
+                                  color="success"
+                                  size="small"
+                                  disabled
+                                >
+                                  <CheckIcon fontSize="small" />
+                                </Button>
+                              ) : (
+                                <Button
+                                  variant="contained"
+                                  color="success"
+                                  size="small"
+                                  onClick={() => send_friend_request(user.id)}
+                                >
+                                  <PersonAddIcon fontSize="small" />
+                                </Button>
+                              )}
+                            </>
                           </Tooltip>
                           {blockedUsers.includes(user.id) ? (
                             <Tooltip title="Unblock User" placement="top">
@@ -361,23 +386,25 @@ const AllUsers: React.FC = () => {
                               </Button>
                             </Tooltip>
                           ) : (
-                            <Tooltip title="Block User" placement="top">
-                              <Button
-                                variant="contained"
-                                color="warning"
-                                size="small"
-                                onClick={() =>
-                                  openConfirmModal(
-                                    "Block User",
-                                    `Are you sure you want to block ${user.username}?`,
-                                    "Block",
-                                    () => block_user(user.id)
-                                  )
-                                }
-                              >
-                                <GppBadIcon fontSize="small" />
-                              </Button>
-                            </Tooltip>
+                            <>
+                              <Tooltip title="Block User" placement="top">
+                                <Button
+                                  variant="contained"
+                                  color="warning"
+                                  size="small"
+                                  onClick={() =>
+                                    openConfirmModal(
+                                      "Block User",
+                                      `Are you sure you want to block ${user.username}?`,
+                                      "Block",
+                                      () => block_user(user.id)
+                                    )
+                                  }
+                                >
+                                  <GppBadIcon fontSize="small" />
+                                </Button>
+                              </Tooltip>
+                            </>
                           )}
                         </Box>
                       </Box>
@@ -467,23 +494,25 @@ const AllUsers: React.FC = () => {
                               </Button>
                             </Tooltip>
                           ) : (
-                            <Tooltip title="Block User" placement="top">
-                              <Button
-                                variant="contained"
-                                color="warning"
-                                sx={{ marginRight: 1 }}
-                                onClick={() =>
-                                  openConfirmModal(
-                                    "Block User",
-                                    `Are you sure you want to block ${user.username}?`,
-                                    "Block",
-                                    () => block_user(user.id)
-                                  )
-                                }
-                              >
-                                <GppBadIcon />
-                              </Button>
-                            </Tooltip>
+                            <>
+                              <Tooltip title="Block User" placement="top">
+                                <Button
+                                  variant="contained"
+                                  color="warning"
+                                  sx={{ marginRight: 1 }}
+                                  onClick={() =>
+                                    openConfirmModal(
+                                      "Block User",
+                                      `Are you sure you want to block ${user.username}?`,
+                                      "Block",
+                                      () => block_user(user.id)
+                                    )
+                                  }
+                                >
+                                  <GppBadIcon />
+                                </Button>
+                              </Tooltip>
+                            </>
                           )}
                         </Box>
                       </>

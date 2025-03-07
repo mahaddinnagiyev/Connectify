@@ -104,7 +104,7 @@ const ProfileInfo: React.FC<ProfileInfoProps> = ({ userData }) => {
     try {
       const result = await get_block_list();
       if (result.success) {
-        const blocked = result.blockList.map((item: BlockListDTO) => item.id);
+        const blocked = result.blockList.map((item: BlockListDTO) => item.blocked_id);
         setBlockedUsers(blocked);
       }
     } catch (error) {
