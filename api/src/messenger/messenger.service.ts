@@ -485,4 +485,50 @@ export class MessengerService {
       );
     }
   }
+
+  async uplaodAudio(file: Express.Multer.File) {
+    try {
+      const fileName = `${uuid()}-${Date.now()}`;
+
+      const { data, error } = await this.supabase
+        .getClient()
+        .storage.from('messages')
+        .upload(`audios/${fileName}`, file.buffer, {
+          contentType: file.mimetype,
+        });
+
+      if (error) {
+        this.logger.error(
+          error.message,
+          'messenger',
+          'There is an error in uploading audio',
+          error.stack,
+        );
+        return new BadRequestException({
+          success: false,
+          error: error.message,
+        });
+      }
+
+      const publicUrl = this.supabase
+        .getClient()
+        .storage.from('messages')
+        .getPublicUrl(`audios/${fileName}`);
+
+      return {
+        publicUrl: publicUrl.data.publicUrl,
+        file_size: file.size,
+      };
+    } catch (error) {
+      this.logger.error(
+        error.message,
+        'messenger',
+        'There was an error in uploading audio',
+        error.stack,
+      );
+      return new InternalServerErrorException(
+        'Uploading audio failed - Due To Internal Server Error',
+      );
+    }
+  }
 }

@@ -48,12 +48,12 @@ export class MulterFileConfig implements MulterOptionsFactory {
           'image/jpeg',
           'image/png',
           'image/gif',
-          'image/webp', 
-          'image/x-icon', 
-          'image/svg+xml', 
+          'image/webp',
+          'image/x-icon',
+          'image/svg+xml',
 
           'audio/mpeg',
-          'video/mp4', 
+          'video/mp4',
           'video/mov',
           'video/avi',
           'video/wmv',
@@ -78,7 +78,7 @@ export class MulterFileConfig implements MulterOptionsFactory {
 }
 
 export class MulterVideoConfig implements MulterOptionsFactory {
-  createMulterOptions(): Promise<MulterModuleOptions> | MulterModuleOptions {
+  createMulterOptions(): MulterModuleOptions {
     return {
       storage: multer.memoryStorage(),
       limits: {
@@ -101,7 +101,7 @@ export class MulterVideoConfig implements MulterOptionsFactory {
 }
 
 export class MulterImageConfig implements MulterOptionsFactory {
-  createMulterOptions(): Promise<MulterModuleOptions> | MulterModuleOptions {
+  createMulterOptions(): MulterModuleOptions {
     return {
       storage: multer.memoryStorage(),
       limits: {
@@ -110,7 +110,30 @@ export class MulterImageConfig implements MulterOptionsFactory {
       fileFilter(req, file, callback) {
         if (!file.mimetype.match(/\/(jpg|jpeg|png|gif|webp|ico|svg|tiff)$/)) {
           return callback(
-            new Error('Invalid file type. Only JPG, JPEG, and PNG are allowed'),
+            new Error(
+              'Invalid file type. Only JPG, JPEG, PNG, GIF, WEBP, ICO, SVG, TIFF are allowed',
+            ),
+            false,
+          );
+        }
+
+        callback(null, true);
+      },
+    };
+  }
+}
+
+export class MulterAudioConfig implements MulterOptionsFactory {
+  createMulterOptions(): MulterModuleOptions {
+    return {
+      storage: multer.memoryStorage(),
+      limits: {
+        fileSize: 50 * 1024 * 1024,
+      },
+      fileFilter(req, file, callback) {
+        if (!file.mimetype.match(/\/(mp3|webm|webm;codecs=opus)$/)) {
+          return callback(
+            new Error('Invalid file type. Only MP3 are allowed'),
             false,
           );
         }

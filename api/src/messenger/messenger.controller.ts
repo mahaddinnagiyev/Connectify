@@ -21,6 +21,8 @@ import { IUser } from 'src/interfaces/user.interface';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ChatGateway } from './gateway/messenger-gateway';
 import {
+  MulterAudioConfig,
+  MulterFileConfig,
   MulterImageConfig,
   MulterVideoConfig,
 } from 'src/supabase/utils/multer-config';
@@ -83,7 +85,8 @@ export class MessengerController {
     if (!file.mimetype.match(/\/(jpg|jpeg|png|gif|webp|ico|svg|tiff)$/)) {
       return new BadRequestException({
         success: false,
-        error: 'Invalid file type. Only JPG, JPEG, and PNG are allowed',
+        error:
+          'Invalid file type. Only JPG, JPEG, PNG, GIF, WEBP, ICO, SVG, TIFF are allowed',
       });
     }
 
@@ -124,7 +127,12 @@ export class MessengerController {
   // Upload Video
   @Post('upload-video')
   @UseGuards(JwtAuthGuard)
-  @UseInterceptors(FileInterceptor('message_video'))
+  @UseInterceptors(
+    FileInterceptor(
+      'message_video',
+      new MulterVideoConfig().createMulterOptions(),
+    ),
+  )
   async uploadVideo(
     @UploadedFile() file: Express.Multer.File,
     @Query('roomId') roomId: string,
@@ -179,10 +187,16 @@ export class MessengerController {
       message_size: uploadedVideo.file_size,
     };
   }
+
   // Upload File
   @Post('upload-file')
   @UseGuards(JwtAuthGuard)
-  @UseInterceptors(FileInterceptor('message_file'))
+  @UseInterceptors(
+    FileInterceptor(
+      'message_file',
+      new MulterFileConfig().createMulterOptions(),
+    ),
+  )
   async uploadFile(
     @UploadedFile() file: Express.Multer.File,
     @Query('roomId') roomId: string,
@@ -237,6 +251,68 @@ export class MessengerController {
       publicUrl: uploadedFile.publicUrl,
       message_name: uploadedFile.file_name,
       message_size: uploadedFile.file_size,
+    };
+  }
+
+  // Upload Audio
+  @Post('upload-audio')
+  @UseGuards(JwtAuthGuard)
+  @UseInterceptors(
+    FileInterceptor(
+      'message_audio',
+      new MulterAudioConfig().createMulterOptions(),
+    ),
+  )
+  async uploadAudio(
+    @UploadedFile() file: Express.Multer.File,
+    @Query('roomId') roomId: string,
+    @Query('senderId') senderId: string,
+  ) {
+    if (!roomId || !senderId) {
+      return new BadRequestException('Missing roomId or senderId');
+    }
+
+    if (!file) {
+      return new BadRequestException('No file uploaded');
+    }
+
+    if (!file.mimetype.match(/\/(mp3|webm)$/)) {
+      return new BadRequestException({
+        success: false,
+        error: 'Invalid file type. Only MP3 and WEBM are allowed',
+      });
+    }
+
+    if (file.size > 50 * 1024 * 1024) {
+      return new BadRequestException({
+        success: false,
+        error: 'File size is too large. Maximum size is 50MB',
+      });
+    }
+
+    const isRoomExist = await this.messengerService.getChatRoomById(roomId);
+
+    if (!isRoomExist || isRoomExist instanceof HttpException) {
+      return new BadRequestException('Room not found');
+    }
+
+    const isUserExist = await this.userService.get_user_by_id(senderId);
+
+    if (!isUserExist || isUserExist instanceof HttpException) {
+      return new BadRequestException('User not found');
+    }
+
+    const Audio = await this.messengerService.uplaodAudio(file);
+
+    if (Audio instanceof HttpException) {
+      return Audio;
+    }
+
+    return {
+      success: true,
+      message: 'Audio uploaded successfully',
+      publicUrl: Audio.publicUrl,
+      message_size: Audio.file_size,
     };
   }
 
