@@ -365,7 +365,9 @@ const Chat = ({
             <div className="last-seen-container">
               <LastSeen
                 otherUserAccount={otherUserAccount as Account}
-                otherUserPrivacySettings={otherUserPrivacySettings as PrivacySettingsDTO}
+                otherUserPrivacySettings={
+                  otherUserPrivacySettings as PrivacySettingsDTO
+                }
                 otherUserId={otherUser?.id as string}
               />
             </div>
@@ -657,7 +659,11 @@ const Chat = ({
 
 export default Chat;
 
-const LastSeen = ({ otherUserAccount, otherUserPrivacySettings, otherUserId }: LastSeenProps) => {
+const LastSeen = ({
+  otherUserAccount,
+  otherUserPrivacySettings,
+  otherUserId,
+}: LastSeenProps) => {
   const [isFriend, setIsFriend] = useState(false);
   const [loading, setLoading] = useState(true);
 
@@ -680,7 +686,7 @@ const LastSeen = ({ otherUserAccount, otherUserPrivacySettings, otherUserId }: L
     } else {
       setLoading(false);
     }
-  }, [otherUserAccount, otherUserId]);
+  }, [otherUserAccount, otherUserId, otherUserPrivacySettings.last_login]);
 
   if (otherUserPrivacySettings.last_login === PrivacySettings.everyone) {
     return (
@@ -703,8 +709,11 @@ const LastSeen = ({ otherUserAccount, otherUserPrivacySettings, otherUserId }: L
       <p className="text-xs">
         Last seen at:{" "}
         {otherUserAccount?.last_login
-          ? new Date(otherUserAccount.last_login).toLocaleString("az-AZ", {
+          ? new Date(otherUserAccount.last_login).toLocaleTimeString("az-AZ", {
               timeZone: "Asia/Baku",
+              hour12: false,
+              hour: "2-digit",
+              minute: "2-digit",
             })
           : "N/A"}
       </p>
