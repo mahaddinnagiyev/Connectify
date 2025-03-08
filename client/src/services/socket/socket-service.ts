@@ -79,3 +79,24 @@ export const uploadFile = async (
   const data = await response.json();
   return data;
 };
+
+export const uploadAudio = async (
+  formData: FormData,
+  roomId: string,
+  senderId: string
+) => {
+  const response = await fetch(
+    `${process.env.SERVER_USER_URL}/messenger/upload-audio?roomId=${roomId}&senderId=${senderId}`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${await getToken()}`,
+      },
+      credentials: "include",
+      body: formData,
+    }
+  );
+
+  const data = await response.json();
+  return data;
+};

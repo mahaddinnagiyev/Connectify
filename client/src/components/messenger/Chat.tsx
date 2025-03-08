@@ -8,10 +8,6 @@ import {
 import { Users } from "../../services/user/dto/user-dto";
 import no_profile_photo from "../../assets/no-profile-photo.png";
 import {
-  Mic as MicIcon,
-  Send as SendIcon,
-  AttachFile as AttachFileIcon,
-  InsertEmoticon as InsertEmoticonIcon,
   LocalPhone as LocalPhoneIcon,
   Videocam as VideocamIcon,
   MoreVert as MoreVertIcon,
@@ -26,29 +22,18 @@ import {
   GridOn as GridOnIcon,
   InsertDriveFile as InsertDriveFileIcon,
 } from "@mui/icons-material";
-import {
-  socket,
-  uploadFile,
-  uploadImage,
-  uploadVideo,
-} from "../../services/socket/socket-service";
+import { socket } from "../../services/socket/socket-service";
 import { Account } from "../../services/account/dto/account-dto";
-import {
-  PrivacySettings,
-  PrivacySettingsDTO,
-} from "../../services/account/dto/privacy-settings-dto";
-import { getAllFriendshipRequests } from "../../services/friendship/friendship-service";
-import { FriendshipStatus } from "../../services/friendship/enum/friendship-status.enum";
+import { PrivacySettingsDTO } from "../../services/account/dto/privacy-settings-dto";
 import { Link } from "react-router-dom";
-import EmojiPicker from "emoji-picker-react";
-import AttachModal from "../modals/chat/AttachModal";
-import SelectedModal from "../modals/chat/SelectedModal";
-import CheckModal from "../modals/spinner/CheckModal";
 import ErrorMessage from "../messages/ErrorMessage";
 import {
   get_block_list,
   get_blocker_list,
 } from "../../services/user/block-list-service";
+import SendMessage from "./SendMessage";
+import { LastSeen } from "./utils/LastSeen";
+import AudioPlayer from "./utils/AudioPlayer";
 
 interface ChatProps {
   roomId: string;
@@ -57,12 +42,6 @@ interface ChatProps {
   otherUserAccount?: Account;
   otherUserPrivacySettings?: PrivacySettingsDTO;
   messages: MessagesDTO[];
-}
-
-interface LastSeenProps {
-  otherUserAccount: Account;
-  otherUserPrivacySettings: PrivacySettingsDTO;
-  otherUserId: string;
 }
 
 const Chat = ({
@@ -78,24 +57,12 @@ const Chat = ({
   const [visibleChatOptions, setVisibleChatOptions] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
-  const [showAttachModal, setShowAttachModal] = useState(false);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [showSelectedModal, setShowSelectedModal] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
   const [isBlocked, setIsBlocked] = useState(false);
   const [isBlocker, setIsBlocker] = useState(false);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const chatOptionsRef = useRef<HTMLDivElement>(null);
   const emojiPickerRef = useRef<HTMLDivElement>(null);
   const screenSize = window.innerWidth;
-
-  const handleFileSelect = (files: FileList | null) => {
-    if (files && files[0]) {
-      setSelectedFile(files[0]);
-      setShowAttachModal(false);
-      setShowSelectedModal(true);
-    }
-  };
 
   useEffect(() => {
     get_block_list().then((response) => {
@@ -112,73 +79,6 @@ const Chat = ({
       }
     });
   }, [otherUser]);
-
-  const handleUpload = async () => {
-    if (!selectedFile) return;
-
-    setIsLoading(true);
-
-    const formData = new FormData();
-    let response: {
-      success: boolean;
-      message?: string;
-      publicUrl?: string;
-      message_name?: string;
-      message_size?: number;
-      error?: string;
-      response?: { success: boolean; message?: string; error?: string };
-    };
-    const fileType = selectedFile.type;
-
-    if (fileType.startsWith("image/")) {
-      formData.append("message_image", selectedFile);
-      response = await uploadImage(formData, roomId, currentUser);
-    } else if (fileType.startsWith("video/")) {
-      formData.append("message_video", selectedFile);
-      response = await uploadVideo(formData, roomId, currentUser);
-    } else if (
-      fileType.startsWith("file/") ||
-      fileType.startsWith("application/") ||
-      fileType.startsWith("text/") ||
-      fileType.startsWith("image/") ||
-      fileType.startsWith("video/")
-    ) {
-      formData.append("message_file", selectedFile);
-      response = await uploadFile(formData, roomId, currentUser);
-    } else {
-      setIsLoading(false);
-      setErrorMessage("System doesn't support this type of file");
-      return;
-    }
-    if (!response.success) {
-      setIsLoading(false);
-      setShowSelectedModal(false);
-      setErrorMessage(
-        response.response?.message ??
-          response.response?.error ??
-          response.message ??
-          response.error ??
-          "Failed To Upload"
-      );
-      return;
-    }
-
-    socket?.emit("sendMessage", {
-      roomId: roomId,
-      content: response.publicUrl,
-      message_type: fileType.startsWith("image/")
-        ? MessageType.IMAGE
-        : fileType.startsWith("video/")
-        ? MessageType.VIDEO
-        : MessageType.FILE,
-      message_name: response.message_name,
-      message_size: Number(response.message_size),
-    });
-
-    setIsLoading(false);
-    setShowSelectedModal(false);
-    setSelectedFile(null);
-  };
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -324,8 +224,6 @@ const Chat = ({
 
   return (
     <>
-      {isLoading && <CheckModal message="Uploading..." />}
-
       {errorMessage && (
         <ErrorMessage
           message={errorMessage}
@@ -479,6 +377,20 @@ const Chat = ({
                       </div>
                     )}
 
+                    {message.message_type === MessageType.AUDIO && (
+                      <AudioPlayer
+                        src={message.content}
+                        onLoadedData={scrollToBottom}
+                      />
+                      // <audio
+                      //   src={message.content}
+                      //   controls
+                      //   className="bg-[#f1f3f4] rounded-lg"
+                      //   style={{ padding: "0px !important" }}
+                      //   onLoadedData={scrollToBottom}
+                      // />
+                    )}
+
                     {message.message_type === MessageType.TEXT && (
                       <p className="message-text px-1">{message.content}</p>
                     )}
@@ -500,263 +412,24 @@ const Chat = ({
           ))}
         </div>
         {/* Send Message Form */}
-        <div className="send-message-container mt-2">
-          {isBlocked ? (
-            <>
-              <Tooltip title="Emotes" placement="top">
-                <button
-                  className="insert-emoticon-button cursor-not-allowed"
-                  disabled
-                >
-                  <InsertEmoticonIcon />
-                </button>
-              </Tooltip>
-              <Tooltip title="Attach File" placement="top">
-                <button
-                  className="attach-file-button cursor-not-allowed"
-                  disabled
-                >
-                  <AttachFileIcon />
-                </button>
-              </Tooltip>
-              <Tooltip
-                title={`You has blocked ${otherUser?.username}!`}
-                placement="top"
-              >
-                <textarea
-                  value={messageInput}
-                  onChange={(e) => setMessageInput(e.target.value)}
-                  placeholder="Type your message..."
-                  className="message-input cursor-not-allowed"
-                  onKeyPress={(e) => {
-                    if (e.key === "Enter" && !e.shiftKey) {
-                      e.preventDefault();
-                      handleSendMessage();
-                    }
-                  }}
-                  disabled
-                ></textarea>
-              </Tooltip>
-              {messageInput.trim() ? (
-                <button
-                  type="submit"
-                  className="send-button"
-                  style={{ cursor: "not-allowed" }}
-                  disabled
-                >
-                  <SendIcon />
-                </button>
-              ) : (
-                <button
-                  type="submit"
-                  className="send-button"
-                  style={{ cursor: "not-allowed" }}
-                  disabled
-                >
-                  <MicIcon />
-                </button>
-              )}
-            </>
-          ) : isBlocker ? (
-            <>
-              <Tooltip title="Emotes" placement="top">
-                <button
-                  className="insert-emoticon-button cursor-not-allowed"
-                  disabled
-                >
-                  <InsertEmoticonIcon />
-                </button>
-              </Tooltip>
-              <Tooltip title="Attach File" placement="top">
-                <button
-                  className="attach-file-button cursor-not-allowed"
-                  disabled
-                >
-                  <AttachFileIcon />
-                </button>
-              </Tooltip>
-              <Tooltip
-                title={`${otherUser?.username} has blocked you!`}
-                placement="top"
-              >
-                <textarea
-                  value={messageInput}
-                  onChange={(e) => setMessageInput(e.target.value)}
-                  placeholder="Type your message..."
-                  className="message-input cursor-not-allowed"
-                  onKeyPress={(e) => {
-                    if (e.key === "Enter" && !e.shiftKey) {
-                      e.preventDefault();
-                      handleSendMessage();
-                    }
-                  }}
-                  disabled
-                ></textarea>
-              </Tooltip>
-              {messageInput.trim() ? (
-                <button
-                  type="submit"
-                  className="send-button"
-                  style={{ cursor: "not-allowed" }}
-                  disabled
-                >
-                  <SendIcon />
-                </button>
-              ) : (
-                <button
-                  type="submit"
-                  className="send-button"
-                  style={{ cursor: "not-allowed" }}
-                  disabled
-                >
-                  <MicIcon />
-                </button>
-              )}
-            </>
-          ) : (
-            <>
-              <Tooltip title="Emotes" placement="top">
-                <button
-                  className="insert-emoticon-button"
-                  onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-                >
-                  <InsertEmoticonIcon />
-                </button>
-              </Tooltip>
-              {showEmojiPicker && (
-                <div className="emoji-picker-container" ref={emojiPickerRef}>
-                  <EmojiPicker onEmojiClick={handleEmojiPicker} />
-                </div>
-              )}
-              <Tooltip title="Attach File" placement="top">
-                <button
-                  className="attach-file-button"
-                  onClick={() => setShowAttachModal(true)}
-                >
-                  <AttachFileIcon />
-                </button>
-              </Tooltip>
-              <textarea
-                value={messageInput}
-                onChange={(e) => setMessageInput(e.target.value)}
-                placeholder="Type your message..."
-                className="message-input"
-                onKeyPress={(e) => {
-                  if (e.key === "Enter" && !e.shiftKey) {
-                    e.preventDefault();
-                    handleSendMessage();
-                  }
-                }}
-              ></textarea>
-              {messageInput.trim() ? (
-                <button type="submit" className="send-button">
-                  <SendIcon />
-                </button>
-              ) : (
-                <button type="submit" className="send-button">
-                  <MicIcon />
-                </button>
-              )}
-            </>
-          )}
-        </div>
+        <SendMessage
+          isBlocked={isBlocked}
+          isBlocker={isBlocker}
+          messageInput={messageInput}
+          setMessageInput={setMessageInput}
+          handleSendMessage={handleSendMessage}
+          showEmojiPicker={showEmojiPicker}
+          setShowEmojiPicker={setShowEmojiPicker}
+          emojiPickerRef={emojiPickerRef}
+          handleEmojiPicker={handleEmojiPicker}
+          roomId={roomId}
+          currentUser={currentUser}
+          socket={socket}
+          otherUserUsername={otherUser?.username}
+        />
       </section>
-
-      {showAttachModal && (
-        <AttachModal
-          onClose={() => setShowAttachModal(false)}
-          onSelectFile={(f) => handleFileSelect(f)}
-          onSelectVideo={(f) => handleFileSelect(f)}
-          onSelectImage={(f) => handleFileSelect(f)}
-        />
-      )}
-
-      {showSelectedModal && selectedFile && (
-        <SelectedModal
-          file={selectedFile}
-          onClose={() => setShowSelectedModal(false)}
-          onUpload={handleUpload}
-        />
-      )}
     </>
   );
 };
 
 export default Chat;
-
-const LastSeen = ({
-  otherUserAccount,
-  otherUserPrivacySettings,
-  otherUserId,
-}: LastSeenProps) => {
-  const [isFriend, setIsFriend] = useState(false);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    if (otherUserPrivacySettings.last_login === PrivacySettings.my_friends) {
-      getAllFriendshipRequests()
-        .then((response) => {
-          if (response.success) {
-            const acceptedFriend = response.friends.find(
-              (friend) =>
-                (friend.friend_id === otherUserId ||
-                  friend.id === otherUserId) &&
-                friend.status === FriendshipStatus.accepted
-            );
-            setIsFriend(!!acceptedFriend);
-          }
-          setLoading(false);
-        })
-        .catch(() => setLoading(false));
-    } else {
-      setLoading(false);
-    }
-  }, [otherUserAccount, otherUserId, otherUserPrivacySettings.last_login]);
-
-  if (otherUserPrivacySettings.last_login === PrivacySettings.everyone) {
-    return (
-      <p className="text-xs">
-        Last seen at:{" "}
-        {otherUserAccount?.last_login
-          ? new Date(otherUserAccount.last_login).toLocaleTimeString("az-AZ", {
-              timeZone: "Asia/Baku",
-              day: "2-digit",
-              month: "2-digit",
-              year: "numeric",
-              hour: "2-digit",
-              minute: "2-digit",
-            })
-          : "N/A"}
-      </p>
-    );
-  }
-
-  if (otherUserPrivacySettings.last_login === PrivacySettings.my_friends) {
-    if (loading) {
-      return <p className="text-xs">Loading last seen...</p>;
-    }
-    return isFriend ? (
-      <p className="text-xs">
-        Last seen at:{" "}
-        {otherUserAccount?.last_login
-          ? new Date(otherUserAccount.last_login).toLocaleTimeString("az-AZ", {
-              timeZone: "Asia/Baku",
-              day: "2-digit",
-              month: "2-digit",
-              year: "numeric",
-              hour: "2-digit",
-              minute: "2-digit",
-            })
-          : "N/A"}
-      </p>
-    ) : (
-      <p className="text-xs">Last seen at: N/A</p>
-    );
-  }
-
-  if (otherUserPrivacySettings.last_login === PrivacySettings.nobody) {
-    return null;
-  }
-
-  return <p className="text-xs">Last seen at: N/A</p>;
-};

@@ -256,7 +256,7 @@ const Messenger = () => {
                             {chat?.lastMessage?.message_type ===
                               MessageType.AUDIO && (
                               <>
-                                <KeyboardVoiceTwoToneIcon />
+                                <KeyboardVoiceTwoToneIcon style={{ fontSize: "16px" }}/>
                                 Voice Message
                               </>
                             )}
