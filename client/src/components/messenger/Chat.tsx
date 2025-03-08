@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import "./chat-style.css";
+import "./css/chat-style.css";
 import { Tooltip } from "@mui/material";
 import {
   MessagesDTO,
@@ -8,6 +8,7 @@ import {
 import { Users } from "../../services/user/dto/user-dto";
 import no_profile_photo from "../../assets/no-profile-photo.png";
 import {
+  Mic as MicIcon,
   Send as SendIcon,
   AttachFile as AttachFileIcon,
   InsertEmoticon as InsertEmoticonIcon,
@@ -536,14 +537,25 @@ const Chat = ({
                   disabled
                 ></textarea>
               </Tooltip>
-              <button
-                type="submit"
-                className="send-button"
-                style={{ cursor: "not-allowed" }}
-                disabled
-              >
-                <SendIcon />
-              </button>
+              {messageInput.trim() ? (
+                <button
+                  type="submit"
+                  className="send-button"
+                  style={{ cursor: "not-allowed" }}
+                  disabled
+                >
+                  <SendIcon />
+                </button>
+              ) : (
+                <button
+                  type="submit"
+                  className="send-button"
+                  style={{ cursor: "not-allowed" }}
+                  disabled
+                >
+                  <MicIcon />
+                </button>
+              )}
             </>
           ) : isBlocker ? (
             <>
@@ -581,14 +593,25 @@ const Chat = ({
                   disabled
                 ></textarea>
               </Tooltip>
-              <button
-                type="submit"
-                className="send-button"
-                style={{ cursor: "not-allowed" }}
-                disabled
-              >
-                <SendIcon />
-              </button>
+              {messageInput.trim() ? (
+                <button
+                  type="submit"
+                  className="send-button"
+                  style={{ cursor: "not-allowed" }}
+                  disabled
+                >
+                  <SendIcon />
+                </button>
+              ) : (
+                <button
+                  type="submit"
+                  className="send-button"
+                  style={{ cursor: "not-allowed" }}
+                  disabled
+                >
+                  <MicIcon />
+                </button>
+              )}
             </>
           ) : (
             <>
@@ -625,13 +648,15 @@ const Chat = ({
                   }
                 }}
               ></textarea>
-              <button
-                type="submit"
-                className="send-button"
-                onClick={handleSendMessage}
-              >
-                <SendIcon />
-              </button>
+              {messageInput.trim() ? (
+                <button type="submit" className="send-button">
+                  <SendIcon />
+                </button>
+              ) : (
+                <button type="submit" className="send-button">
+                  <MicIcon />
+                </button>
+              )}
             </>
           )}
         </div>

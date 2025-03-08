@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import "../../colors.css";
-import "./style.css";
+import "./css/style.css";
 import Chat from "./Chat";
 import SearchModal from "../modals/search/SearchModal";
 import no_profile_photo from "../../assets/no-profile-photo.png";
