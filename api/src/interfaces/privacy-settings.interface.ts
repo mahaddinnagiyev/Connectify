@@ -1,4 +1,4 @@
-import { PrivacySettings } from "src/entities/privacy-settings.entity";
+import { PrivacySettings } from "src/enums/privacy-settings.enum";
 import { IAccount } from "./account.interface";
 
 export interface IPrivacySettings {

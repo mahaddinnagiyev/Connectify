@@ -2,8 +2,6 @@ import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { UserModule } from './user/user.module';
-import { config } from './orm.config';
-import { TypeOrmModule } from '@nestjs/typeorm';
 import { AuthModule } from './auth/auth.module';
 import { MailerModule } from '@nestjs-modules/mailer';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
@@ -17,7 +15,6 @@ import { WebpushModule } from './webpush/webpush.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forRoot(config),
     MailerModule.forRoot({
       transport: {
         host: process.env.EMAIL_HOST,

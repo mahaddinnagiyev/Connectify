@@ -5,7 +5,6 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { LoggerService } from 'src/logger/logger.service';
-import { User } from 'src/entities/user.entity';
 import { FriendshipStatus } from 'src/enums/friendship-status.enum';
 import { SupabaseService } from 'src/supabase/supabase.service';
 import { IUser } from 'src/interfaces/user.interface';
