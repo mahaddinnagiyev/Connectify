@@ -20,10 +20,15 @@ import DescriptionIcon from "@mui/icons-material/Description";
 import SlideshowIcon from "@mui/icons-material/Slideshow";
 import ImageTwoToneIcon from "@mui/icons-material/ImageTwoTone";
 import KeyboardVoiceTwoToneIcon from "@mui/icons-material/KeyboardVoiceTwoTone";
+import { PrivacySettingsDTO } from "../../services/account/dto/privacy-settings-dto";
 
 const Messenger = () => {
   const [chats, setChats] = useState<
-    (ChatRoomsDTO & { otherUser?: Users; otherUserAccount?: Account })[]
+    (ChatRoomsDTO & {
+      otherUser?: Users;
+      otherUserAccount?: Account;
+      otherUserPrivacySettings?: PrivacySettingsDTO;
+    })[]
   >([]);
   const [currentUser, setCurrentUser] = useState<string | null>(null);
   const [messages, setMessages] = useState<MessagesDTO[]>([]);
@@ -164,6 +169,8 @@ const Messenger = () => {
                   ...chat,
                   otherUser: userResponse.user as Users,
                   otherUserAccount: userResponse.account as Account,
+                  otherUserPrivacySettings:
+                    userResponse.privacy_settings as PrivacySettingsDTO,
                 };
               }
             } catch (error) {
@@ -306,6 +313,7 @@ const Messenger = () => {
                 roomId={currentRoomId}
                 otherUser={currentChat.otherUser}
                 otherUserAccount={currentChat.otherUserAccount}
+                otherUserPrivacySettings={currentChat.otherUserPrivacySettings}
                 messages={messages}
               />
             )}

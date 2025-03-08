@@ -137,6 +137,7 @@
   align-items: center;
   background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
   padding: 15px 20px;
+  border-radius: 10px;
 }
 
 .doc-file-icon {

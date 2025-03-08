@@ -32,7 +32,10 @@ import {
   uploadVideo,
 } from "../../services/socket/socket-service";
 import { Account } from "../../services/account/dto/account-dto";
-import { PrivacySettings } from "../../services/account/dto/privacy-settings-dto";
+import {
+  PrivacySettings,
+  PrivacySettingsDTO,
+} from "../../services/account/dto/privacy-settings-dto";
 import { getAllFriendshipRequests } from "../../services/friendship/friendship-service";
 import { FriendshipStatus } from "../../services/friendship/enum/friendship-status.enum";
 import { Link } from "react-router-dom";
@@ -51,11 +54,13 @@ interface ChatProps {
   currentUser: string;
   otherUser?: Users;
   otherUserAccount?: Account;
+  otherUserPrivacySettings?: PrivacySettingsDTO;
   messages: MessagesDTO[];
 }
 
 interface LastSeenProps {
   otherUserAccount: Account;
+  otherUserPrivacySettings: PrivacySettingsDTO;
   otherUserId: string;
 }
 
@@ -64,6 +69,7 @@ const Chat = ({
   currentUser,
   otherUser,
   otherUserAccount,
+  otherUserPrivacySettings,
   messages,
 }: ChatProps) => {
   const [messageInput, setMessageInput] = useState("");
@@ -359,6 +365,7 @@ const Chat = ({
             <div className="last-seen-container">
               <LastSeen
                 otherUserAccount={otherUserAccount as Account}
+                otherUserPrivacySettings={otherUserPrivacySettings as PrivacySettingsDTO}
                 otherUserId={otherUser?.id as string}
               />
             </div>
@@ -650,12 +657,12 @@ const Chat = ({
 
 export default Chat;
 
-const LastSeen = ({ otherUserAccount, otherUserId }: LastSeenProps) => {
+const LastSeen = ({ otherUserAccount, otherUserPrivacySettings, otherUserId }: LastSeenProps) => {
   const [isFriend, setIsFriend] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (otherUserAccount.privacy!.last_login === PrivacySettings.my_friends) {
+    if (otherUserPrivacySettings.last_login === PrivacySettings.my_friends) {
       getAllFriendshipRequests()
         .then((response) => {
           if (response.success) {
@@ -675,7 +682,7 @@ const LastSeen = ({ otherUserAccount, otherUserId }: LastSeenProps) => {
     }
   }, [otherUserAccount, otherUserId]);
 
-  if (otherUserAccount.privacy!.last_login === PrivacySettings.everyone) {
+  if (otherUserPrivacySettings.last_login === PrivacySettings.everyone) {
     return (
       <p className="text-xs">
         Last seen at:{" "}
@@ -688,7 +695,7 @@ const LastSeen = ({ otherUserAccount, otherUserId }: LastSeenProps) => {
     );
   }
 
-  if (otherUserAccount.privacy!.last_login === PrivacySettings.my_friends) {
+  if (otherUserPrivacySettings.last_login === PrivacySettings.my_friends) {
     if (loading) {
       return <p className="text-xs">Loading last seen...</p>;
     }
@@ -706,7 +713,7 @@ const LastSeen = ({ otherUserAccount, otherUserId }: LastSeenProps) => {
     );
   }
 
-  if (otherUserAccount.privacy!.last_login === PrivacySettings.nobody) {
+  if (otherUserPrivacySettings.last_login === PrivacySettings.nobody) {
     return null;
   }
 
