@@ -125,10 +125,20 @@ const AccountInfo: React.FC<AccountInfoProps> = ({
           privacy_settings?.last_login === PrivacySettings.everyone ? (
             <TextField
               id="last_login"
-              label="Last login"
+              label="Last seen"
               value={
                 userData?.account.last_login
-                  ? userData.account.last_login
+                  ? new Date(userData.account.last_login).toLocaleTimeString(
+                      "az-AZ",
+                      {
+                        timeZone: "Asia/Baku",
+                        day: "2-digit",
+                        month: "2-digit",
+                        year: "numeric",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      }
+                    )
                   : "There is no last login yet"
               }
               variant="outlined"
@@ -143,10 +153,19 @@ const AccountInfo: React.FC<AccountInfoProps> = ({
               accepted ? (
                 <TextField
                   id="last_login"
-                  label="Last login"
+                  label="Last seen"
                   value={
                     userData?.account.last_login
-                      ? userData.account.last_login
+                      ? new Date(
+                          userData.account.last_login
+                        ).toLocaleTimeString("az-AZ", {
+                          timeZone: "Asia/Baku",
+                          day: "numeric",
+                          month: "2-digit",
+                          year: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })
                       : "There is no last login yet"
                   }
                   variant="outlined"

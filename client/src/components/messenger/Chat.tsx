@@ -693,8 +693,13 @@ const LastSeen = ({
       <p className="text-xs">
         Last seen at:{" "}
         {otherUserAccount?.last_login
-          ? new Date(otherUserAccount.last_login).toLocaleString("az-AZ", {
+          ? new Date(otherUserAccount.last_login).toLocaleTimeString("az-AZ", {
               timeZone: "Asia/Baku",
+              day: "2-digit",
+              month: "2-digit",
+              year: "numeric",
+              hour: "2-digit",
+              minute: "2-digit",
             })
           : "N/A"}
       </p>
@@ -711,7 +716,9 @@ const LastSeen = ({
         {otherUserAccount?.last_login
           ? new Date(otherUserAccount.last_login).toLocaleTimeString("az-AZ", {
               timeZone: "Asia/Baku",
-              hour12: false,
+              day: "2-digit",
+              month: "2-digit",
+              year: "numeric",
               hour: "2-digit",
               minute: "2-digit",
             })
