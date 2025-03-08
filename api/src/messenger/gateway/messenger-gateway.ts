@@ -10,31 +10,28 @@ import { MessageType } from 'src/enums/message-type.enum';
 import { MessengerService } from '../messenger.service';
 import { JwtService } from '@nestjs/jwt';
 import { SupabaseService } from 'src/supabase/supabase.service';
-import {
-  BadRequestException,
-  UnauthorizedException,
-  Logger,
-} from '@nestjs/common';
+import { BadRequestException, UnauthorizedException } from '@nestjs/common';
 import { JwtPayload } from 'src/jwt/jwt-payload';
 import { IUser } from 'src/interfaces/user.interface';
 import { MessageStatus } from 'src/enums/message-status.enum';
 import { WebpushService } from 'src/webpush/webpush.service';
+import { LoggerService } from 'src/logger/logger.service';
 
 @WebSocketGateway(3636, {
   cors: {
-    origin: '*',
+    origin: 'http://localhost:5173',
     allowedHeaders: ['Authorization'],
     credentials: true,
   },
 })
 export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer() server: Server;
-  private readonly logger = new Logger(ChatGateway.name);
 
   constructor(
     private readonly messengerService: MessengerService,
     private readonly jwtService: JwtService,
     private readonly supabase: SupabaseService,
+    private readonly logger: LoggerService,
     private readonly webPushService: WebpushService,
   ) {}
 
@@ -57,12 +54,21 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         .single();
 
       if (error || !user) {
-        this.logger.warn(`User validation failed: ${error?.message}`);
+        this.logger.warn(
+          `User validation failed: ${error?.message}`,
+          'messenger-gateway',
+          `User ID: ${userId}`,
+        );
         throw new UnauthorizedException('User not found');
       }
       return user;
     } catch (error) {
-      this.logger.error('User validation error', error);
+      this.logger.error(
+        error.message,
+        'messenger-gateway',
+        'There was an error in validateUser',
+        error.stack,
+      );
       throw new UnauthorizedException('User validation failed');
     }
   }
@@ -87,9 +93,17 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       const { password, is_admin, ...safeUser } = user;
       client.data.user = safeUser;
       client.join(`user:${user.id}`);
-      this.logger.log(`Client connected: ${client.id} (User: ${user.id})`);
+      this.logger.info(
+        `Client connected: ${client.id} (User: ${user.id})`,
+        'messenger-gateway',
+      );
     } catch (error) {
-      this.logger.error('Connection error', error);
+      this.logger.error(
+        error.message,
+        'messenger-gateway',
+        'There was an error in handleConnection',
+        error.stack,
+      );
       client.emit('error', {
         success: false,
         status: error.response?.statusCode || 500,
@@ -100,21 +114,36 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   async handleDisconnect(client: Socket) {
-    const token = this.extractToken(client);
-    if (!token) {
-      throw new UnauthorizedException('Missing token');
-    }
-    const payload = await this.jwtService.verifyAsync<JwtPayload>(token, {
-      secret: process.env.JWT_ACCESS_SECRET_KEY,
-    });
-    const user = await this.validateUser(payload.id);
+    try {
+      const token = this.extractToken(client);
+      if (!token) {
+        throw new UnauthorizedException('Missing token');
+      }
+      const payload = await this.jwtService.verifyAsync<JwtPayload>(token, {
+        secret: process.env.JWT_ACCESS_SECRET_KEY,
+      });
+      const user = await this.validateUser(payload.id);
 
-    await this.supabase
-      .getClient()
-      .from('accounts')
-      .update({ last_login: new Date() })
-      .eq('user_id', user.id);
-    this.logger.log(`User disconnected: ${client.id}`);
+      await this.supabase
+        .getClient()
+        .from('accounts')
+        .update({ last_login: new Date() })
+        .eq('user_id', user.id);
+      this.logger.info(`User disconnected: ${client.id}`, 'messenger-gateway');
+    } catch (error) {
+      this.logger.error(
+        error.message,
+        'messenger-gateway',
+        'There was an error in handleDisconnect',
+        error.stack,
+      );
+      client.emit('error', {
+        success: false,
+        status: error.response?.statusCode || 500,
+        error: error.message,
+      });
+      client.disconnect();
+    }
   }
 
   @SubscribeMessage('joinRoom')
@@ -125,6 +154,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       }
       this.logger.debug(
         `Join room request from ${client.data.user.id} with ${payload.user2Id}`,
+        'messenger-gateway',
       );
 
       const room = await this.messengerService.createChatRoomIfNotExist(
@@ -144,7 +174,10 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       );
       for (const oldRoom of rooms) {
         client.leave(oldRoom);
-        this.logger.log(`User ${client.id} left room ${oldRoom}`);
+        this.logger.info(
+          `User ${client.id} left room ${oldRoom}`,
+          'messenger-gateway',
+        );
       }
 
       client.join(room.id);
@@ -152,9 +185,17 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       client.emit('joinRoomSuccess', { roomId: room.id });
       this.server.to(`user:${client.data.user.id}`).emit('chatRoomsUpdated');
       this.server.to(`user:${payload.user2Id}`).emit('chatRoumsUpdated');
-      this.logger.log(`User ${client.id} joined room ${room.id}`);
+      this.logger.info(
+        `User ${client.id} joined room ${room.id}`,
+        'messenger-gateway',
+      );
     } catch (error) {
-      this.logger.error('Error in joinRoom', error);
+      this.logger.error(
+        error.message,
+        'messenger-gateway',
+        'There was an error in joinRoom',
+        error.stack,
+      );
       if (error instanceof BadRequestException) {
         client.emit('error', {
           success: false,
@@ -198,6 +239,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
       this.logger.debug(
         `Send message request from ${client.data.user.id} in room ${payload.roomId}`,
+        'messenger-gateway',
       );
 
       const savedMessage = await this.messengerService.sendMessage(
@@ -270,9 +312,15 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
       this.logger.debug(
         `Message sent in room ${payload.roomId}: ${JSON.stringify(savedMessage)}`,
+        'messenger-gateway',
       );
     } catch (error) {
-      this.logger.error('Error in sendMessage', error);
+      this.logger.error(
+        error.message,
+        'messenger-gateway',
+        'There was an error in sendMessage',
+        error.stack,
+      );
       client.emit('error', {
         success: false,
         message: error.message || 'Error sending message',
@@ -290,9 +338,17 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
       const chatRooms = await this.messengerService.getChatRoomsForUser(userId);
       client.emit('getChatRooms', chatRooms);
-      this.logger.debug(`Chat rooms sent to user ${userId}`);
+      this.logger.debug(
+        `Chat rooms sent to user ${userId}`,
+        'messenger-gateway',
+      );
     } catch (error) {
-      this.logger.error('Error in getChatRooms', error);
+      this.logger.error(
+        error.message,
+        'messenger-gateway',
+        'There was an error in getChatRooms',
+        error.stack,
+      );
       client.emit('error', {
         success: false,
         message: error.message || 'Error retrieving chat rooms',
@@ -312,9 +368,17 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       );
 
       client.emit('messages', { roomId: payload.roomId, messages });
-      this.logger.debug(`Messages sent for room ${payload.roomId}`);
+      this.logger.debug(
+        `Messages sent for room ${payload.roomId}`,
+        'messenger-gateway',
+      );
     } catch (error) {
-      this.logger.error('Error in getMessages', error);
+      this.logger.error(
+        error.message,
+        'messenger-gateway',
+        'There was an error in getMessages',
+        error.stack,
+      );
       client.emit('error', {
         success: false,
         message: error.message || 'Error retrieving messages',
@@ -326,10 +390,18 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   async handleLeaveRoom(client: Socket, payload: { roomId: string }) {
     try {
       client.leave(payload.roomId);
-      this.logger.log(`Client ${client.id} left room ${payload.roomId}`);
+      this.logger.info(
+        `Client ${client.id} left room ${payload.roomId}`,
+        'messenger-gateway',
+      );
       client.emit('roomLeft', payload.roomId);
     } catch (error) {
-      this.logger.error('Error in leaveRoom', error);
+      this.logger.error(
+        error.message,
+        'messenger-gateway',
+        'There was an error in leaveRoom',
+        error.stack,
+      );
       client.emit('error', { message: error.message || 'Error leaving room' });
     }
   }
@@ -342,7 +414,6 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         client.data.user.id,
       );
 
-      // YENİ: Oxunma zamanı unread count-u yenilə
       const { count } = await this.supabase
         .getClient()
         .from('messages')
@@ -360,7 +431,12 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         .to(payload.roomId)
         .emit('messagesRead', { roomId: payload.roomId });
     } catch (error) {
-      this.logger.error('Error in setMessageRead', error);
+      this.logger.error(
+        error.message,
+        'messenger-gateway',
+        'There was an error in setMessageRead',
+        error.stack,
+      );
       client.emit('error', {
         success: false,
         message: error.message || 'Error setting messages as read',

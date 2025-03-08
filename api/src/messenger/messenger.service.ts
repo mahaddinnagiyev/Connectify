@@ -2,18 +2,19 @@ import {
   BadRequestException,
   Injectable,
   InternalServerErrorException,
-  Logger,
 } from '@nestjs/common';
 import { MessageStatus } from 'src/enums/message-status.enum';
 import { MessageType } from 'src/enums/message-type.enum';
+import { LoggerService } from 'src/logger/logger.service';
 import { SupabaseService } from 'src/supabase/supabase.service';
 import { v4 as uuid } from 'uuid';
 
 @Injectable()
 export class MessengerService {
-  private readonly logger = new Logger(MessengerService.name);
-
-  constructor(private readonly supabase: SupabaseService) {}
+  constructor(
+    private readonly supabase: SupabaseService,
+    private readonly logger: LoggerService,
+  ) {}
 
   async getChatRoomById(roomId: string) {
     try {
@@ -25,7 +26,12 @@ export class MessengerService {
         .single();
 
       if (error) {
-        this.logger.error('Error checking existing chat room', error);
+        this.logger.error(
+          error.message,
+          'messenger',
+          'There was an error while getting chat room by id from supabase',
+          error.stack,
+        );
         throw new InternalServerErrorException(
           `Error checking existing chat room: ${error.message}`,
         );
@@ -37,7 +43,12 @@ export class MessengerService {
 
       return chatRoom;
     } catch (error) {
-      this.logger.error('Exception in createChatRoomIfNotExist', error);
+      this.logger.error(
+        error.message,
+        'messenger',
+        'There was an error in getting chat room by id',
+        error.stack,
+      );
       if (error instanceof BadRequestException) {
         throw error;
       }
@@ -64,14 +75,19 @@ export class MessengerService {
         .contains('user_ids', sortedUserIds);
 
       if (error) {
-        this.logger.error('Error checking existing chat room', error);
+        this.logger.error(
+          error.message,
+          'messenger',
+          'There was an error while getting chat rooms from supabase',
+          error.stack,
+        );
         throw new InternalServerErrorException(
           `Error checking existing chat room: ${error.message}`,
         );
       }
 
       if (chatRoom && chatRoom.length > 0) {
-        this.logger.debug('Existing chat room found');
+        this.logger.debug('Existing chat room found', 'messenger');
         return chatRoom[0];
       }
 
@@ -83,7 +99,12 @@ export class MessengerService {
         .single();
 
       if (createError) {
-        this.logger.error('Error creating new chat room', createError);
+        this.logger.error(
+          error.message,
+          'messenger',
+          'There was an error while creating new chat room in supabase',
+          error.stack,
+        );
         throw new InternalServerErrorException(
           `Error creating new chat room: ${createError.message}`,
         );
@@ -102,13 +123,27 @@ export class MessengerService {
         .insert([defaultMessage]);
 
       if (messageError) {
-        this.logger.error('Error sending default message', messageError);
+        this.logger.error(
+          error.message,
+          'messenger',
+          'There was an error while saving new message in supabase',
+          error.stack,
+        );
       }
 
-      this.logger.debug('New chat room created successfully');
+      this.logger.debug(
+        'New chat room created successfully',
+        'messenger',
+        `Users ${user1} and ${user2}`,
+      );
       return newChatRoom;
     } catch (error) {
-      this.logger.error('Exception in createChatRoomIfNotExist', error);
+      this.logger.error(
+        error.message,
+        'messenger',
+        'There was an error in creating chat room',
+        error.stack,
+      );
       if (error instanceof BadRequestException) {
         throw error;
       }
@@ -144,16 +179,26 @@ export class MessengerService {
         .single();
 
       if (error) {
-        this.logger.error('Error sending message', error);
+        this.logger.error(
+          error.message,
+          'messenger',
+          'Error sending message to supabase',
+          error.stack,
+        );
         throw new InternalServerErrorException(
           `Error sending message: ${error.message}`,
         );
       }
 
-      this.logger.debug('Message sent successfully');
+      this.logger.debug('Message sent successfully', 'messenger', data);
       return data;
     } catch (error) {
-      this.logger.error('Exception in sendMessage', error);
+      this.logger.error(
+        error.message,
+        'messenger',
+        'There was an error in sending message',
+        error.stack,
+      );
       throw new InternalServerErrorException(
         `Error sending message: ${error.message}`,
       );
@@ -162,22 +207,21 @@ export class MessengerService {
 
   async setMessageRead(roomId: string, userId: string) {
     try {
-      const { data, error } = await this.supabase
+      const { data } = await this.supabase
         .getClient()
         .from('messages')
         .update({ status: MessageStatus.READ })
         .eq('room_id', roomId)
         .neq('sender_id', userId);
 
-      if (error) {
-        this.logger.error('Error updating messages to read', error);
-        throw new InternalServerErrorException(
-          'Error setting messages as read',
-        );
-      }
       return data;
     } catch (error) {
-      this.logger.error('Exception in setMessageRead', error);
+      this.logger.error(
+        error.message,
+        'messenger',
+        'There was an error in setting messages as read',
+        error.stack,
+      );
       throw new InternalServerErrorException('Error setting messages as read');
     }
   }
@@ -221,8 +265,12 @@ export class MessengerService {
           new Date(a.lastMessageDate || 0).getTime(),
       );
     } catch (error) {
-      console.log(error);
-      this.logger.error('Exception in getChatRoomsForUser', error);
+      this.logger.error(
+        error.message,
+        'messenger',
+        'There was an error in retrieving chat rooms',
+        error.stack,
+      );
       throw new InternalServerErrorException(
         `Error retrieving chat rooms: ${error.message}`,
       );
@@ -231,24 +279,22 @@ export class MessengerService {
 
   async getMessagesForRoom(roomId: string) {
     try {
-      const { data, error } = await this.supabase
+      const { data } = await this.supabase
         .getClient()
         .from('messages')
         .select('*')
         .eq('room_id', roomId)
         .order('created_at', { ascending: true });
 
-      if (error) {
-        this.logger.error('Error retrieving messages', error);
-        throw new InternalServerErrorException(
-          `Error retrieving messages: ${error.message}`,
-        );
-      }
-
-      this.logger.debug(`Retrieved messages for room ${roomId}`);
+      this.logger.debug(`Retrieved messages for room ${roomId}`, 'messenger');
       return data;
     } catch (error) {
-      this.logger.error('Exception in getMessagesForRoom', error);
+      this.logger.error(
+        error.message,
+        'messenger',
+        'There was an error in retrieving messages for room',
+        error.stack,
+      );
       throw new InternalServerErrorException(
         `Error retrieving messages: ${error.message}`,
       );
@@ -257,7 +303,7 @@ export class MessengerService {
 
   async updateMessageStatus(messageId: string, status: MessageStatus) {
     try {
-      const { data, error } = await this.supabase
+      const { data } = await this.supabase
         .getClient()
         .from('messages')
         .update({ status })
@@ -265,17 +311,15 @@ export class MessengerService {
         .select('*')
         .single();
 
-      if (error) {
-        this.logger.error('Error updating message status', error);
-        throw new InternalServerErrorException(
-          `Error updating message status: ${error.message}`,
-        );
-      }
-
-      this.logger.debug('Message status updated successfully');
+      this.logger.debug('Message status updated successfully', 'messenger');
       return data;
     } catch (error) {
-      this.logger.error('Exception in updateMessageStatus', error);
+      this.logger.error(
+        error.message,
+        'messenger',
+        'There was an error in updating message status',
+        error.stack,
+      );
       throw new InternalServerErrorException(
         `Error updating message status: ${error.message}`,
       );
@@ -301,7 +345,12 @@ export class MessengerService {
         });
 
       if (error) {
-        this.logger.error(error.message);
+        this.logger.error(
+          error.message,
+          'messenger',
+          'There is an error in uploading image',
+          error.stack,
+        );
         return new BadRequestException({
           success: false,
           error: error.message,
@@ -319,7 +368,12 @@ export class MessengerService {
         file_size: file.size,
       };
     } catch (error) {
-      this.logger.error(error.message);
+      this.logger.error(
+        error.message,
+        'messenger',
+        'There was an error in uploading image',
+        error.stack,
+      );
       return new InternalServerErrorException(
         'Uploading image failed - Due To Internal Server Error',
       );
@@ -344,7 +398,12 @@ export class MessengerService {
         });
 
       if (error) {
-        this.logger.error(error.message);
+        this.logger.error(
+          error.message,
+          'messenger',
+          'There is an error in uploading video',
+          error.stack,
+        );
         return new BadRequestException({
           success: false,
           error: error.message,
@@ -362,9 +421,14 @@ export class MessengerService {
         file_size: file.size,
       };
     } catch (error) {
-      this.logger.error(error.message);
+      this.logger.error(
+        error.message,
+        'messenger',
+        'There was an error in uploading video',
+        error.stack,
+      );
       return new InternalServerErrorException(
-        'Uploading image failed - Due To Internal Server Error',
+        'Uploading video failed - Due To Internal Server Error',
       );
     }
   }
@@ -387,7 +451,12 @@ export class MessengerService {
         });
 
       if (error) {
-        this.logger.error(error.message);
+        this.logger.error(
+          error.message,
+          'messenger',
+          'There is an error in uploading file',
+          error.stack,
+        );
         return new BadRequestException({
           success: false,
           error: error.message,
@@ -405,9 +474,14 @@ export class MessengerService {
         file_size: file.size,
       };
     } catch (error) {
-      this.logger.error(error.message);
+      this.logger.error(
+        error.message,
+        'messenger',
+        'There was an error in uploading file',
+        error.stack,
+      );
       return new InternalServerErrorException(
-        'Uploading image failed - Due To Internal Server Error',
+        'Uploading file failed - Due To Internal Server Error',
       );
     }
   }

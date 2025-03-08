@@ -19,7 +19,8 @@ import { UserModule } from 'src/user/user.module';
     AuthModule,
     LoggerModule,
     WebpushModule,
-    UserModule
+    UserModule,
+    LoggerModule,
   ],
   providers: [MessengerService, JwtStrategy, ChatGateway],
   controllers: [MessengerController],
