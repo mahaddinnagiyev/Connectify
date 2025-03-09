@@ -1,19 +1,11 @@
 import { useState, useEffect, useRef } from "react";
 import "./css/chat-style.css";
-import { Tooltip } from "@mui/material";
 import {
   MessagesDTO,
   MessageType,
 } from "../../services/socket/dto/messages-dto";
 import { Users } from "../../services/user/dto/user-dto";
-import no_profile_photo from "../../assets/no-profile-photo.png";
 import {
-  LocalPhone as LocalPhoneIcon,
-  Videocam as VideocamIcon,
-  MoreVert as MoreVertIcon,
-  AccountBox as AccountBoxIcon,
-  Delete as DeleteIcon,
-  ChevronLeft as ChevronLeftIcon,
   PictureAsPdf as PictureAsPdfIcon,
   Description as DescriptionIcon,
   TableChart as TableChartIcon,
@@ -25,15 +17,14 @@ import {
 import { socket } from "../../services/socket/socket-service";
 import { Account } from "../../services/account/dto/account-dto";
 import { PrivacySettingsDTO } from "../../services/account/dto/privacy-settings-dto";
-import { Link } from "react-router-dom";
 import ErrorMessage from "../messages/ErrorMessage";
 import {
   get_block_list,
   get_blocker_list,
 } from "../../services/user/block-list-service";
 import SendMessage from "./SendMessage";
-import { LastSeen } from "./utils/LastSeen";
 import AudioPlayer from "./utils/AudioPlayer";
+import ChatHeader from "./utils/ChatHeader";
 
 interface ChatProps {
   roomId: string;
@@ -54,15 +45,11 @@ const Chat = ({
 }: ChatProps) => {
   const [messageInput, setMessageInput] = useState("");
   const [errorMessage, setErrorMessage] = useState<string | null>("");
-  const [visibleChatOptions, setVisibleChatOptions] = useState(false);
-  const [isHovered, setIsHovered] = useState(false);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [isBlocked, setIsBlocked] = useState(false);
   const [isBlocker, setIsBlocker] = useState(false);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
-  const chatOptionsRef = useRef<HTMLDivElement>(null);
   const emojiPickerRef = useRef<HTMLDivElement>(null);
-  const screenSize = window.innerWidth;
 
   useEffect(() => {
     get_block_list().then((response) => {
@@ -83,22 +70,6 @@ const Chat = ({
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
-        chatOptionsRef.current &&
-        !chatOptionsRef.current.contains(event.target as Node)
-      ) {
-        setVisibleChatOptions(false);
-      }
-    };
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, []);
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
         emojiPickerRef.current &&
         !emojiPickerRef.current.contains(event.target as Node)
       ) {
@@ -111,11 +82,6 @@ const Chat = ({
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
-
-  const toggleChatOptions = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setVisibleChatOptions(!visibleChatOptions);
-  };
 
   const handleEmojiPicker = (emojiObject: { emoji: string }) => {
     setMessageInput((prevInput) => prevInput + emojiObject.emoji);
@@ -233,87 +199,11 @@ const Chat = ({
 
       {/* Header */}
       <div className="right-header pb-2 pr-4 flex items-center justify-between max-h-[57px]">
-        <div className="flex items-center gap-5">
-          <div className="flex items-center gap-2">
-            <Tooltip title="Back" placement="top">
-              <Link to={"/chat"}>
-                <ChevronLeftIcon />
-              </Link>
-            </Tooltip>
-            <img
-              src={otherUserAccount?.profile_picture ?? no_profile_photo}
-              alt="User Profile"
-              className="rounded-full border-2 border-[var(--primary-color)]"
-              style={{ height: "50px", width: "50px" }}
-            />
-          </div>
-          <div
-            className={`user-info-container ${isHovered ? "hovered" : ""}`}
-            onMouseEnter={() => setIsHovered(true)}
-            onMouseLeave={() => setIsHovered(false)}
-          >
-            <div className="marquee">
-              <a
-                href={`/user/@${otherUser?.username}`}
-                className="user-name mb-1 hover:underline text-sm"
-              >
-                {otherUser?.first_name} {otherUser?.last_name} | @
-                {otherUser?.username}
-              </a>
-            </div>
-            <div className="last-seen-container">
-              <LastSeen
-                otherUserAccount={otherUserAccount as Account}
-                otherUserPrivacySettings={
-                  otherUserPrivacySettings as PrivacySettingsDTO
-                }
-                otherUserId={otherUser?.id as string}
-              />
-            </div>
-          </div>
-        </div>
-        <div className="flex gap-1 items-center md:mr-3 ml-3">
-          {screenSize >= 768 && (
-            <>
-              <button className="call-btn">
-                <LocalPhoneIcon />
-              </button>
-              <button className="call-btn">
-                <VideocamIcon />
-              </button>
-            </>
-          )}
-          <div>
-            <button onClick={toggleChatOptions}>
-              <MoreVertIcon />
-            </button>
-            {visibleChatOptions && (
-              <div ref={chatOptionsRef} className="action-buttons-2">
-                <button
-                  className="user-profile-btn"
-                  onClick={() =>
-                    (window.location.href = `/user/@${otherUser?.username}`)
-                  }
-                >
-                  <AccountBoxIcon className="profile-icon" /> User Profile
-                </button>
-                {screenSize < 768 && (
-                  <>
-                    <button className="user-profile-btn">
-                      <LocalPhoneIcon /> Audio Call
-                    </button>
-                    <button className="user-profile-btn">
-                      <VideocamIcon /> Video Call
-                    </button>
-                  </>
-                )}
-                <button className="delete-btn">
-                  <DeleteIcon className="delete-icon" /> Delete Chat
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
+        <ChatHeader
+          otherUserAccount={otherUserAccount!}
+          otherUserPrivacySettings={otherUserPrivacySettings!}
+          otherUser={otherUser!}
+        />
       </div>
       <hr className="font-bold" />
       {/* Messages Section */}
