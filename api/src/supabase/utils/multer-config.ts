@@ -131,9 +131,9 @@ export class MulterAudioConfig implements MulterOptionsFactory {
         fileSize: 50 * 1024 * 1024,
       },
       fileFilter(req, file, callback) {
-        if (!file.mimetype.match(/\/(mp3|webm|webm;codecs=opus)$/)) {
+        if (!file.mimetype.match(/\/(mp3|webm|wav|ogg|x-wav)$/)) {
           return callback(
-            new Error('Invalid file type. Only MP3 are allowed'),
+            new Error('Invalid file type. Only MP3 and WEBM are allowed'),
             false,
           );
         }

@@ -276,7 +276,7 @@ export class MessengerController {
       return new BadRequestException('No file uploaded');
     }
 
-    if (!file.mimetype.match(/\/(mp3|webm)$/)) {
+    if (!file.mimetype.match(/\/(mp3|webm|wav|ogg|x-wav)$/)) {
       return new BadRequestException({
         success: false,
         error: 'Invalid file type. Only MP3 and WEBM are allowed',
