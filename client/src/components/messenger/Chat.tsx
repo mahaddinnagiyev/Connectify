@@ -378,10 +378,12 @@ const Chat = ({
                     )}
 
                     {message.message_type === MessageType.AUDIO && (
-                      <AudioPlayer
-                        src={message.content}
-                        onLoadedData={scrollToBottom}
-                      />
+                      <div className="audio-player-container">
+                        <AudioPlayer
+                          src={message.content}
+                          onLoadedData={scrollToBottom}
+                        />
+                      </div>
                       // <audio
                       //   src={message.content}
                       //   controls

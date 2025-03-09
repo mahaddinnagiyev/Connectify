@@ -1,4 +1,4 @@
-import React, { useState, KeyboardEvent } from "react";
+import React, { useState, KeyboardEvent, useRef } from "react";
 import { Tooltip } from "@mui/material";
 import {
   Mic as MicIcon,
@@ -62,6 +62,7 @@ const SendMessage: React.FC<SendMessageProps> = ({
   const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(
     null
   );
+  const recordingCanceled = useRef(false);
 
   const onKeyPressHandler = (e: KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -148,20 +149,28 @@ const SendMessage: React.FC<SendMessageProps> = ({
   const startRecording = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const recorder = new MediaRecorder(stream);
+      const recorder = new MediaRecorder(stream, {
+        mimeType: "audio/webm; codecs=opus",
+        audioBitsPerSecond: 192000,
+      });
       const audioChunks: Blob[] = [];
 
       recorder.ondataavailable = (event) => {
-        console.log(event.data);
+        if (recordingCanceled.current) return;
         audioChunks.push(event.data);
       };
 
       recorder.onstop = async () => {
-        const audioBlob = new Blob(audioChunks, { type: "audio/webm" });
-        const audioFile = new File([audioBlob], "recording.webm", {
-          type: "audio/webm",
+        if (recordingCanceled.current) {
+          recordingCanceled.current = false;
+          return;
+        }
+        const audioBlob = new Blob(audioChunks, {
+          type: "audio/webm; codecs=opus",
         });
-
+        const audioFile = new File([audioBlob], "recording.webm", {
+          type: "audio/webm; codecs=opus",
+        });
         await handleAudioUpload(audioFile);
       };
 
@@ -171,6 +180,24 @@ const SendMessage: React.FC<SendMessageProps> = ({
     } catch (error) {
       console.error("Error accessing microphone:", error);
     }
+  };
+
+  const stopRecordingAndUpload = () => {
+    if (mediaRecorder) {
+      // Qeydi dayandırırıq, ləğv bayrağı təyin olunmur, ona görə də upload olacaq
+      mediaRecorder.stop();
+      setMediaRecorder(null);
+    }
+    setIsRecording(false);
+  };
+
+  const cancelRecording = () => {
+    if (mediaRecorder) {
+      recordingCanceled.current = true;
+      mediaRecorder.stop();
+      setMediaRecorder(null);
+    }
+    setIsRecording(false);
   };
 
   const handleAudioUpload = async (audioFile: File) => {
@@ -206,14 +233,6 @@ const SendMessage: React.FC<SendMessageProps> = ({
       setIsLoading(false);
       setErrorMessage((error as Error).message || "Audio upload failed.");
     }
-  };
-
-  const cancelRecording = () => {
-    if (mediaRecorder) {
-      mediaRecorder.stop();
-      setMediaRecorder(null);
-    }
-    setIsRecording(false);
   };
 
   return (
@@ -344,13 +363,7 @@ const SendMessage: React.FC<SendMessageProps> = ({
                 <button
                   type="submit"
                   className="send-button"
-                  onClick={() => {
-                    if (isRecording) {
-                      cancelRecording();
-                    } else {
-                      handleSendMessage();
-                    }
-                  }}
+                  onClick={stopRecordingAndUpload}
                 >
                   <SendIcon />
                 </button>
