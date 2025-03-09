@@ -4,7 +4,7 @@ import CloseIcon from "@mui/icons-material/Close";
 import {
   MessagesDTO,
   MessageType,
-} from "../../../services/socket/dto/messages-dto";
+} from "../../../../services/socket/dto/messages-dto";
 
 const ChatImage = ({ message }: { message: MessagesDTO }) => {
   const [isOpen, setIsOpen] = useState(false);

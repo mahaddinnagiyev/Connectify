@@ -20,7 +20,7 @@ import {
 } from "../../services/socket/socket-service";
 import { MessageType } from "../../services/socket/dto/messages-dto";
 import { Socket } from "socket.io-client";
-import AudioWaveAnimation from "./utils/AudioWaveAnimation";
+import AudioWaveAnimation from "./utils/audio/AudioWaveAnimation";
 
 interface SendMessageProps {
   isBlocked: boolean;

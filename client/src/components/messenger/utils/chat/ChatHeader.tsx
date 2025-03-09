@@ -1,11 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import { Tooltip } from "@mui/material";
 import { Link } from "react-router-dom";
-import no_profile_photo from "../../../assets/no-profile-photo.png";
-import { Account } from "../../../services/account/dto/account-dto";
-import { PrivacySettingsDTO } from "../../../services/account/dto/privacy-settings-dto";
-import { Users } from "../../../services/user/dto/user-dto";
-import { LastSeen } from "./../utils/LastSeen";
+import no_profile_photo from "../../../../assets/no-profile-photo.png";
+import { Account } from "../../../../services/account/dto/account-dto";
+import { PrivacySettingsDTO } from "../../../../services/account/dto/privacy-settings-dto";
+import { Users } from "../../../../services/user/dto/user-dto";
+import { LastSeen } from "./../../utils/LastSeen";
 import {
   LocalPhone as LocalPhoneIcon,
   Videocam as VideocamIcon,

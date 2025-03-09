@@ -23,9 +23,10 @@ import {
   get_blocker_list,
 } from "../../services/user/block-list-service";
 import SendMessage from "./SendMessage";
-import AudioPlayer from "./utils/AudioPlayer";
-import ChatHeader from "./utils/ChatHeader";
-import ChatImage from "./utils/ChatImage";
+import AudioPlayer from "./utils/audio/AudioPlayer";
+import ChatHeader from "./utils/chat/ChatHeader";
+import ChatImage from "./utils/media/ChatImage";
+import ChatVideo from "./utils/media/ChatVideo";
 
 interface ChatProps {
   roomId: string;
@@ -230,22 +231,9 @@ const Chat = ({
                   >
                     {message.message_type === MessageType.IMAGE && (
                       <ChatImage message={message} />
-                      // <img
-                      //   src={message.content}
-                      //   alt=""
-                      //   className="bg-white rounded-lg"
-                      //   style={{ padding: "0px !important" }}
-                      //   onLoad={scrollToBottom}
-                      // />
                     )}
                     {message.message_type === MessageType.VIDEO && (
-                      <video
-                        src={message.content}
-                        controls
-                        className="bg-white rounded-lg"
-                        style={{ padding: "0px !important" }}
-                        onLoadedData={scrollToBottom}
-                      />
+                      <ChatVideo message={message} />
                     )}
                     {message.message_type === MessageType.FILE && (
                       <div className="file-message-container">
@@ -276,13 +264,6 @@ const Chat = ({
                           onLoadedData={scrollToBottom}
                         />
                       </div>
-                      // <audio
-                      //   src={message.content}
-                      //   controls
-                      //   className="bg-[#f1f3f4] rounded-lg"
-                      //   style={{ padding: "0px !important" }}
-                      //   onLoadedData={scrollToBottom}
-                      // />
                     )}
 
                     {message.message_type === MessageType.TEXT && (
