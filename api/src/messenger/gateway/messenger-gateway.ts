@@ -456,6 +456,14 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         client.data.user.id,
       );
 
+      const { data: newLastMessage } = await this.supabase
+        .getClient()
+        .from('messages')
+        .select('*')
+        .eq('room_id', payload.roomId)
+        .order('created_at', { ascending: false })
+        .limit(1);
+
       const { data: allMessages } = await this.supabase
         .getClient()
         .from('messages')
@@ -469,7 +477,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       });
       this.server.to(payload.roomId).emit('lastMessageUpdated', {
         roomId: payload.roomId,
-        lastMessage: allMessages?.[0] || null,
+        lastMessage: newLastMessage?.[0] || null,
       });
       this.server.to(payload.roomId).emit('messages', {
         roomId: payload.roomId,
