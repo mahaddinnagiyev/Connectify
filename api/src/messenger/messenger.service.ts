@@ -1,10 +1,13 @@
 import {
   BadRequestException,
+  ForbiddenException,
   Injectable,
   InternalServerErrorException,
+  NotFoundException,
 } from '@nestjs/common';
 import { MessageStatus } from 'src/enums/message-status.enum';
 import { MessageType } from 'src/enums/message-type.enum';
+import { IMessage } from 'src/interfaces/message.interface';
 import { LoggerService } from 'src/logger/logger.service';
 import { SupabaseService } from 'src/supabase/supabase.service';
 import { v4 as uuid } from 'uuid';
@@ -32,13 +35,13 @@ export class MessengerService {
           'There was an error while getting chat room by id from supabase',
           error.stack,
         );
-        throw new InternalServerErrorException(
+        return new InternalServerErrorException(
           `Error checking existing chat room: ${error.message}`,
         );
       }
 
       if (!chatRoom) {
-        throw new BadRequestException('Chat room not found');
+        return new BadRequestException('Chat room not found');
       }
 
       return chatRoom;
@@ -50,9 +53,9 @@ export class MessengerService {
         error.stack,
       );
       if (error instanceof BadRequestException) {
-        throw error;
+        return error;
       }
-      throw new InternalServerErrorException(
+      return new InternalServerErrorException(
         `Error creating chat room: ${error.message}`,
       );
     }
@@ -60,7 +63,7 @@ export class MessengerService {
 
   async createChatRoomIfNotExist(user1: string, user2: string) {
     if (user1 === user2) {
-      throw new BadRequestException(
+      return new BadRequestException(
         'Cannot create a chat room with the same user.',
       );
     }
@@ -81,7 +84,7 @@ export class MessengerService {
           'There was an error while getting chat rooms from supabase',
           error.stack,
         );
-        throw new InternalServerErrorException(
+        return new InternalServerErrorException(
           `Error checking existing chat room: ${error.message}`,
         );
       }
@@ -105,7 +108,7 @@ export class MessengerService {
           'There was an error while creating new chat room in supabase',
           error.stack,
         );
-        throw new InternalServerErrorException(
+        return new InternalServerErrorException(
           `Error creating new chat room: ${createError.message}`,
         );
       }
@@ -145,9 +148,9 @@ export class MessengerService {
         error.stack,
       );
       if (error instanceof BadRequestException) {
-        throw error;
+        return error;
       }
-      throw new InternalServerErrorException(
+      return new InternalServerErrorException(
         `Error creating chat room: ${error.message}`,
       );
     }
@@ -185,7 +188,7 @@ export class MessengerService {
           'Error sending message to supabase',
           error.stack,
         );
-        throw new InternalServerErrorException(
+        return new InternalServerErrorException(
           `Error sending message: ${error.message}`,
         );
       }
@@ -199,7 +202,7 @@ export class MessengerService {
         'There was an error in sending message',
         error.stack,
       );
-      throw new InternalServerErrorException(
+      return new InternalServerErrorException(
         `Error sending message: ${error.message}`,
       );
     }
@@ -222,7 +225,7 @@ export class MessengerService {
         'There was an error in setting messages as read',
         error.stack,
       );
-      throw new InternalServerErrorException('Error setting messages as read');
+      return new InternalServerErrorException('Error setting messages as read');
     }
   }
 
@@ -271,7 +274,7 @@ export class MessengerService {
         'There was an error in retrieving chat rooms',
         error.stack,
       );
-      throw new InternalServerErrorException(
+      return new InternalServerErrorException(
         `Error retrieving chat rooms: ${error.message}`,
       );
     }
@@ -295,7 +298,7 @@ export class MessengerService {
         'There was an error in retrieving messages for room',
         error.stack,
       );
-      throw new InternalServerErrorException(
+      return new InternalServerErrorException(
         `Error retrieving messages: ${error.message}`,
       );
     }
@@ -320,8 +323,89 @@ export class MessengerService {
         'There was an error in updating message status',
         error.stack,
       );
-      throw new InternalServerErrorException(
+      return new InternalServerErrorException(
         `Error updating message status: ${error.message}`,
+      );
+    }
+  }
+
+  async unsendMessage(roomId: string, messageId: string, sender_id: string) {
+    try {
+      const { data: message } = (await this.supabase
+        .getClient()
+        .from('messages')
+        .select('*')
+        .eq('id', messageId)
+        .eq('room_id', roomId)
+        .single()) as { data: IMessage };
+
+      if (!message) {
+        await this.logger.warn(
+          'Message not found',
+          'messenger',
+          `Message Not Found\nMessage ID: ${messageId}\nRoom ID: ${roomId}`,
+        );
+        throw new NotFoundException('Message not found');
+      }
+
+      if (message.sender_id !== sender_id) {
+        throw new ForbiddenException(
+          'You are not allowed to delete this message',
+        );
+      }
+
+      if (message.message_type !== MessageType.TEXT) {
+        const publicUrl = message.content;
+        const bucketPathIdentifier = '/public/messages/';
+        const index = publicUrl.indexOf(bucketPathIdentifier);
+        if (index !== -1) {
+          const filePath = publicUrl.substring(
+            index + bucketPathIdentifier.length,
+          );
+          const { error: deleteError } = await this.supabase
+            .getClient()
+            .storage.from('messages')
+            .remove([filePath]);
+          if (deleteError) {
+            await this.logger.error(
+              deleteError.message,
+              'messenger',
+              'Error deleting file from storage',
+              deleteError.stack,
+            );
+          }
+        } else {
+          await this.logger.warn(
+            'Public URL does not contain expected bucket path',
+            'messenger',
+            `Message ID: ${messageId}\nPublic URL: ${publicUrl}`,
+          );
+        }
+      }
+
+      await this.supabase
+        .getClient()
+        .from('messages')
+        .delete()
+        .eq('id', messageId)
+        .eq('room_id', roomId);
+
+      this.logger.debug(
+        'Message unsent successfully',
+        'messenger',
+        `Message ID: ${messageId}\nRoom ID: ${roomId}\nUser ID: ${message.sender_id}\nContent: ${message.content}\nMessage Type: ${message.message_type}`,
+      );
+
+      return { success: true, message: 'Message unsent successfully' };
+    } catch (error) {
+      this.logger.error(
+        error.message,
+        'messenger',
+        'Error unsending message',
+        error.stack,
+      );
+      throw new InternalServerErrorException(
+        `Error unsending message: ${error.message}`,
       );
     }
   }

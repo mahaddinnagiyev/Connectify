@@ -443,4 +443,50 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       });
     }
   }
+
+  @SubscribeMessage('unsendMessage')
+  async handleUnsendMessage(
+    client: Socket,
+    payload: { roomId: string; messageId: string },
+  ) {
+    try {
+      const result = await this.messengerService.unsendMessage(
+        payload.roomId,
+        payload.messageId,
+        client.data.user.id,
+      );
+
+      const { data: allMessages } = await this.supabase
+        .getClient()
+        .from('messages')
+        .select('*')
+        .eq('room_id', payload.roomId)
+        .order('created_at', { ascending: true });
+
+      this.server.to(payload.roomId).emit('messageUnsent', {
+        messageId: payload.messageId,
+        roomId: payload.roomId,
+      });
+      this.server.to(payload.roomId).emit('lastMessageUpdated', {
+        roomId: payload.roomId,
+        lastMessage: allMessages?.[0] || null,
+      });
+      this.server.to(payload.roomId).emit('messages', {
+        roomId: payload.roomId,
+        messages: allMessages || [],
+      });
+      client.emit('unsendMessageSuccess', result);
+    } catch (error) {
+      this.logger.error(
+        error.message,
+        'messenger-gateway',
+        'There was an error unsending message',
+        error.stack,
+      );
+      client.emit('error', {
+        success: false,
+        message: error.message || 'Error unsending message',
+      });
+    }
+  }
 }
