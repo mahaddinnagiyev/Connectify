@@ -22,6 +22,7 @@ const ChatVideo = ({
   } | null>(null);
 
   if (message.message_type !== MessageType.VIDEO) return null;
+  
   const handleContextMenu = (event: React.MouseEvent) => {
     event.preventDefault();
     setContextMenu({
@@ -99,7 +100,6 @@ const ChatVideo = ({
         </Box>
       </Box>
 
-      {/* Kontekst menyusu */}
       {contextMenu !== null && (
         <Box
           sx={{

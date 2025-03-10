@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { Modal, Box, IconButton } from "@mui/material";
+import { Modal, Box, IconButton, Button } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
+import DownloadIcon from "@mui/icons-material/Download";
 import {
   MessagesDTO,
   MessageType,
@@ -8,8 +9,52 @@ import {
 
 const ChatImage = ({ message }: { message: MessagesDTO }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [contextMenu, setContextMenu] = useState<{
+    mouseX: number;
+    mouseY: number;
+  } | null>(null);
 
   if (message.message_type !== MessageType.IMAGE) return null;
+
+  const handleContextMenu = (event: React.MouseEvent) => {
+    event.preventDefault();
+    setContextMenu({
+      mouseX: event.clientX - 2,
+      mouseY: event.clientY - 4,
+    });
+  };
+
+  const handleCloseContextMenu = () => {
+    setContextMenu(null);
+  };
+
+  const handleDownload = async () => {
+    try {
+      const response = await fetch(message.content);
+
+      if (!response.ok) throw new Error("Failed to download image");
+
+      const blob = await response.blob();
+
+      const image_url = message.content;
+      const image_name = image_url.split("/").pop();
+
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+
+      a.href = url;
+      a.download = image_name ?? "image.jpg";
+      document.body.appendChild(a);
+      a.click();
+
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (error) {
+      console.error("Download failed:", error);
+      alert("Image download failed");
+    }
+    handleCloseContextMenu();
+  };
 
   return (
     <>
@@ -18,7 +63,34 @@ const ChatImage = ({ message }: { message: MessagesDTO }) => {
         alt=""
         className="bg-white rounded-lg cursor-pointer"
         onClick={() => setIsOpen(true)}
+        onContextMenu={handleContextMenu}
       />
+
+      {contextMenu !== null && (
+        <Box
+          sx={{
+            position: "fixed",
+            top: contextMenu.mouseY,
+            left: contextMenu.mouseX,
+            backgroundColor: "white",
+            boxShadow: 3,
+            borderRadius: "4px",
+            zIndex: 1300,
+          }}
+          onMouseLeave={handleCloseContextMenu}
+        >
+          <Button
+            onClick={handleDownload}
+            style={{
+              color: "var(--primary-color) !important",
+              fontWeight: 600,
+              padding: "10px",
+            }}
+          >
+            <DownloadIcon /> Download Image
+          </Button>
+        </Box>
+      )}
 
       <Modal open={isOpen} onClose={() => setIsOpen(false)}>
         <Box
@@ -47,17 +119,20 @@ const ChatImage = ({ message }: { message: MessagesDTO }) => {
             }}
             onClick={(e) => e.stopPropagation()}
           >
-            <IconButton
-              sx={{
-                position: "absolute",
-                top: 10,
-                right: 10,
-                color: "white",
-              }}
-              onClick={() => setIsOpen(false)}
-            >
-              <CloseIcon />
-            </IconButton>
+            <div className="absolute top-2 right-2">
+              <IconButton
+                sx={{ color: "var(--primary-color)" }}
+                onClick={handleDownload}
+              >
+                <DownloadIcon />
+              </IconButton>
+              <IconButton
+                sx={{ color: "var(--primary-color)" }}
+                onClick={() => setIsOpen(false)}
+              >
+                <CloseIcon />
+              </IconButton>
+            </div>
             <img
               src={message.content}
               alt=""
