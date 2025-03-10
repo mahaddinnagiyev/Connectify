@@ -92,6 +92,15 @@ const Chat = ({
     }
   };
 
+  const isValidUrl = (url: string): boolean => {
+    try {
+      new URL(url);
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
   useEffect(() => {
     if (messagesContainerRef.current) {
       messagesContainerRef.current.scrollTop =
@@ -206,7 +215,20 @@ const Chat = ({
                     )}
 
                     {message.message_type === MessageType.TEXT && (
-                      <p className="message-text px-1">{message.content}</p>
+                      <p className="message-text px-1">
+                        {isValidUrl(message.content) ? (
+                          <a
+                            href={message.content}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-blue-500 underline"
+                          >
+                            {message.content}
+                          </a>
+                        ) : (
+                          message.content
+                        )}
+                      </p>
                     )}
                     {message.message_type !== MessageType.DEFAULT && (
                       <span className="message-time">
