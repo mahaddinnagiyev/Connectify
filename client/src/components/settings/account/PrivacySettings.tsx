@@ -22,7 +22,7 @@ import { Account } from "../../../services/account/dto/account-dto";
 interface UserProfile {
   user: User;
   account: Account;
-  privacy_settings: PrivacySettingsDTO;
+  privacy_settings: PrivacySettingsDTO[];
 }
 
 interface PrivacySettingsProps {
@@ -45,12 +45,12 @@ const PrivacySettingsComponent: React.FC<PrivacySettingsProps> = ({ userData }) 
   useEffect(() => {
     if (userData && userData.privacy_settings) {
       setPrivacy({
-        email: userData.privacy_settings.email,
-        gender: userData.privacy_settings.gender,
-        bio: userData.privacy_settings.bio,
-        location: userData.privacy_settings.location,
-        social_links: userData.privacy_settings.social_links,
-        last_login: userData.privacy_settings.last_login,
+        email: userData.privacy_settings[0].email,
+        gender: userData.privacy_settings[0].gender,
+        bio: userData.privacy_settings[0].bio,
+        location: userData.privacy_settings[0].location,
+        social_links: userData.privacy_settings[0].social_links,
+        last_login: userData.privacy_settings[0].last_login,
       });
     }
   }, [userData]);
