@@ -3,8 +3,14 @@ import { IconButton, Slider, Box, styled, Typography } from "@mui/material";
 import PlayArrowIcon from "@mui/icons-material/PlayArrow";
 import PauseIcon from "@mui/icons-material/Pause";
 import VolumeUpIcon from "@mui/icons-material/VolumeUp";
+import VolumeOffIcon from "@mui/icons-material/VolumeOff";
 import PictureInPictureAltIcon from "@mui/icons-material/PictureInPictureAlt";
 import FullscreenExitIcon from "@mui/icons-material/FullscreenExit";
+import DownloadIcon from "@mui/icons-material/Download";
+import MoreVertIcon from "@mui/icons-material/MoreVert";
+import Menu from "@mui/material/Menu";
+import MenuItem from "@mui/material/MenuItem";
+import useMediaQuery from "@mui/material/useMediaQuery";
 import { MessagesDTO } from "../../../../services/socket/dto/messages-dto";
 
 const VideoContainer = styled(Box)({
@@ -46,17 +52,34 @@ const ProgressSliderOverlay = styled(Box)(({ theme }) => ({
 
 interface VideoPlayerProps {
   message: MessagesDTO;
+  handleDownload: () => void;
   onClose: () => void;
 }
 
-const VideoPlayer = ({ message, onClose }: VideoPlayerProps) => {
+const VideoPlayer = ({
+  message,
+  handleDownload,
+  onClose,
+}: VideoPlayerProps) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [volume, setVolume] = useState(1);
+  const [isMuted, setIsMuted] = useState(false);
+  const [previousVolume, setPreviousVolume] = useState(1);
   const [isPiPSupported, setIsPiPSupported] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [showVolumeSlider, setShowVolumeSlider] = useState(false);
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const isMobile = useMediaQuery("(max-width:768px)");
+
+  const handleMenuOpen = (event: React.MouseEvent<HTMLButtonElement>) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleMenuClose = () => {
+    setAnchorEl(null);
+  };
 
   useEffect(() => {
     const videoElement = videoRef.current;
@@ -96,7 +119,6 @@ const VideoPlayer = ({ message, onClose }: VideoPlayerProps) => {
   }, []);
 
   useEffect(() => {
-    // Əlavə edilmiş hissə: keyboard event listener
     const handleKeyPress = (e: KeyboardEvent) => {
       if (e.code === "Space") {
         e.preventDefault();
@@ -107,6 +129,16 @@ const VideoPlayer = ({ message, onClose }: VideoPlayerProps) => {
     window.addEventListener("keydown", handleKeyPress);
     return () => window.removeEventListener("keydown", handleKeyPress);
   }, [isPlaying]);
+
+  useEffect(() => {
+    const savedVolume = localStorage.getItem("videoVolume");
+    if (savedVolume) {
+      const vol = parseFloat(savedVolume);
+      setVolume(vol);
+      setIsMuted(vol === 0);
+      if (vol > 0) setPreviousVolume(vol);
+    }
+  }, []);
 
   const togglePlayPause = () => {
     if (videoRef.current) {
@@ -125,6 +157,25 @@ const VideoPlayer = ({ message, onClose }: VideoPlayerProps) => {
     setVolume(newVolume);
     if (videoRef.current) videoRef.current.volume = newVolume;
     localStorage.setItem("videoVolume", newVolume.toString());
+
+    if (newVolume === 0) {
+      setIsMuted(true);
+    } else {
+      setIsMuted(false);
+    }
+  };
+
+  const toggleMute = () => {
+    if (isMuted) {
+      setVolume(previousVolume);
+      if (videoRef.current) videoRef.current.volume = previousVolume;
+      setIsMuted(false);
+    } else {
+      setPreviousVolume(volume);
+      setVolume(0);
+      if (videoRef.current) videoRef.current.volume = 0;
+      setIsMuted(true);
+    }
   };
 
   const handleProgressChange = (_: Event, value: number | number[]) => {
@@ -234,7 +285,13 @@ const VideoPlayer = ({ message, onClose }: VideoPlayerProps) => {
               overflow: "hidden",
             }}
           >
-            <VolumeUpIcon sx={{ color: "#00ff00" }} />
+            <IconButton
+              onClick={toggleMute}
+              sx={{ color: "#00ff00" }}
+              onMouseEnter={() => setShowVolumeSlider(true)}
+            >
+              {isMuted ? <VolumeOffIcon /> : <VolumeUpIcon />}
+            </IconButton>
             <Box
               sx={{
                 width: showVolumeSlider ? 100 : 0,
@@ -255,25 +312,79 @@ const VideoPlayer = ({ message, onClose }: VideoPlayerProps) => {
                   "& .MuiSlider-thumb": {
                     width: 12,
                     height: 12,
+                    display: isMuted ? "none" : "block",
                     borderRadius: "50%",
                     "&:hover, &.Mui-focusVisible": {
                       boxShadow: "0 0 0 8px rgba(0, 255, 0, 0.16)",
                     },
                   },
                   transition: "opacity 0.3s ease 0.1s",
-                  mt: .5,
+                  mt: 0.5,
                 }}
               />
             </Box>
           </Box>
 
-          {isPiPSupported && (
+          {isPiPSupported && !isMobile && (
             <IconButton
               onClick={togglePiP}
-              sx={{ color: "#00ff00", ml: "auto", pr: 0 }}
+              sx={{ color: "#00ff00", ml: "auto", pr: "4px" }}
             >
               <PictureInPictureAltIcon />
             </IconButton>
+          )}
+
+          {!isMobile && (
+            <IconButton
+              onClick={handleDownload}
+              sx={{ color: "#00ff00", pr: "0px" }}
+            >
+              <DownloadIcon />
+            </IconButton>
+          )}
+
+          {isMobile && (
+            <>
+              <IconButton
+                onClick={handleMenuOpen}
+                sx={{ color: "#00ff00", ml: "auto" }}
+              >
+                <MoreVertIcon />
+              </IconButton>
+
+              <Menu
+                anchorEl={anchorEl}
+                open={Boolean(anchorEl)}
+                onClose={handleMenuClose}
+                MenuListProps={{
+                  sx: {
+                    backgroundColor: "rgba(0,0,0,0.9)",
+                    color: "#00ff00",
+                  },
+                }}
+              >
+                {isPiPSupported && (
+                  <MenuItem
+                    onClick={() => {
+                      togglePiP();
+                      handleMenuClose();
+                    }}
+                  >
+                    <PictureInPictureAltIcon sx={{ mr: 1.5 }} />
+                    Picture-in-Picture
+                  </MenuItem>
+                )}
+                <MenuItem
+                  onClick={() => {
+                    handleDownload();
+                    handleMenuClose();
+                  }}
+                >
+                  <DownloadIcon sx={{ mr: 1.5 }} />
+                  Download
+                </MenuItem>
+              </Menu>
+            </>
           )}
 
           <IconButton onClick={onClose} sx={{ color: "#00ff00" }}>

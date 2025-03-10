@@ -233,7 +233,10 @@ const Chat = ({
                       <ChatImage message={message} />
                     )}
                     {message.message_type === MessageType.VIDEO && (
-                      <ChatVideo message={message} />
+                      <ChatVideo
+                        message={message}
+                        onLoadedData={scrollToBottom}
+                      />
                     )}
                     {message.message_type === MessageType.FILE && (
                       <div className="file-message-container">

@@ -1,16 +1,64 @@
 import { useState } from "react";
-import { Modal, Box } from "@mui/material";
+import { Modal, Box, Button } from "@mui/material";
 import PlayArrowIcon from "@mui/icons-material/PlayArrow";
+import DownloadIcon from "@mui/icons-material/Download";
 import VideoPlayer from "./VideoPlayer";
 import {
   MessagesDTO,
   MessageType,
 } from "../../../../services/socket/dto/messages-dto";
 
-const ChatVideo = ({ message }: { message: MessagesDTO }) => {
+const ChatVideo = ({
+  message,
+  onLoadedData,
+}: {
+  message: MessagesDTO;
+  onLoadedData: () => void;
+}) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [contextMenu, setContextMenu] = useState<{
+    mouseX: number;
+    mouseY: number;
+  } | null>(null);
 
   if (message.message_type !== MessageType.VIDEO) return null;
+  const handleContextMenu = (event: React.MouseEvent) => {
+    event.preventDefault();
+    setContextMenu({
+      mouseX: event.clientX - 2,
+      mouseY: event.clientY - 4,
+    });
+  };
+
+  const handleCloseContextMenu = () => {
+    setContextMenu(null);
+  };
+
+  const handleDownload = async () => {
+    try {
+      const response = await fetch(message.content);
+      if (!response.ok) throw new Error("Failed to download video");
+
+      const blob = await response.blob();
+
+      const video_url = message.content;
+      const video_name = video_url.split("/").pop();
+
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = video_name ?? "video.mp4";
+      document.body.appendChild(a);
+      a.click();
+
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (error) {
+      console.error("Download failed:", error);
+      alert("Video download failed");
+    }
+    handleCloseContextMenu();
+  };
 
   return (
     <>
@@ -23,12 +71,14 @@ const ChatVideo = ({ message }: { message: MessagesDTO }) => {
           overflow: "hidden",
         }}
         onClick={() => setIsModalOpen(true)}
+        onContextMenu={handleContextMenu}
       >
         <video
           src={message.content}
           style={{ width: "100%", display: "block", maxHeight: "90vh" }}
           muted
           playsInline
+          onLoadedData={onLoadedData}
         />
         <Box
           sx={{
@@ -48,6 +98,33 @@ const ChatVideo = ({ message }: { message: MessagesDTO }) => {
           />
         </Box>
       </Box>
+
+      {/* Kontekst menyusu */}
+      {contextMenu !== null && (
+        <Box
+          sx={{
+            position: "fixed",
+            top: contextMenu.mouseY,
+            left: contextMenu.mouseX,
+            backgroundColor: "white",
+            boxShadow: 3,
+            borderRadius: "4px",
+            zIndex: 1300,
+          }}
+          onMouseLeave={handleCloseContextMenu}
+        >
+          <Button
+            onClick={handleDownload}
+            style={{
+              color: "var(--primary-color) !important",
+              fontWeight: 600,
+              padding: "10px",
+            }}
+          >
+            <DownloadIcon /> Download Video
+          </Button>
+        </Box>
+      )}
 
       <Modal
         open={isModalOpen}
@@ -72,6 +149,7 @@ const ChatVideo = ({ message }: { message: MessagesDTO }) => {
         >
           <VideoPlayer
             message={message}
+            handleDownload={handleDownload}
             onClose={() => setIsModalOpen(false)}
           />
         </Box>
