@@ -11,7 +11,7 @@ import AccountSettingsComponent from "./account/AccountSettingsComponent";
 interface UserProfile {
   user: User;
   account: Account;
-  privacy_settings: PrivacySettingsDTO[];
+  privacy_settings: PrivacySettingsDTO;
 }
 
 interface AccountSettingsProps {

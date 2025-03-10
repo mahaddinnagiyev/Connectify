@@ -18,7 +18,7 @@ import { PrivacySettingsDTO } from "../../services/account/dto/privacy-settings-
 interface UserProfile {
   user: User;
   account: Account;
-  privacy_settings: PrivacySettingsDTO[];
+  privacy_settings: PrivacySettingsDTO;
 }
 
 interface TabPanelProps {

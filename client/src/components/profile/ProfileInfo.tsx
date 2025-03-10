@@ -44,7 +44,7 @@ import { PrivacySettingsDTO } from "../../services/account/dto/privacy-settings-
 interface UserProfile {
   user: User;
   account: Account;
-  privacy_settings: PrivacySettingsDTO[];
+  privacy_settings: PrivacySettingsDTO;
 }
 
 interface ProfileInfoProps {
@@ -532,13 +532,13 @@ const ProfileInfo: React.FC<ProfileInfoProps> = ({ userData }) => {
         <PersonalInfo
           userData={userData}
           onEdit={() => setEditPersonalInfoModalOpen(true)}
-          privacy_settings={userData?.privacy_settings[0] ?? null}
+          privacy_settings={userData?.privacy_settings ?? null}
           accepted={accepted}
         />
         {/* Account Information Section */}
         <AccountInfo
           userData={userData}
-          privacy_settings={userData?.privacy_settings[0] ?? null}
+          privacy_settings={userData?.privacy_settings ?? null}
           onEdit={() => setEditProfileInfoModalOpen(true)}
           copySocialLink={copy_soical_link}
           accepted={accepted}
