@@ -128,7 +128,7 @@ const AccountInfo: React.FC<AccountInfoProps> = ({
               label="Last seen"
               value={
                 userData?.account.last_login
-                  ? new Date(userData.account.last_login).toLocaleTimeString(
+                  ? new Date(userData.account.last_login + "Z").toLocaleTimeString(
                       "az-AZ",
                       {
                         timeZone: "Asia/Baku",
