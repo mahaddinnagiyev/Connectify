@@ -31,7 +31,7 @@ interface SendMessageProps {
   showEmojiPicker: boolean;
   setShowEmojiPicker: React.Dispatch<React.SetStateAction<boolean>>;
   emojiPickerRef: React.RefObject<HTMLDivElement>;
-  handleEmojiPicker: (emoji: any, event?: any) => void;
+  handleEmojiPicker: (emoji: { emoji: string }) => void;
   roomId: string;
   currentUser: string;
   socket: Socket | null;
@@ -62,6 +62,8 @@ const SendMessage: React.FC<SendMessageProps> = ({
   const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(
     null
   );
+  const [recordingTime, setRecordingTime] = useState<number>(0);
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
   const recordingCanceled = useRef(false);
 
   const onKeyPressHandler = (e: KeyboardEvent<HTMLTextAreaElement>) => {
@@ -161,6 +163,10 @@ const SendMessage: React.FC<SendMessageProps> = ({
       };
 
       recorder.onstop = async () => {
+        if (timerRef.current) {
+          clearInterval(timerRef.current);
+          timerRef.current = null;
+        }
         if (recordingCanceled.current) {
           recordingCanceled.current = false;
           return;
@@ -177,6 +183,10 @@ const SendMessage: React.FC<SendMessageProps> = ({
       recorder.start();
       setMediaRecorder(recorder);
       setIsRecording(true);
+      setRecordingTime(0);
+      timerRef.current = setInterval(() => {
+        setRecordingTime((prev) => prev + 1);
+      }, 1000);
     } catch (error) {
       console.error("Error accessing microphone:", error);
     }
@@ -184,7 +194,10 @@ const SendMessage: React.FC<SendMessageProps> = ({
 
   const stopRecordingAndUpload = () => {
     if (mediaRecorder) {
-      // Qeydi dayandırırıq, ləğv bayrağı təyin olunmur, ona görə də upload olacaq
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
       mediaRecorder.stop();
       setMediaRecorder(null);
     }
@@ -193,11 +206,23 @@ const SendMessage: React.FC<SendMessageProps> = ({
 
   const cancelRecording = () => {
     if (mediaRecorder) {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
       recordingCanceled.current = true;
       mediaRecorder.stop();
       setMediaRecorder(null);
     }
     setIsRecording(false);
+  };
+
+  const formatRecordingTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins.toString().padStart(2, "0")}:${secs
+      .toString()
+      .padStart(2, "0")}`;
   };
 
   const handleAudioUpload = async (audioFile: File) => {
@@ -359,6 +384,10 @@ const SendMessage: React.FC<SendMessageProps> = ({
                 >
                   <DeleteIcon />
                 </button>
+
+                <div className="recording-timer text-lg font-medium">
+                  {formatRecordingTime(recordingTime)}
+                </div>
                 <AudioWaveAnimation mediaRecorder={mediaRecorder!} />
                 <button
                   type="submit"

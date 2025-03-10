@@ -54,6 +54,13 @@ const AudioPlayer = ({
     checkDuration();
   };
 
+  // Audio bitəndə çağırılacaq funksiyanı əlavə edirik
+  const handleAudioEnded = () => {
+    setIsPlaying(false);
+    setCurrentTime(0);
+    setProgress(0);
+  };
+
   const changeProgress = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!audioRef.current || !audioRef.current.duration) return;
     const newProgress = parseFloat(e.target.value);
@@ -95,6 +102,7 @@ const AudioPlayer = ({
         onTimeUpdate={updateProgress}
         onLoadedMetadata={handleLoadedMetadata}
         onDurationChange={handleLoadedMetadata}
+        onEnded={handleAudioEnded}
         onError={(e) => console.error("Audio error:", e)}
       />
     </div>
