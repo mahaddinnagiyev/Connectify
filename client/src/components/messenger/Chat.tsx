@@ -250,7 +250,11 @@ const Chat = ({
                     }
                   >
                     {message.message_type === MessageType.IMAGE && (
-                      <ChatImage message={message} />
+                      <ChatImage
+                        message={message}
+                        curretUser={currentUser}
+                        handleUnsendMessage={handleUnsendMessage}
+                      />
                     )}
                     {message.message_type === MessageType.VIDEO && (
                       <ChatVideo
@@ -314,6 +318,7 @@ const Chat = ({
               backgroundColor: "white",
               boxShadow: 3,
               borderRadius: "4px",
+              width: "200px",
               zIndex: 1300,
             }}
             onMouseLeave={handleCloseContextMenu}
@@ -324,9 +329,8 @@ const Chat = ({
                 color: "red",
                 fontWeight: 600,
                 padding: "10px",
-                display: "flex",
-                width: "150px",
-                alignItems: "center",
+                textTransform: "none",
+                width: "100%",
               }}
             >
               <TurnLeftIcon className="pb-1" /> Unsend

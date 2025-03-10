@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Modal, Box, IconButton, Button } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import DownloadIcon from "@mui/icons-material/Download";
+import TurnLeftIcon from "@mui/icons-material/TurnLeft";
 import {
   MessagesDTO,
   MessageType,
@@ -9,22 +10,34 @@ import {
 import ErrorMessage from "../../../messages/ErrorMessage";
 import SuccessMessage from "../../../messages/SuccessMessage";
 
-const ChatImage = ({ message }: { message: MessagesDTO }) => {
+interface ChatImageProps {
+  message: MessagesDTO;
+  handleUnsendMessage: (messageId: string | undefined) => void;
+  curretUser: string;
+}
+
+const ChatImage = ({
+  message,
+  handleUnsendMessage,
+  curretUser,
+}: ChatImageProps) => {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [isOpen, setIsOpen] = useState(false);
   const [contextMenu, setContextMenu] = useState<{
     mouseX: number;
     mouseY: number;
+    messageId?: string;
   } | null>(null);
 
   if (message.message_type !== MessageType.IMAGE) return null;
 
-  const handleContextMenu = (event: React.MouseEvent) => {
+  const handleContextMenu = (event: React.MouseEvent, messageId: string) => {
     event.preventDefault();
     setContextMenu({
       mouseX: event.clientX - 2,
       mouseY: event.clientY - 4,
+      messageId,
     });
   };
 
@@ -82,7 +95,7 @@ const ChatImage = ({ message }: { message: MessagesDTO }) => {
         alt=""
         className="bg-white rounded-lg cursor-pointer"
         onClick={() => setIsOpen(true)}
-        onContextMenu={handleContextMenu}
+        onContextMenu={(e) => handleContextMenu(e, message.id)}
       />
 
       {contextMenu !== null && (
@@ -94,6 +107,7 @@ const ChatImage = ({ message }: { message: MessagesDTO }) => {
             backgroundColor: "white",
             boxShadow: 3,
             borderRadius: "4px",
+            width: "200px",
             zIndex: 1300,
           }}
           onMouseLeave={handleCloseContextMenu}
@@ -104,10 +118,26 @@ const ChatImage = ({ message }: { message: MessagesDTO }) => {
               color: "var(--primary-color) !important",
               fontWeight: 600,
               padding: "10px",
+              textTransform: "none",
+              width: "100%",
             }}
           >
             <DownloadIcon /> Download Image
           </Button>
+          {curretUser === message.sender_id && (
+            <Button
+              onClick={() => handleUnsendMessage(contextMenu.messageId)}
+              style={{
+                color: "red",
+                fontWeight: 600,
+                padding: "10px",
+                textTransform: "none",
+                width: "100%",
+              }}
+            >
+              <TurnLeftIcon className="pb-1" /> Unsend
+            </Button>
+          )}
         </Box>
       )}
 
