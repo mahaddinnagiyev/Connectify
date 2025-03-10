@@ -16,7 +16,7 @@ import { PrivacySettingsDTO } from "../../services/account/dto/privacy-settings-
 interface UserProfile {
   user: User;
   account: Account;
-  privacy_settings: PrivacySettingsDTO;
+  privacy_settings: PrivacySettingsDTO[];
 }
 
 interface TabPanelProps {
@@ -76,7 +76,7 @@ const SettingsPage = () => {
     localStorage.setItem("activeSettingsTab", value.toString());
   }, [value]);
 
-  const handleChange = (event: React.SyntheticEvent, newValue: number) => {
+  const handleChange = (_: React.SyntheticEvent, newValue: number) => {
     setValue(newValue);
   };
 
@@ -113,15 +113,7 @@ const SettingsPage = () => {
             privacy_settings: null,
             social_links: [],
           },
-          privacy_settings: response.privacy_settings ?? {
-            id: null,
-            email: null,
-            gender: null,
-            bio: null,
-            location: null,
-            social_links: null,
-            last_login: null,
-          },
+          privacy_settings: response.privacy_settings ?? null,
         });
       } else {
         setErrorMessage(

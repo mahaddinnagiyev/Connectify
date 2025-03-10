@@ -1,4 +1,4 @@
-import "./login.css";
+import "./css/login.css";
 import google_logo from "../../assets/google.png";
 
 import { Link, useNavigate } from "react-router-dom";

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import "./signup.css";
+import "./css/signup.css";
 import ConfirmAccount from "../../components/forms/ConfirmAccount";
 import { signup } from "../../services/auth/auth-service";
 import { Gender, SignupDTO } from "../../services/auth/dto/singup-dto";

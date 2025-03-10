@@ -65,7 +65,7 @@ export const getUserByUsername = async (
   success: boolean;
   user: User;
   account: Account;
-  privacy_settings: PrivacySettingsDTO;
+  privacy_settings: PrivacySettingsDTO[];
   response: {
     success: boolean;
     message?: string;

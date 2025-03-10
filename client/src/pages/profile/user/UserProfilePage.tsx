@@ -19,7 +19,7 @@ import { PrivacySettingsDTO } from "../../../services/account/dto/privacy-settin
 interface UserProfile {
   user: User;
   account: Account;
-  privacy_settings: PrivacySettingsDTO;
+  privacy_settings: PrivacySettingsDTO[];
 }
 
 interface TabPanelProps {
@@ -123,13 +123,7 @@ const UserProfilePage = () => {
               profile_picture: null,
               social_links: [],
             },
-            privacy_settings: response.privacy_settings ?? {
-              id: null,
-              show_bio: null,
-              show_location: null,
-              show_profile_picture: null,
-              show_social_links: null,
-            },
+            privacy_settings: response.privacy_settings ?? null,
           });
         } else {
           setErrorMessage(

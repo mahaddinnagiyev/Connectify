@@ -1,4 +1,4 @@
-import "./forgot-password.css";
+import "./css/forgot-password.css";
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import {

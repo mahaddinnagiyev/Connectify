@@ -13,10 +13,12 @@ import FriendRequests from "../../components/friends/FriendRequests";
 import { getUserById } from "../../services/user/user-service";
 import { User } from "../../services/user/dto/user-dto";
 import { Account } from "../../services/account/dto/account-dto";
+import { PrivacySettingsDTO } from "../../services/account/dto/privacy-settings-dto";
 
 interface UserProfile {
   user: User;
   account: Account;
+  privacy_settings: PrivacySettingsDTO[];
 }
 
 interface TabPanelProps {
@@ -76,7 +78,7 @@ const ProfilePage = () => {
     localStorage.setItem("activeTab", value.toString());
   }, [value]);
 
-  const handleChange = (event: React.SyntheticEvent, newValue: number) => {
+  const handleChange = (_: React.SyntheticEvent, newValue: number) => {
     setValue(newValue);
   };
 
@@ -112,8 +114,8 @@ const ProfilePage = () => {
             profile_picture: null,
             social_links: [],
             last_login: null,
-            privacy: null,
           },
+          privacy_settings: response.privacy_settings ?? null,
         });
       } else {
         setErrorMessage(

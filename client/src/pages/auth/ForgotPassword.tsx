@@ -1,10 +1,10 @@
-import "./forgot-password.css";
+import "./css/forgot-password.css";
 import { Link } from "react-router-dom";
 import { useState } from "react";
 import ErrorMessage from "../../components/messages/ErrorMessage";
 import SuccessMessage from "../../components/messages/SuccessMessage";
 import CheckModal from "../../components/modals/spinner/CheckModal";
-import { forgot_password } from "../../services/auth/auth-service"; // İnteqrasiya
+import { forgot_password } from "../../services/auth/auth-service";
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState("");
