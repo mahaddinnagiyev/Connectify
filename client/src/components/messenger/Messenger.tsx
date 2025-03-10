@@ -35,6 +35,7 @@ const Messenger = () => {
   const [searchParams] = useSearchParams();
   const currentRoomId = searchParams.get("room");
   const lastJoinedRoomRef = useRef<string | null>(null);
+  const socketRef = useRef(socket);
 
   useEffect(() => {
     getToken().then((token) => {
@@ -84,6 +85,26 @@ const Messenger = () => {
     socket?.on("unreadCountUpdated", handleUnreadCountUpdated);
     return () => {
       socket?.off("unreadCountUpdated", handleUnreadCountUpdated);
+    };
+  }, []);
+
+  useEffect(() => {
+    const handleLastMessageUpdated = (data: {
+      roomId: string;
+      lastMessage: MessagesDTO | null;
+    }) => {
+      setChats((prevChats) =>
+        prevChats.map((chat) =>
+          chat.id === data.roomId
+            ? { ...chat, lastMessage: data.lastMessage ?? undefined }
+            : chat
+        )
+      );
+    };
+
+    socket?.on("lastMessageUpdated", handleLastMessageUpdated);
+    return () => {
+      socket?.off("lastMessageUpdated", handleLastMessageUpdated);
     };
   }, []);
 
@@ -169,8 +190,8 @@ const Messenger = () => {
                   ...chat,
                   otherUser: userResponse.user as Users,
                   otherUserAccount: userResponse.account as Account,
-                  otherUserPrivacySettings: userResponse
-                    .privacy_settings as PrivacySettingsDTO,
+                  otherUserPrivacySettings:
+                    userResponse.privacy_settings as PrivacySettingsDTO,
                 };
               }
             } catch (error) {
@@ -189,7 +210,7 @@ const Messenger = () => {
       socket?.off("chatRoomsUpdated", fetchChats);
       socket?.off("getChatRooms");
     };
-  }, [socket]);
+  }, [socketRef]);
 
   const currentChat = chats.find((chat) => chat.id === currentRoomId);
 
@@ -256,7 +277,9 @@ const Messenger = () => {
                             {chat?.lastMessage?.message_type ===
                               MessageType.AUDIO && (
                               <>
-                                <KeyboardVoiceTwoToneIcon style={{ fontSize: "16px" }}/>
+                                <KeyboardVoiceTwoToneIcon
+                                  style={{ fontSize: "16px" }}
+                                />
                                 Voice Message
                               </>
                             )}

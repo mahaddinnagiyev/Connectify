@@ -1,5 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import "./css/chat-style.css";
+import { Box, Button } from "@mui/material";
+import TurnLeftIcon from "@mui/icons-material/TurnLeft";
 import {
   MessagesDTO,
   MessageType,
@@ -37,13 +39,23 @@ const Chat = ({
   otherUserPrivacySettings,
   messages,
 }: ChatProps) => {
+  const [contextMenu, setContextMenu] = useState<{
+    mouseX: number;
+    mouseY: number;
+    messageId?: string;
+  } | null>(null);
   const [messageInput, setMessageInput] = useState("");
+  const [allMessages, setAllMessages] = useState<MessagesDTO[]>(messages);
   const [errorMessage, setErrorMessage] = useState<string | null>("");
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [isBlocked, setIsBlocked] = useState(false);
   const [isBlocker, setIsBlocker] = useState(false);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const emojiPickerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setAllMessages(messages);
+  }, [messages]);
 
   useEffect(() => {
     get_block_list().then((response) => {
@@ -77,6 +89,19 @@ const Chat = ({
     };
   }, []);
 
+  useEffect(() => {
+    const handleMessageUnsent = (data: { messageId: string }) => {
+      setAllMessages((prevMessages) =>
+        prevMessages.filter((msg) => msg.id !== data.messageId)
+      );
+    };
+
+    socket?.on("messageUnsent", handleMessageUnsent);
+    return () => {
+      socket?.off("messageUnsent", handleMessageUnsent);
+    };
+  }, []);
+
   const handleEmojiPicker = (emojiObject: { emoji: string }) => {
     setMessageInput((prevInput) => prevInput + emojiObject.emoji);
   };
@@ -89,7 +114,29 @@ const Chat = ({
         message_type: "text",
       });
       setMessageInput("");
+      setAllMessages((prevMessages) => [...prevMessages]);
     }
+  };
+
+  const handleContextMenu = (event: React.MouseEvent, messageId: string) => {
+    event.preventDefault();
+    setContextMenu({
+      mouseX: event.clientX - 2,
+      mouseY: event.clientY - 4,
+      messageId,
+    });
+  };
+
+  const handleCloseContextMenu = () => {
+    setContextMenu(null);
+  };
+
+  const handleUnsendMessage = (messageId: string | undefined) => {
+    if (!messageId) return;
+    setAllMessages((prev) => prev.filter((msg) => msg.id !== messageId));
+    socket?.emit("unsendMessage", { roomId, messageId });
+
+    setContextMenu(null);
   };
 
   const isValidUrl = (url: string): boolean => {
@@ -106,7 +153,7 @@ const Chat = ({
       messagesContainerRef.current.scrollTop =
         messagesContainerRef.current.scrollHeight;
     }
-  }, [messages]);
+  }, [allMessages]);
 
   const scrollToBottom = () => {
     if (messagesContainerRef.current) {
@@ -151,7 +198,7 @@ const Chat = ({
     return groupedMessages;
   };
 
-  const groupedMessages = groupMessagesByDate(messages);
+  const groupedMessages = groupMessagesByDate(allMessages);
 
   return (
     <>
@@ -191,6 +238,16 @@ const Chat = ({
                         ? "default"
                         : "receiver"
                     }`}
+                    onContextMenu={
+                      message.sender_id === currentUser &&
+                      ![
+                        MessageType.IMAGE,
+                        MessageType.DEFAULT,
+                        MessageType.VIDEO,
+                      ].includes(message.message_type)
+                        ? (e) => handleContextMenu(e, message.id)
+                        : undefined
+                    }
                   >
                     {message.message_type === MessageType.IMAGE && (
                       <ChatImage message={message} />
@@ -247,6 +304,36 @@ const Chat = ({
             </>
           ))}
         </div>
+
+        {contextMenu !== null && (
+          <Box
+            sx={{
+              position: "fixed",
+              top: contextMenu.mouseY,
+              left: contextMenu.mouseX,
+              backgroundColor: "white",
+              boxShadow: 3,
+              borderRadius: "4px",
+              zIndex: 1300,
+            }}
+            onMouseLeave={handleCloseContextMenu}
+          >
+            <Button
+              onClick={() => handleUnsendMessage(contextMenu.messageId)}
+              style={{
+                color: "red",
+                fontWeight: 600,
+                padding: "10px",
+                display: "flex",
+                width: "150px",
+                alignItems: "center",
+              }}
+            >
+              <TurnLeftIcon className="pb-1" /> Unsend
+            </Button>
+          </Box>
+        )}
+
         {/* Send Message Form */}
         <SendMessage
           isBlocked={isBlocked}
