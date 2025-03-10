@@ -6,8 +6,12 @@ import {
   MessagesDTO,
   MessageType,
 } from "../../../../services/socket/dto/messages-dto";
+import ErrorMessage from "../../../messages/ErrorMessage";
+import SuccessMessage from "../../../messages/SuccessMessage";
 
 const ChatImage = ({ message }: { message: MessagesDTO }) => {
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [isOpen, setIsOpen] = useState(false);
   const [contextMenu, setContextMenu] = useState<{
     mouseX: number;
@@ -43,21 +47,36 @@ const ChatImage = ({ message }: { message: MessagesDTO }) => {
       const a = document.createElement("a");
 
       a.href = url;
-      a.download = image_name ?? "image.jpg";
+      a.download = `connectify/${image_name}`;
       document.body.appendChild(a);
       a.click();
 
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
-    } catch (error) {
-      console.error("Download failed:", error);
-      alert("Image download failed");
+
+      setSuccessMessage("Image downloaded successfully");
+    } catch {
+      setErrorMessage("Download failed. Please try again later.");
     }
     handleCloseContextMenu();
   };
 
   return (
     <>
+      {errorMessage && (
+        <ErrorMessage
+          message={errorMessage}
+          onClose={() => setErrorMessage(null)}
+        />
+      )}
+
+      {successMessage && (
+        <SuccessMessage
+          message={successMessage}
+          onClose={() => setSuccessMessage(null)}
+        />
+      )}
+
       <img
         src={message.content}
         alt=""

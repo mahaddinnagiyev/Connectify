@@ -7,6 +7,8 @@ import {
   MessagesDTO,
   MessageType,
 } from "../../../../services/socket/dto/messages-dto";
+import ErrorMessage from "../../../messages/ErrorMessage";
+import SuccessMessage from "../../../messages/SuccessMessage";
 
 const ChatVideo = ({
   message,
@@ -15,6 +17,8 @@ const ChatVideo = ({
   message: MessagesDTO;
   onLoadedData: () => void;
 }) => {
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [contextMenu, setContextMenu] = useState<{
     mouseX: number;
@@ -22,7 +26,7 @@ const ChatVideo = ({
   } | null>(null);
 
   if (message.message_type !== MessageType.VIDEO) return null;
-  
+
   const handleContextMenu = (event: React.MouseEvent) => {
     event.preventDefault();
     setContextMenu({
@@ -48,21 +52,36 @@ const ChatVideo = ({
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = video_name ?? "video.mp4";
+      a.download = `connectify/${video_name}`;
       document.body.appendChild(a);
       a.click();
 
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
-    } catch (error) {
-      console.error("Download failed:", error);
-      alert("Video download failed");
+
+      setSuccessMessage("Video downloaded successfully");
+    } catch {
+      setErrorMessage("Download failed. Please try again later.");
     }
     handleCloseContextMenu();
   };
 
   return (
     <>
+      {errorMessage && (
+        <ErrorMessage
+          message={errorMessage}
+          onClose={() => setErrorMessage(null)}
+        />
+      )}
+
+      {successMessage && (
+        <SuccessMessage
+          message={successMessage}
+          onClose={() => setSuccessMessage(null)}
+        />
+      )}
+
       <Box
         sx={{
           position: "relative",

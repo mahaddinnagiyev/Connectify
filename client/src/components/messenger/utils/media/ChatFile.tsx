@@ -14,12 +14,16 @@ import {
   MessagesDTO,
   MessageType,
 } from "../../../../services/socket/dto/messages-dto";
+import ErrorMessage from "../../../messages/ErrorMessage";
+import SuccessMessage from "../../../messages/SuccessMessage";
 
 interface ChatFileProps {
   message: MessagesDTO;
 }
 
 const ChatFile = ({ message }: ChatFileProps) => {
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [contextMenu, setContextMenu] = useState<{
     mouseX: number;
     mouseY: number;
@@ -54,15 +58,16 @@ const ChatFile = ({ message }: ChatFileProps) => {
       const a = document.createElement("a");
 
       a.href = url;
-      a.download = file_name!;
+      a.download = `connectify/${file_name}`;
       document.body.appendChild(a);
       a.click();
 
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
-    } catch (error) {
-      console.error("Download failed:", error);
-      alert("file download failed");
+
+      setSuccessMessage("File downloaded successfully");
+    } catch {
+      setErrorMessage("Download failed. Please try again later.");
     }
     handleCloseContextMenu();
   };
@@ -107,6 +112,20 @@ const ChatFile = ({ message }: ChatFileProps) => {
 
   return (
     <>
+      {errorMessage && (
+        <ErrorMessage
+          message={errorMessage}
+          onClose={() => setErrorMessage(null)}
+        />
+      )}
+
+      {successMessage && (
+        <SuccessMessage
+          message={successMessage}
+          onClose={() => setSuccessMessage(null)}
+        />
+      )}
+
       <div className="file-message-container" onContextMenu={handleContextMenu}>
         <div className="doc-file-icon">{getFileIcon(message.message_name)}</div>
         <div className="doc-file-info">
