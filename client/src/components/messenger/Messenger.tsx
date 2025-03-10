@@ -170,7 +170,7 @@ const Messenger = () => {
                   otherUser: userResponse.user as Users,
                   otherUserAccount: userResponse.account as Account,
                   otherUserPrivacySettings: userResponse
-                    .privacy_settings[0] as PrivacySettingsDTO,
+                    .privacy_settings as PrivacySettingsDTO,
                 };
               }
             } catch (error) {
