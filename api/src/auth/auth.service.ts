@@ -307,7 +307,7 @@ export class AuthService {
         .getClient()
         .from('users')
         .select('*')
-        .eq('email', username_or_email)
+        .eq('username', username_or_email)
         .single()) as { data: IUser };
 
       if (!check_email_exist && !check_username_exist) {
