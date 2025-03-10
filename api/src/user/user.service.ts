@@ -94,7 +94,8 @@ export class UserService {
         .getClient()
         .from('privacy_settings')
         .select('*')
-        .eq('account_id', account.id)) as { data: IPrivacySettings };
+        .eq('account_id', account.id)
+        .single()) as { data: IPrivacySettings };
 
       if (!(user && account && privacy_settings)) {
         return new NotFoundException({
