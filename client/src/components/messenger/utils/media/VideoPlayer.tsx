@@ -10,7 +10,6 @@ import DownloadIcon from "@mui/icons-material/Download";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
-import useMediaQuery from "@mui/material/useMediaQuery";
 import { MessagesDTO } from "../../../../services/socket/dto/messages-dto";
 
 const VideoContainer = styled(Box)({
@@ -71,7 +70,6 @@ const VideoPlayer = ({
   const [duration, setDuration] = useState(0);
   const [showVolumeSlider, setShowVolumeSlider] = useState(false);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-  const isMobile = useMediaQuery("(max-width:768px)");
 
   const handleMenuOpen = (event: React.MouseEvent<HTMLButtonElement>) => {
     setAnchorEl(event.currentTarget);
@@ -325,69 +323,47 @@ const VideoPlayer = ({
             </Box>
           </Box>
 
-          {isPiPSupported && !isMobile && (
-            <IconButton
-              onClick={togglePiP}
-              sx={{ color: "#00ff00", ml: "auto", pr: "4px" }}
-            >
-              <PictureInPictureAltIcon />
-            </IconButton>
-          )}
+          <IconButton
+            onClick={handleMenuOpen}
+            sx={{ color: "#00ff00", ml: "auto", pl: 0, pr: 0 }}
+          >
+            <MoreVertIcon />
+          </IconButton>
 
-          {!isMobile && (
-            <IconButton
-              onClick={handleDownload}
-              sx={{ color: "#00ff00", pr: "0px" }}
-            >
-              <DownloadIcon />
-            </IconButton>
-          )}
-
-          {isMobile && (
-            <>
-              <IconButton
-                onClick={handleMenuOpen}
-                sx={{ color: "#00ff00", ml: "auto" }}
-              >
-                <MoreVertIcon />
-              </IconButton>
-
-              <Menu
-                anchorEl={anchorEl}
-                open={Boolean(anchorEl)}
-                onClose={handleMenuClose}
-                MenuListProps={{
-                  sx: {
-                    backgroundColor: "rgba(0,0,0,0.9)",
-                    color: "#00ff00",
-                  },
+          <Menu
+            anchorEl={anchorEl}
+            open={Boolean(anchorEl)}
+            onClose={handleMenuClose}
+            MenuListProps={{
+              sx: {
+                backgroundColor: "rgba(0,0,0,0.9)",
+                color: "#00ff00",
+              },
+            }}
+          >
+            {isPiPSupported && (
+              <MenuItem
+                onClick={() => {
+                  togglePiP();
+                  handleMenuClose();
                 }}
               >
-                {isPiPSupported && (
-                  <MenuItem
-                    onClick={() => {
-                      togglePiP();
-                      handleMenuClose();
-                    }}
-                  >
-                    <PictureInPictureAltIcon sx={{ mr: 1.5 }} />
-                    Picture-in-Picture
-                  </MenuItem>
-                )}
-                <MenuItem
-                  onClick={() => {
-                    handleDownload();
-                    handleMenuClose();
-                  }}
-                >
-                  <DownloadIcon sx={{ mr: 1.5 }} />
-                  Download
-                </MenuItem>
-              </Menu>
-            </>
-          )}
+                <PictureInPictureAltIcon sx={{ mr: 1.5 }} />
+                Picture-in-Picture
+              </MenuItem>
+            )}
+            <MenuItem
+              onClick={() => {
+                handleDownload();
+                handleMenuClose();
+              }}
+            >
+              <DownloadIcon sx={{ mr: 1.5 }} />
+              Download
+            </MenuItem>
+          </Menu>
 
-          <IconButton onClick={onClose} sx={{ color: "#00ff00" }}>
+          <IconButton onClick={onClose} sx={{ color: "#00ff00", pl: 0 }}>
             <FullscreenExitIcon />
           </IconButton>
         </ControlsOverlay>
