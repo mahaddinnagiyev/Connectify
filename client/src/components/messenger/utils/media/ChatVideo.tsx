@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Modal, Box, Button } from "@mui/material";
 import PlayArrowIcon from "@mui/icons-material/PlayArrow";
 import DownloadIcon from "@mui/icons-material/Download";
+import TurnLeftIcon from "@mui/icons-material/TurnLeft";
 import VideoPlayer from "./VideoPlayer";
 import {
   MessagesDTO,
@@ -10,28 +11,36 @@ import {
 import ErrorMessage from "../../../messages/ErrorMessage";
 import SuccessMessage from "../../../messages/SuccessMessage";
 
+interface ChatVideoProps {
+  message: MessagesDTO;
+  handleUnsendMessage: (messageId: string | undefined) => void;
+  onLoadedData: () => void;
+  currentUser: string;
+}
+
 const ChatVideo = ({
   message,
+  handleUnsendMessage,
   onLoadedData,
-}: {
-  message: MessagesDTO;
-  onLoadedData: () => void;
-}) => {
+  currentUser,
+}: ChatVideoProps) => {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [contextMenu, setContextMenu] = useState<{
     mouseX: number;
     mouseY: number;
+    messageId?: string;
   } | null>(null);
 
   if (message.message_type !== MessageType.VIDEO) return null;
 
-  const handleContextMenu = (event: React.MouseEvent) => {
+  const handleContextMenu = (event: React.MouseEvent, messageId: string) => {
     event.preventDefault();
     setContextMenu({
       mouseX: event.clientX - 2,
       mouseY: event.clientY - 4,
+      messageId,
     });
   };
 
@@ -91,7 +100,7 @@ const ChatVideo = ({
           overflow: "hidden",
         }}
         onClick={() => setIsModalOpen(true)}
-        onContextMenu={handleContextMenu}
+        onContextMenu={(e) => handleContextMenu(e, message.id)}
       >
         <video
           src={message.content}
@@ -128,6 +137,7 @@ const ChatVideo = ({
             backgroundColor: "white",
             boxShadow: 3,
             borderRadius: "4px",
+            width: "200px",
             zIndex: 1300,
           }}
           onMouseLeave={handleCloseContextMenu}
@@ -138,10 +148,26 @@ const ChatVideo = ({
               color: "var(--primary-color) !important",
               fontWeight: 600,
               padding: "10px",
+              textTransform: "none",
+              width: "100%",
             }}
           >
             <DownloadIcon /> Download Video
           </Button>
+          {currentUser === message.sender_id && (
+            <Button
+              onClick={() => handleUnsendMessage(contextMenu.messageId)}
+              style={{
+                color: "red",
+                fontWeight: 600,
+                padding: "10px",
+                textTransform: "none",
+                width: "100%",
+              }}
+            >
+              <TurnLeftIcon className="pb-1" /> Unsend
+            </Button>
+          )}
         </Box>
       )}
 

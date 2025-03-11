@@ -252,14 +252,16 @@ const Chat = ({
                     {message.message_type === MessageType.IMAGE && (
                       <ChatImage
                         message={message}
-                        curretUser={currentUser}
+                        currentUser={currentUser}
                         handleUnsendMessage={handleUnsendMessage}
                       />
                     )}
                     {message.message_type === MessageType.VIDEO && (
                       <ChatVideo
                         message={message}
+                        handleUnsendMessage={handleUnsendMessage}
                         onLoadedData={scrollToBottom}
+                        currentUser={currentUser}
                       />
                     )}
                     {message.message_type === MessageType.FILE && (

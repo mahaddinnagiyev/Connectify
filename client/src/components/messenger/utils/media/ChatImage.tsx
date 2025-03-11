@@ -13,13 +13,13 @@ import SuccessMessage from "../../../messages/SuccessMessage";
 interface ChatImageProps {
   message: MessagesDTO;
   handleUnsendMessage: (messageId: string | undefined) => void;
-  curretUser: string;
+  currentUser: string;
 }
 
 const ChatImage = ({
   message,
   handleUnsendMessage,
-  curretUser,
+  currentUser,
 }: ChatImageProps) => {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
@@ -124,7 +124,7 @@ const ChatImage = ({
           >
             <DownloadIcon /> Download Image
           </Button>
-          {curretUser === message.sender_id && (
+          {currentUser === message.sender_id && (
             <Button
               onClick={() => handleUnsendMessage(contextMenu.messageId)}
               style={{
