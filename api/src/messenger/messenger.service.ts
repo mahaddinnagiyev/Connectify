@@ -411,7 +411,7 @@ export class MessengerService {
   }
 
   // Send Another Type Messages
-  async uplaodImage(file: Express.Multer.File) {
+  async uploadImage(file: Express.Multer.File) {
     try {
       let fileOriginalName: string;
 
@@ -464,7 +464,7 @@ export class MessengerService {
     }
   }
 
-  async uplaodVideo(file: Express.Multer.File) {
+  async uploadVideo(file: Express.Multer.File) {
     try {
       let fileOriginalName: string;
 
@@ -517,7 +517,7 @@ export class MessengerService {
     }
   }
 
-  async uplaodFile(file: Express.Multer.File) {
+  async uploadFile(file: Express.Multer.File) {
     try {
       let fileOriginalName: string;
 

@@ -109,7 +109,7 @@ export class MessengerController {
       return new BadRequestException('User not found');
     }
 
-    const uploadedImage = await this.messengerService.uplaodFile(file);
+    const uploadedImage = await this.messengerService.uploadFile(file);
 
     if (uploadedImage instanceof HttpException) {
       return uploadedImage;
@@ -173,7 +173,7 @@ export class MessengerController {
       return new BadRequestException('User not found');
     }
 
-    const uploadedVideo = await this.messengerService.uplaodFile(file);
+    const uploadedVideo = await this.messengerService.uploadVideo(file);
 
     if (uploadedVideo instanceof HttpException) {
       return uploadedVideo;
@@ -239,7 +239,7 @@ export class MessengerController {
       return new BadRequestException('User not found');
     }
 
-    const uploadedFile = await this.messengerService.uplaodFile(file);
+    const uploadedFile = await this.messengerService.uploadFile(file);
 
     if (uploadedFile instanceof HttpException) {
       return uploadedFile;
