@@ -13,9 +13,10 @@ import SuccessMessage from "../../../messages/SuccessMessage";
 
 interface ChatVideoProps {
   message: MessagesDTO;
-  handleUnsendMessage: (messageId: string | undefined) => void;
-  onLoadedData: () => void;
-  currentUser: string;
+  handleUnsendMessage?: (messageId: string | undefined) => void;
+  onLoadedData?: () => void;
+  currentUser?: string;
+  isInModal?: boolean;
 }
 
 const ChatVideo = ({
@@ -23,6 +24,7 @@ const ChatVideo = ({
   handleUnsendMessage,
   onLoadedData,
   currentUser,
+  isInModal = false,
 }: ChatVideoProps) => {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
@@ -104,7 +106,13 @@ const ChatVideo = ({
       >
         <video
           src={message.content}
-          style={{ width: "100%", display: "block", maxHeight: "90vh" }}
+          style={{
+            width: "100%",
+            display: "block",
+            maxHeight: isInModal ? "152px" : "90vh",
+            height: isInModal ? "100%" : "auto",
+            objectFit: isInModal ? "cover" : "contain",
+          }}
           muted
           playsInline
           onLoadedData={onLoadedData}
@@ -156,7 +164,7 @@ const ChatVideo = ({
           </Button>
           {currentUser === message.sender_id && (
             <Button
-              onClick={() => handleUnsendMessage(contextMenu.messageId)}
+              onClick={() => handleUnsendMessage!(contextMenu.messageId)}
               style={{
                 color: "red",
                 fontWeight: 600,

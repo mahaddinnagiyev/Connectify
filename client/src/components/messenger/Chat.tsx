@@ -214,6 +214,7 @@ const Chat = ({
           otherUserAccount={otherUserAccount!}
           otherUserPrivacySettings={otherUserPrivacySettings!}
           otherUser={otherUser!}
+          messages={allMessages}
         />
       </div>
       <hr className="font-bold" />

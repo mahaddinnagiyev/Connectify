@@ -7,6 +7,7 @@ import { PrivacySettingsDTO } from "../../../../services/account/dto/privacy-set
 import { Users } from "../../../../services/user/dto/user-dto";
 import { LastSeen } from "./../../utils/LastSeen";
 import {
+  PermMedia as PermMediaIcon,
   LocalPhone as LocalPhoneIcon,
   Videocam as VideocamIcon,
   MoreVert as MoreVertIcon,
@@ -14,19 +15,24 @@ import {
   Delete as DeleteIcon,
   ChevronLeft as ChevronLeftIcon,
 } from "@mui/icons-material";
+import MediaModal from "../../../modals/chat/MediaModals";
+import { MessagesDTO } from "../../../../services/socket/dto/messages-dto";
 
 interface ChatHeaderProps {
   otherUserAccount: Account;
   otherUserPrivacySettings: PrivacySettingsDTO;
   otherUser: Users;
+  messages: MessagesDTO[]
 }
 
 const ChatHeader = ({
   otherUserAccount,
   otherUserPrivacySettings,
   otherUser,
+  messages
 }: ChatHeaderProps) => {
   const [isHovered, setIsHovered] = useState(false);
+  const [isMediaModalOpen, setIsMediaModalOpen] = useState(false);
   const [visibleChatOptions, setVisibleChatOptions] = useState(false);
   const screenSize = window.innerWidth;
   const chatOptionsRef = useRef<HTMLDivElement>(null);
@@ -50,6 +56,12 @@ const ChatHeader = ({
   const toggleChatOptions = (e: React.MouseEvent) => {
     e.stopPropagation();
     setVisibleChatOptions(!visibleChatOptions);
+  };
+
+  const showMediaModal = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setVisibleChatOptions(false);
+    setIsMediaModalOpen(true);
   };
 
   return (
@@ -118,6 +130,9 @@ const ChatHeader = ({
               >
                 <AccountBoxIcon className="profile-icon" /> User Profile
               </button>
+              <button className="user-profile-btn" onClick={(e) => showMediaModal(e)}>
+                <PermMediaIcon className="profile-icon" /> Medias
+              </button>
               {screenSize < 768 && (
                 <>
                   <button className="user-profile-btn">
@@ -135,6 +150,11 @@ const ChatHeader = ({
           )}
         </div>
       </div>
+
+      {isMediaModalOpen && (
+        <MediaModal messages={messages} setIsMediaModalOpen={setIsMediaModalOpen}/>
+      )}
+
     </>
   );
 };

@@ -12,8 +12,8 @@ import SuccessMessage from "../../../messages/SuccessMessage";
 
 interface ChatImageProps {
   message: MessagesDTO;
-  handleUnsendMessage: (messageId: string | undefined) => void;
-  currentUser: string;
+  handleUnsendMessage?: (messageId: string | undefined) => void;
+  currentUser?: string;
 }
 
 const ChatImage = ({
@@ -126,7 +126,7 @@ const ChatImage = ({
           </Button>
           {currentUser === message.sender_id && (
             <Button
-              onClick={() => handleUnsendMessage(contextMenu.messageId)}
+              onClick={() => handleUnsendMessage!(contextMenu.messageId)}
               style={{
                 color: "red",
                 fontWeight: 600,
