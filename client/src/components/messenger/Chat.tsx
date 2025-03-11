@@ -133,7 +133,6 @@ const Chat = ({
 
   const handleUnsendMessage = (messageId: string | undefined) => {
     if (!messageId) return;
-    setAllMessages((prev) => prev.filter((msg) => msg.id !== messageId));
     socket?.emit("unsendMessage", { roomId, messageId });
 
     setContextMenu(null);
@@ -244,6 +243,7 @@ const Chat = ({
                         MessageType.IMAGE,
                         MessageType.DEFAULT,
                         MessageType.VIDEO,
+                        MessageType.FILE,
                       ].includes(message.message_type)
                         ? (e) => handleContextMenu(e, message.id)
                         : undefined
@@ -265,7 +265,11 @@ const Chat = ({
                       />
                     )}
                     {message.message_type === MessageType.FILE && (
-                      <ChatFile message={message} />
+                      <ChatFile
+                        message={message}
+                        handleUnsendMessage={handleUnsendMessage}
+                        currentUser={currentUser}
+                      />
                     )}
 
                     {message.message_type === MessageType.AUDIO && (

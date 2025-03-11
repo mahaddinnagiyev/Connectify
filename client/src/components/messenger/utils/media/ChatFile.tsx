@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { Box, Button } from "@mui/material";
+import { Box, Button, Tooltip } from "@mui/material";
 import DownloadIcon from "@mui/icons-material/Download";
 import {
+  TurnLeft as TurnLeftIcon,
   PictureAsPdf as PictureAsPdfIcon,
   Description as DescriptionIcon,
   TableChart as TableChartIcon,
@@ -19,23 +20,31 @@ import SuccessMessage from "../../../messages/SuccessMessage";
 
 interface ChatFileProps {
   message: MessagesDTO;
+  handleUnsendMessage: (messageId: string | undefined) => void;
+  currentUser: string;
 }
 
-const ChatFile = ({ message }: ChatFileProps) => {
+const ChatFile = ({
+  message,
+  handleUnsendMessage,
+  currentUser,
+}: ChatFileProps) => {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [contextMenu, setContextMenu] = useState<{
     mouseX: number;
     mouseY: number;
+    messageId?: string;
   } | null>(null);
 
   if (message.message_type !== MessageType.FILE) return null;
 
-  const handleContextMenu = (event: React.MouseEvent) => {
+  const handleContextMenu = (event: React.MouseEvent, messageId: string) => {
     event.preventDefault();
     setContextMenu({
       mouseX: event.clientX - 2,
       mouseY: event.clientY - 4,
+      messageId,
     });
   };
 
@@ -126,20 +135,28 @@ const ChatFile = ({ message }: ChatFileProps) => {
         />
       )}
 
-      <div className="file-message-container" onContextMenu={handleContextMenu}>
+      <div
+        className="file-message-container"
+        onContextMenu={(e) => handleContextMenu(e, message.id)}
+      >
         <div className="doc-file-icon">{getFileIcon(message.message_name)}</div>
         <div className="doc-file-info">
-          <a
-            href={message.content}
-            target="_blank"
+          <p
             rel="noopener noreferrer"
             className="file-name"
-            title={message.message_name || "Download File"}
+            title={message.message_name || "Imported File"}
           >
-            {message.message_name || "Download File"}
-          </a>
+            {message.message_name || "Imported File"}
+          </p>
           <span className="file-size">
             Size: {formatFileSize(Number(message.message_size))}
+            <span>
+              <Tooltip placement="top" title={`Download "${message.message_name ?? "Imported File"}"`}>
+                <button className="text-[var(--primary-color)]">
+                  <DownloadIcon fontSize="medium" />
+                </button>
+              </Tooltip>
+            </span>
           </span>
         </div>
       </div>
@@ -153,6 +170,7 @@ const ChatFile = ({ message }: ChatFileProps) => {
             backgroundColor: "white",
             boxShadow: 3,
             borderRadius: "4px",
+            width: "200px",
             zIndex: 1300,
           }}
           onMouseLeave={handleCloseContextMenu}
@@ -163,10 +181,26 @@ const ChatFile = ({ message }: ChatFileProps) => {
               color: "var(--primary-color) !important",
               fontWeight: 600,
               padding: "10px",
+              textTransform: "none",
+              width: "100%",
             }}
           >
             <DownloadIcon /> Download File
           </Button>
+          {currentUser === message.sender_id && (
+            <Button
+              onClick={() => handleUnsendMessage(contextMenu.messageId)}
+              style={{
+                color: "red",
+                fontWeight: 600,
+                padding: "10px",
+                textTransform: "none",
+                width: "100%",
+              }}
+            >
+              <TurnLeftIcon className="pb-1" /> Unsend
+            </Button>
+          )}
         </Box>
       )}
     </>
