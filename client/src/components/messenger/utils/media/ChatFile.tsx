@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Box, Button, Tooltip } from "@mui/material";
 import DownloadIcon from "@mui/icons-material/Download";
 import {
+  Reply as ReplyIcon,
   TurnLeft as TurnLeftIcon,
   PictureAsPdf as PictureAsPdfIcon,
   Description as DescriptionIcon,
@@ -20,31 +21,33 @@ import SuccessMessage from "../../../messages/SuccessMessage";
 
 interface ChatFileProps {
   message: MessagesDTO;
-  handleUnsendMessage: (messageId: string | undefined) => void;
   currentUser: string;
+  handleUnsendMessage: (messageId: string | undefined) => void;
+  handleReplyMessage: (message: MessagesDTO | null) => void;
 }
 
 const ChatFile = ({
   message,
-  handleUnsendMessage,
   currentUser,
+  handleUnsendMessage,
+  handleReplyMessage,
 }: ChatFileProps) => {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [contextMenu, setContextMenu] = useState<{
     mouseX: number;
     mouseY: number;
-    messageId?: string;
+    message?: MessagesDTO;
   } | null>(null);
 
   if (message.message_type !== MessageType.FILE) return null;
 
-  const handleContextMenu = (event: React.MouseEvent, messageId: string) => {
+  const handleContextMenu = (event: React.MouseEvent, message: MessagesDTO) => {
     event.preventDefault();
     setContextMenu({
       mouseX: event.clientX - 2,
       mouseY: event.clientY - 4,
-      messageId,
+      message,
     });
   };
 
@@ -137,7 +140,7 @@ const ChatFile = ({
 
       <div
         className="file-message-container"
-        onContextMenu={(e) => handleContextMenu(e, message.id)}
+        onContextMenu={(e) => handleContextMenu(e, message)}
       >
         <div className="doc-file-icon">{getFileIcon(message.message_name)}</div>
         <div className="doc-file-info">
@@ -151,7 +154,10 @@ const ChatFile = ({
           <span className="file-size">
             Size: {formatFileSize(Number(message.message_size))}
             <span>
-              <Tooltip placement="top" title={`Download "${message.message_name ?? "Imported File"}"`}>
+              <Tooltip
+                placement="top"
+                title={`Download "${message.message_name ?? "Imported File"}"`}
+              >
                 <button className="text-[var(--primary-color)]">
                   <DownloadIcon fontSize="medium" />
                 </button>
@@ -161,48 +167,69 @@ const ChatFile = ({
         </div>
       </div>
 
-      {contextMenu !== null && (
-        <Box
-          sx={{
-            position: "fixed",
-            top: contextMenu.mouseY,
-            left: contextMenu.mouseX,
-            backgroundColor: "white",
-            boxShadow: 3,
-            borderRadius: "4px",
-            width: "200px",
-            zIndex: 1300,
-          }}
-          onMouseLeave={handleCloseContextMenu}
-        >
-          <Button
-            onClick={handleDownload}
-            style={{
-              color: "var(--primary-color) !important",
-              fontWeight: 600,
-              padding: "10px",
-              textTransform: "none",
-              width: "100%",
-            }}
-          >
-            <DownloadIcon /> Download File
-          </Button>
-          {currentUser === message.sender_id && (
-            <Button
-              onClick={() => handleUnsendMessage(contextMenu.messageId)}
-              style={{
-                color: "red",
-                fontWeight: 600,
-                padding: "10px",
-                textTransform: "none",
-                width: "100%",
+      {contextMenu !== null &&
+        (() => {
+          const menuWidth = 200;
+          const computedLeft =
+            contextMenu.mouseX + menuWidth > window.innerWidth
+              ? contextMenu.mouseX - menuWidth
+              : contextMenu.mouseX;
+
+          return (
+            <Box
+              sx={{
+                position: "fixed",
+                top: contextMenu.mouseY,
+                left: computedLeft,
+                backgroundColor: "white",
+                boxShadow: 3,
+                borderRadius: "4px",
+                width: "200px",
+                zIndex: 1300,
               }}
+              onMouseLeave={handleCloseContextMenu}
             >
-              <TurnLeftIcon className="pb-1" /> Unsend
-            </Button>
-          )}
-        </Box>
-      )}
+              <Button
+                onClick={handleDownload}
+                style={{
+                  color: "var(--primary-color) !important",
+                  fontWeight: 600,
+                  padding: "10px",
+                  textTransform: "none",
+                  width: "100%",
+                }}
+              >
+                <DownloadIcon /> Download File
+              </Button>
+              <Button
+                onClick={() => handleReplyMessage(contextMenu.message!)}
+                style={{
+                  color: "var(--primary-color)",
+                  fontWeight: 600,
+                  padding: "10px",
+                  textTransform: "none",
+                  width: "100%",
+                }}
+              >
+                <ReplyIcon /> Reply
+              </Button>
+              {currentUser === message.sender_id && (
+                <Button
+                  onClick={() => handleUnsendMessage(contextMenu.message?.id)}
+                  style={{
+                    color: "red",
+                    fontWeight: 600,
+                    padding: "10px",
+                    textTransform: "none",
+                    width: "100%",
+                  }}
+                >
+                  <TurnLeftIcon className="pb-1" /> Unsend
+                </Button>
+              )}
+            </Box>
+          );
+        })()}
     </>
   );
 };

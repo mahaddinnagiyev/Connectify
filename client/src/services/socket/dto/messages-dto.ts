@@ -18,6 +18,7 @@ export interface MessagesDTO {
   id: string;
   room_id: string;
   sender_id: string;
+  parent_message_id: MessagesDTO;
   message_type: MessageType;
   content: string;
   status: MessageStatus;

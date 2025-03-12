@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import "./css/chat-style.css";
 import { Box, Button } from "@mui/material";
 import TurnLeftIcon from "@mui/icons-material/TurnLeft";
+import ReplyIcon from "@mui/icons-material/Reply";
 import {
   MessagesDTO,
   MessageType,
@@ -29,6 +30,7 @@ interface ChatProps {
   otherUserAccount?: Account;
   otherUserPrivacySettings?: PrivacySettingsDTO;
   messages: MessagesDTO[];
+  truncateMessage: (message: string, maxLength: number) => string;
 }
 
 const Chat = ({
@@ -38,18 +40,22 @@ const Chat = ({
   otherUserAccount,
   otherUserPrivacySettings,
   messages,
+  truncateMessage,
 }: ChatProps) => {
   const [contextMenu, setContextMenu] = useState<{
     mouseX: number;
     mouseY: number;
-    messageId?: string;
+    message?: MessagesDTO;
   } | null>(null);
-  const [messageInput, setMessageInput] = useState("");
   const [allMessages, setAllMessages] = useState<MessagesDTO[]>(messages);
+  const [replyMessage, setReplyMessage] = useState<MessagesDTO | null>(null);
+  const [messageInput, setMessageInput] = useState("");
   const [errorMessage, setErrorMessage] = useState<string | null>("");
+
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [isBlocked, setIsBlocked] = useState(false);
   const [isBlocker, setIsBlocker] = useState(false);
+
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const emojiPickerRef = useRef<HTMLDivElement>(null);
 
@@ -106,24 +112,30 @@ const Chat = ({
     setMessageInput((prevInput) => prevInput + emojiObject.emoji);
   };
 
+  const handleReplyMessage = (message: MessagesDTO | null) => {
+    setReplyMessage(message);
+  };
+
   const handleSendMessage = () => {
     if (messageInput.trim()) {
       socket?.emit("sendMessage", {
         roomId: roomId,
         content: messageInput,
         message_type: "text",
+        parent_message_id: replyMessage?.id,
       });
       setMessageInput("");
       setAllMessages((prevMessages) => [...prevMessages]);
+      handleReplyMessage(null);
     }
   };
 
-  const handleContextMenu = (event: React.MouseEvent, messageId: string) => {
+  const handleContextMenu = (event: React.MouseEvent, message: MessagesDTO) => {
     event.preventDefault();
     setContextMenu({
       mouseX: event.clientX - 2,
       mouseY: event.clientY - 4,
-      messageId,
+      message,
     });
   };
 
@@ -185,7 +197,9 @@ const Chat = ({
     };
 
     messages.forEach((message) => {
-      const formattedDate = formatDate(new Date(message.created_at).toString());
+      const formattedDate = formatDate(
+        new Date(message.created_at + "Z").toString()
+      );
 
       if (!groupedMessages[formattedDate]) {
         groupedMessages[formattedDate] = [];
@@ -226,8 +240,8 @@ const Chat = ({
               <div className="message-date w-full text-center text-sm border-y-2 border-[var(--primary-color)] my-2 py-2">
                 {date}
               </div>
-              {Array.isArray(messages) &&
-                messages.map((message, index) => (
+              {messages.map((message, index) => (
+                <>
                   <div
                     key={index}
                     className={`message ${
@@ -239,37 +253,90 @@ const Chat = ({
                         : "receiver"
                     }`}
                     onContextMenu={
-                      message.sender_id === currentUser &&
                       ![
                         MessageType.IMAGE,
                         MessageType.DEFAULT,
                         MessageType.VIDEO,
                         MessageType.FILE,
                       ].includes(message.message_type)
-                        ? (e) => handleContextMenu(e, message.id)
+                        ? (e) => handleContextMenu(e, message)
                         : undefined
                     }
                   >
+                    {message.parent_message_id && (
+                      <div className="parent-message-container">
+                        <div className="parent-message">
+                          <div className="parent-message-header">
+                            <span className="parent-message-icon">↩</span>
+                            <span className="parent-message-username">
+                              {message.parent_message_id.sender_id ===
+                              currentUser
+                                ? "You"
+                                : otherUser?.username}
+                            </span>
+                          </div>
+                          <div className="parent-message-content">
+                            {message.parent_message_id.message_type ===
+                            MessageType.TEXT ? (
+                              <span className="text-preview">
+                                {truncateMessage(
+                                  message.parent_message_id.content,
+                                  50
+                                )}
+                              </span>
+                            ) : message.parent_message_id.message_type ===
+                              MessageType.IMAGE ? (
+                              <span className="media-preview">🖼 Image</span>
+                            ) : message.parent_message_id.message_type ===
+                              MessageType.VIDEO ? (
+                              <span className="media-preview">🎬 Video</span>
+                            ) : message.parent_message_id.message_type ===
+                              MessageType.FILE ? (
+                              <span className="file-preview">
+                                📎{" "}
+                                {message.parent_message_id.message_name ??
+                                  "Imported File"}
+                              </span>
+                            ) : message.parent_message_id.message_type ===
+                              MessageType.AUDIO ? (
+                              <>
+                                <span className="audio-preview">
+                                  🎵 {"Audio"}
+                                </span>
+                              </>
+                            ) : (
+                              <span className="text-preview">
+                                {message.parent_message_id.content}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
                     {message.message_type === MessageType.IMAGE && (
                       <ChatImage
                         message={message}
                         currentUser={currentUser}
+                        handleReplyMessage={handleReplyMessage}
                         handleUnsendMessage={handleUnsendMessage}
                       />
                     )}
                     {message.message_type === MessageType.VIDEO && (
                       <ChatVideo
                         message={message}
-                        handleUnsendMessage={handleUnsendMessage}
-                        onLoadedData={scrollToBottom}
                         currentUser={currentUser}
+                        onLoadedData={scrollToBottom}
+                        handleReplyMessage={handleReplyMessage}
+                        handleUnsendMessage={handleUnsendMessage}
                       />
                     )}
                     {message.message_type === MessageType.FILE && (
                       <ChatFile
                         message={message}
-                        handleUnsendMessage={handleUnsendMessage}
                         currentUser={currentUser}
+                        handleReplyMessage={handleReplyMessage}
+                        handleUnsendMessage={handleUnsendMessage}
                       />
                     )}
 
@@ -283,20 +350,22 @@ const Chat = ({
                     )}
 
                     {message.message_type === MessageType.TEXT && (
-                      <p className="message-text px-1">
-                        {isValidUrl(message.content) ? (
-                          <a
-                            href={message.content}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-blue-500 underline"
-                          >
-                            {message.content}
-                          </a>
-                        ) : (
-                          message.content
-                        )}
-                      </p>
+                      <>
+                        <p className="message-text px-1">
+                          {isValidUrl(message.content) ? (
+                            <a
+                              href={message.content}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-blue-500 underline"
+                            >
+                              {message.content}
+                            </a>
+                          ) : (
+                            message.content
+                          )}
+                        </p>
+                      </>
                     )}
                     {message.message_type !== MessageType.DEFAULT && (
                       <span className="message-time">
@@ -311,39 +380,62 @@ const Chat = ({
                       </span>
                     )}
                   </div>
-                ))}
+                </>
+              ))}
             </>
           ))}
         </div>
 
-        {contextMenu !== null && (
-          <Box
-            sx={{
-              position: "fixed",
-              top: contextMenu.mouseY,
-              left: contextMenu.mouseX,
-              backgroundColor: "white",
-              boxShadow: 3,
-              borderRadius: "4px",
-              width: "200px",
-              zIndex: 1300,
-            }}
-            onMouseLeave={handleCloseContextMenu}
-          >
-            <Button
-              onClick={() => handleUnsendMessage(contextMenu.messageId)}
-              style={{
-                color: "red",
-                fontWeight: 600,
-                padding: "10px",
-                textTransform: "none",
-                width: "100%",
-              }}
-            >
-              <TurnLeftIcon className="pb-1" /> Unsend
-            </Button>
-          </Box>
-        )}
+        {contextMenu !== null &&
+          (() => {
+            const menuWidth = 200;
+            const computedLeft =
+              contextMenu.mouseX + menuWidth > window.innerWidth
+                ? contextMenu.mouseX - menuWidth
+                : contextMenu.mouseX;
+            return (
+              <Box
+                sx={{
+                  position: "fixed",
+                  top: contextMenu.mouseY,
+                  left: computedLeft,
+                  backgroundColor: "white",
+                  boxShadow: 3,
+                  borderRadius: "4px",
+                  width: `${menuWidth}px`,
+                  zIndex: 1300,
+                }}
+                onMouseLeave={handleCloseContextMenu}
+              >
+                <Button
+                  onClick={() => handleReplyMessage(contextMenu.message!)}
+                  style={{
+                    color: "var(--primary-color)",
+                    fontWeight: 600,
+                    padding: "10px",
+                    textTransform: "none",
+                    width: "100%",
+                  }}
+                >
+                  <ReplyIcon /> Reply
+                </Button>
+                {contextMenu.message?.sender_id === currentUser && (
+                  <Button
+                    onClick={() => handleUnsendMessage(contextMenu.message?.id)}
+                    style={{
+                      color: "red",
+                      fontWeight: 600,
+                      padding: "10px",
+                      textTransform: "none",
+                      width: "100%",
+                    }}
+                  >
+                    <TurnLeftIcon className="pb-1" /> Unsend
+                  </Button>
+                )}
+              </Box>
+            );
+          })()}
 
         {/* Send Message Form */}
         <SendMessage
@@ -360,6 +452,9 @@ const Chat = ({
           currentUser={currentUser}
           socket={socket}
           otherUserUsername={otherUser?.username}
+          handleReplyMessage={handleReplyMessage}
+          replyMessage={replyMessage}
+          truncateMessage={truncateMessage}
         />
       </section>
     </>

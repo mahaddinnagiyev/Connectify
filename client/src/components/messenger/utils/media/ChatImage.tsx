@@ -3,6 +3,7 @@ import { Modal, Box, IconButton, Button } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import DownloadIcon from "@mui/icons-material/Download";
 import TurnLeftIcon from "@mui/icons-material/TurnLeft";
+import ReplyIcon from "@mui/icons-material/Reply";
 import {
   MessagesDTO,
   MessageType,
@@ -12,14 +13,16 @@ import SuccessMessage from "../../../messages/SuccessMessage";
 
 interface ChatImageProps {
   message: MessagesDTO;
-  handleUnsendMessage?: (messageId: string | undefined) => void;
   currentUser?: string;
+  handleReplyMessage: (message: MessagesDTO | null) => void;
+  handleUnsendMessage?: (messageId: string | undefined) => void;
 }
 
 const ChatImage = ({
   message,
-  handleUnsendMessage,
   currentUser,
+  handleReplyMessage,
+  handleUnsendMessage,
 }: ChatImageProps) => {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
@@ -27,17 +30,17 @@ const ChatImage = ({
   const [contextMenu, setContextMenu] = useState<{
     mouseX: number;
     mouseY: number;
-    messageId?: string;
+    message?: MessagesDTO;
   } | null>(null);
 
   if (message.message_type !== MessageType.IMAGE) return null;
 
-  const handleContextMenu = (event: React.MouseEvent, messageId: string) => {
+  const handleContextMenu = (event: React.MouseEvent, message: MessagesDTO) => {
     event.preventDefault();
     setContextMenu({
       mouseX: event.clientX - 2,
       mouseY: event.clientY - 4,
-      messageId,
+      message,
     });
   };
 
@@ -95,51 +98,72 @@ const ChatImage = ({
         alt=""
         className="bg-white rounded-lg cursor-pointer"
         onClick={() => setIsOpen(true)}
-        onContextMenu={(e) => handleContextMenu(e, message.id)}
+        onContextMenu={(e) => handleContextMenu(e, message)}
       />
 
-      {contextMenu !== null && (
-        <Box
-          sx={{
-            position: "fixed",
-            top: contextMenu.mouseY,
-            left: contextMenu.mouseX,
-            backgroundColor: "white",
-            boxShadow: 3,
-            borderRadius: "4px",
-            width: "200px",
-            zIndex: 1300,
-          }}
-          onMouseLeave={handleCloseContextMenu}
-        >
-          <Button
-            onClick={handleDownload}
-            style={{
-              color: "var(--primary-color) !important",
-              fontWeight: 600,
-              padding: "10px",
-              textTransform: "none",
-              width: "100%",
-            }}
-          >
-            <DownloadIcon /> Download Image
-          </Button>
-          {currentUser === message.sender_id && (
-            <Button
-              onClick={() => handleUnsendMessage!(contextMenu.messageId)}
-              style={{
-                color: "red",
-                fontWeight: 600,
-                padding: "10px",
-                textTransform: "none",
-                width: "100%",
+      {contextMenu !== null &&
+        (() => {
+          const menuWidth = 200;
+          const computedLeft =
+            contextMenu.mouseX + menuWidth > window.innerWidth
+              ? contextMenu.mouseX - menuWidth
+              : contextMenu.mouseX;
+
+          return (
+            <Box
+              sx={{
+                position: "fixed",
+                top: contextMenu.mouseY,
+                left: computedLeft,
+                backgroundColor: "white",
+                boxShadow: 3,
+                borderRadius: "4px",
+                width: "200px",
+                zIndex: 1300,
               }}
+              onMouseLeave={handleCloseContextMenu}
             >
-              <TurnLeftIcon className="pb-1" /> Unsend
-            </Button>
-          )}
-        </Box>
-      )}
+              <Button
+                onClick={handleDownload}
+                style={{
+                  color: "var(--primary-color) !important",
+                  fontWeight: 600,
+                  padding: "10px",
+                  textTransform: "none",
+                  width: "100%",
+                }}
+              >
+                <DownloadIcon /> Download Image
+              </Button>
+              <Button
+                onClick={() => handleReplyMessage(contextMenu.message!)}
+                style={{
+                  color: "var(--primary-color)",
+                  fontWeight: 600,
+                  padding: "10px",
+                  textTransform: "none",
+                  width: "100%",
+                }}
+              >
+                <ReplyIcon /> Reply
+              </Button>
+              {currentUser === message.sender_id && (
+                <Button
+                  onClick={() => handleUnsendMessage!(contextMenu.message?.id)}
+                  style={{
+                    color: "red",
+                    fontWeight: 600,
+                    padding: "10px",
+                    textTransform: "none",
+                    width: "100%",
+                  }}
+                >
+                  <TurnLeftIcon className="pb-1" /> Unsend
+                </Button>
+              )}
+            </Box>
+          );
+        })()}
 
       <Modal open={isOpen} onClose={() => setIsOpen(false)}>
         <Box

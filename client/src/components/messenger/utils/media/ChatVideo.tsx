@@ -3,6 +3,7 @@ import { Modal, Box, Button } from "@mui/material";
 import PlayArrowIcon from "@mui/icons-material/PlayArrow";
 import DownloadIcon from "@mui/icons-material/Download";
 import TurnLeftIcon from "@mui/icons-material/TurnLeft";
+import ReplyIcon from "@mui/icons-material/Reply";
 import VideoPlayer from "./VideoPlayer";
 import {
   MessagesDTO,
@@ -13,18 +14,20 @@ import SuccessMessage from "../../../messages/SuccessMessage";
 
 interface ChatVideoProps {
   message: MessagesDTO;
-  handleUnsendMessage?: (messageId: string | undefined) => void;
-  onLoadedData?: () => void;
   currentUser?: string;
   isInModal?: boolean;
+  onLoadedData?: () => void;
+  handleReplyMessage: (message: MessagesDTO | null) => void;
+  handleUnsendMessage?: (messageId: string | undefined) => void;
 }
 
 const ChatVideo = ({
   message,
-  handleUnsendMessage,
-  onLoadedData,
   currentUser,
   isInModal = false,
+  onLoadedData,
+  handleReplyMessage,
+  handleUnsendMessage,
 }: ChatVideoProps) => {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
@@ -32,17 +35,17 @@ const ChatVideo = ({
   const [contextMenu, setContextMenu] = useState<{
     mouseX: number;
     mouseY: number;
-    messageId?: string;
+    message?: MessagesDTO;
   } | null>(null);
 
   if (message.message_type !== MessageType.VIDEO) return null;
 
-  const handleContextMenu = (event: React.MouseEvent, messageId: string) => {
+  const handleContextMenu = (event: React.MouseEvent, message: MessagesDTO) => {
     event.preventDefault();
     setContextMenu({
       mouseX: event.clientX - 2,
       mouseY: event.clientY - 4,
-      messageId,
+      message,
     });
   };
 
@@ -102,7 +105,7 @@ const ChatVideo = ({
           overflow: "hidden",
         }}
         onClick={() => setIsModalOpen(true)}
-        onContextMenu={(e) => handleContextMenu(e, message.id)}
+        onContextMenu={(e) => handleContextMenu(e, message)}
       >
         <video
           src={message.content}
@@ -136,48 +139,68 @@ const ChatVideo = ({
         </Box>
       </Box>
 
-      {contextMenu !== null && (
-        <Box
-          sx={{
-            position: "fixed",
-            top: contextMenu.mouseY,
-            left: contextMenu.mouseX,
-            backgroundColor: "white",
-            boxShadow: 3,
-            borderRadius: "4px",
-            width: "200px",
-            zIndex: 1300,
-          }}
-          onMouseLeave={handleCloseContextMenu}
-        >
-          <Button
-            onClick={handleDownload}
-            style={{
-              color: "var(--primary-color) !important",
-              fontWeight: 600,
-              padding: "10px",
-              textTransform: "none",
-              width: "100%",
-            }}
-          >
-            <DownloadIcon /> Download Video
-          </Button>
-          {currentUser === message.sender_id && (
-            <Button
-              onClick={() => handleUnsendMessage!(contextMenu.messageId)}
-              style={{
-                color: "red",
-                fontWeight: 600,
-                padding: "10px",
-                textTransform: "none",
-                width: "100%",
+      {contextMenu !== null &&
+        (() => {
+          const menuWidth = 200;
+          const computedLeft =
+            contextMenu.mouseX + menuWidth > window.innerWidth
+              ? contextMenu.mouseX - menuWidth
+              : contextMenu.mouseX;
+          return (
+            <Box
+              sx={{
+                position: "fixed",
+                top: contextMenu.mouseY,
+                left: computedLeft,
+                backgroundColor: "white",
+                boxShadow: 3,
+                borderRadius: "4px",
+                width: "200px",
+                zIndex: 1300,
               }}
+              onMouseLeave={handleCloseContextMenu}
             >
-              <TurnLeftIcon className="pb-1" /> Unsend
-            </Button>
-          )}
-        </Box>
-      )}
+              <Button
+                onClick={handleDownload}
+                style={{
+                  color: "var(--primary-color) !important",
+                  fontWeight: 600,
+                  padding: "10px",
+                  textTransform: "none",
+                  width: "100%",
+                }}
+              >
+                <DownloadIcon /> Download Video
+              </Button>
+              <Button
+                onClick={() => handleReplyMessage(contextMenu.message!)}
+                style={{
+                  color: "var(--primary-color)",
+                  fontWeight: 600,
+                  padding: "10px",
+                  textTransform: "none",
+                  width: "100%",
+                }}
+              >
+                <ReplyIcon /> Reply
+              </Button>
+              {currentUser === message.sender_id && (
+                <Button
+                  onClick={() => handleUnsendMessage!(contextMenu.message?.id)}
+                  style={{
+                    color: "red",
+                    fontWeight: 600,
+                    padding: "10px",
+                    textTransform: "none",
+                    width: "100%",
+                  }}
+                >
+                  <TurnLeftIcon className="pb-1" /> Unsend
+                </Button>
+              )}
+            </Box>
+          );
+        })()}
 
       <Modal
         open={isModalOpen}

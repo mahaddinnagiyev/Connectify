@@ -338,6 +338,7 @@ const Messenger = () => {
                 otherUserAccount={currentChat.otherUserAccount}
                 otherUserPrivacySettings={currentChat.otherUserPrivacySettings}
                 messages={messages}
+                truncateMessage={truncateMessage}
               />
             )}
           </div>

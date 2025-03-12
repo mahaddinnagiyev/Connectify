@@ -68,7 +68,7 @@ export const LastSeen = ({
       <p className="text-xs">
         Last seen at:{" "}
         {otherUserAccount?.last_login
-          ? new Date(otherUserAccount.last_login).toLocaleTimeString("az-AZ", {
+          ? new Date(otherUserAccount.last_login + "Z").toLocaleTimeString("az-AZ", {
               timeZone: "Asia/Baku",
               day: "2-digit",
               month: "2-digit",

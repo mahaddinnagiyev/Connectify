@@ -1,6 +1,7 @@
 import React, { useState, KeyboardEvent, useRef } from "react";
 import { Tooltip } from "@mui/material";
 import {
+  HighlightOff as HighlightOffIcon,
   Mic as MicIcon,
   Send as SendIcon,
   AttachFile as AttachFileIcon,
@@ -18,7 +19,10 @@ import {
   uploadImage,
   uploadVideo,
 } from "../../services/socket/socket-service";
-import { MessageType } from "../../services/socket/dto/messages-dto";
+import {
+  MessagesDTO,
+  MessageType,
+} from "../../services/socket/dto/messages-dto";
 import { Socket } from "socket.io-client";
 import AudioWaveAnimation from "./utils/audio/AudioWaveAnimation";
 
@@ -27,15 +31,18 @@ interface SendMessageProps {
   isBlocker: boolean;
   messageInput: string;
   setMessageInput: React.Dispatch<React.SetStateAction<string>>;
-  handleSendMessage: () => void;
   showEmojiPicker: boolean;
   setShowEmojiPicker: React.Dispatch<React.SetStateAction<boolean>>;
   emojiPickerRef: React.RefObject<HTMLDivElement>;
-  handleEmojiPicker: (emoji: { emoji: string }) => void;
   roomId: string;
   currentUser: string;
   socket: Socket | null;
   otherUserUsername?: string;
+  replyMessage?: MessagesDTO | null;
+  truncateMessage: (message: string, maxLength: number) => string;
+  handleSendMessage: () => void;
+  handleEmojiPicker: (emoji: { emoji: string }) => void;
+  handleReplyMessage: (message: MessagesDTO | null) => void;
 }
 
 const SendMessage: React.FC<SendMessageProps> = ({
@@ -51,7 +58,10 @@ const SendMessage: React.FC<SendMessageProps> = ({
   roomId,
   currentUser,
   socket,
+  truncateMessage,
   otherUserUsername,
+  handleReplyMessage,
+  replyMessage,
 }) => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [showAttachModal, setShowAttachModal] = useState(false);
@@ -270,7 +280,48 @@ const SendMessage: React.FC<SendMessageProps> = ({
         />
       )}
 
-      <div className="send-message-container mt-2">
+      {replyMessage && (
+        <div className="reply-message-container">
+          <div className="reply-message">
+            <div className="reply-message-header">
+              <span className="reply-icon">↩</span>
+              <span className="reply-username">
+                {replyMessage.sender_id === currentUser
+                  ? "You"
+                  : otherUserUsername}
+              </span>
+            </div>
+            <div className="reply-content">
+              {replyMessage.message_type === MessageType.TEXT ? (
+                <span className="text-preview">
+                  {truncateMessage(replyMessage.content, 150)}
+                </span>
+              ) : replyMessage.message_type === MessageType.IMAGE ? (
+                <span className="media-preview">🖼 Image</span>
+              ) : replyMessage.message_type === MessageType.VIDEO ? (
+                <span className="media-preview">🎬 Video</span>
+              ) : replyMessage.message_type === MessageType.FILE ? (
+                <span className="file-preview">
+                  📎 {replyMessage.message_name ?? "Imported File"}
+                </span>
+              ) : replyMessage.message_type === MessageType.AUDIO ? (
+                <span className="audio-preview">🎵 {"Audio"}</span>
+              ) : (
+                <span className="text-preview">
+                  {truncateMessage(replyMessage.content, 150)}
+                </span>
+              )}
+            </div>
+          </div>
+          <button
+            className="cancel-reply"
+            onClick={() => handleReplyMessage(null)}
+          >
+            <HighlightOffIcon />
+          </button>
+        </div>
+      )}
+      <div className="send-message-container">
         {isBlocked ? (
           <>
             <Tooltip title="Emotes" placement="top">
