@@ -3,6 +3,7 @@ import "./css/chat-style.css";
 import { Box, Button } from "@mui/material";
 import TurnLeftIcon from "@mui/icons-material/TurnLeft";
 import ReplyIcon from "@mui/icons-material/Reply";
+import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import {
   MessagesDTO,
   MessageType,
@@ -22,6 +23,7 @@ import ChatHeader from "./utils/chat/ChatHeader";
 import ChatImage from "./utils/media/ChatImage";
 import ChatVideo from "./utils/media/ChatVideo";
 import ChatFile from "./utils/media/ChatFile";
+import SuccessMessage from "../messages/SuccessMessage";
 
 interface ChatProps {
   roomId: string;
@@ -51,6 +53,7 @@ const Chat = ({
   const [replyMessage, setReplyMessage] = useState<MessagesDTO | null>(null);
 
   const [errorMessage, setErrorMessage] = useState<string | null>("");
+  const [successMessage, setSuccessMessage] = useState<string | null>("");
 
   const [isBlocked, setIsBlocked] = useState(false);
   const [isBlocker, setIsBlocker] = useState(false);
@@ -128,7 +131,14 @@ const Chat = ({
     }
   }, []);
 
- useEffect(() => {
+  const copyMessage = useCallback((message: MessagesDTO) => {
+    if (message.message_type === MessageType.TEXT) {
+      navigator.clipboard.writeText(message.content);
+      setSuccessMessage("Message copied to clipboard");
+    }
+  }, []);
+
+  useEffect(() => {
     if (messagesContainerRef.current) {
       messagesContainerRef.current.scrollTop =
         messagesContainerRef.current.scrollHeight;
@@ -182,6 +192,13 @@ const Chat = ({
         <ErrorMessage
           message={errorMessage}
           onClose={() => setErrorMessage(null)}
+        />
+      )}
+
+      {successMessage && (
+        <SuccessMessage
+          message={successMessage}
+          onClose={() => setSuccessMessage(null)}
         />
       )}
 
@@ -385,6 +402,22 @@ const Chat = ({
                 >
                   <ReplyIcon /> Reply
                 </Button>
+                {contextMenu.message?.message_type === MessageType.TEXT && (
+                  <Button
+                    onClick={() => copyMessage(contextMenu.message!)}
+                    style={{
+                      color: "var(--primary-color)",
+                      fontWeight: 600,
+                      padding: "10px",
+                      textTransform: "none",
+                      width: "100%",
+                      display: "flex",
+                      gap: "3px",
+                    }}
+                  >
+                    <ContentCopyIcon fontSize="small"/> Copy Message
+                  </Button>
+                )}
                 {contextMenu.message?.sender_id === currentUser && (
                   <Button
                     onClick={() => handleUnsendMessage(contextMenu.message?.id)}
