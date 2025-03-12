@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import "./css/chat-style.css";
 import { Box, Button } from "@mui/material";
 import TurnLeftIcon from "@mui/icons-material/TurnLeft";
@@ -49,15 +49,13 @@ const Chat = ({
   } | null>(null);
   const [allMessages, setAllMessages] = useState<MessagesDTO[]>(messages);
   const [replyMessage, setReplyMessage] = useState<MessagesDTO | null>(null);
-  const [messageInput, setMessageInput] = useState("");
+
   const [errorMessage, setErrorMessage] = useState<string | null>("");
 
-  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [isBlocked, setIsBlocked] = useState(false);
   const [isBlocker, setIsBlocker] = useState(false);
 
   const messagesContainerRef = useRef<HTMLDivElement>(null);
-  const emojiPickerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setAllMessages(messages);
@@ -65,35 +63,19 @@ const Chat = ({
 
   useEffect(() => {
     get_block_list().then((response) => {
-      if (response.success) {
+      if (response.success && otherUser) {
         const blockedUsers = response.blockList.map((user) => user.id);
-        setIsBlocked(blockedUsers.includes(otherUser!.id));
+        setIsBlocked(blockedUsers.includes(otherUser.id));
       }
     });
 
     get_blocker_list().then((response) => {
-      if (response.success) {
+      if (response.success && otherUser) {
         const blockUsers = response.blockerList.map((user) => user.id);
-        setIsBlocker(blockUsers.includes(otherUser!.id));
+        setIsBlocker(blockUsers.includes(otherUser.id));
       }
     });
   }, [otherUser]);
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        emojiPickerRef.current &&
-        !emojiPickerRef.current.contains(event.target as Node)
-      ) {
-        setShowEmojiPicker(false);
-      }
-    };
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, []);
 
   useEffect(() => {
     const handleMessageUnsent = (data: { messageId: string }) => {
@@ -108,58 +90,45 @@ const Chat = ({
     };
   }, []);
 
-  const handleEmojiPicker = (emojiObject: { emoji: string }) => {
-    setMessageInput((prevInput) => prevInput + emojiObject.emoji);
-  };
-
-  const handleReplyMessage = (message: MessagesDTO | null) => {
+  const handleReplyMessage = useCallback((message: MessagesDTO | null) => {
     setReplyMessage(message);
-  };
+  }, []);
 
-  const handleSendMessage = () => {
-    if (messageInput.trim()) {
-      socket?.emit("sendMessage", {
-        roomId: roomId,
-        content: messageInput,
-        message_type: "text",
-        parent_message_id: replyMessage?.id,
+  const handleContextMenu = useCallback(
+    (event: React.MouseEvent, message: MessagesDTO) => {
+      event.preventDefault();
+      setContextMenu({
+        mouseX: event.clientX - 2,
+        mouseY: event.clientY - 4,
+        message,
       });
-      setMessageInput("");
-      setAllMessages((prevMessages) => [...prevMessages]);
-      handleReplyMessage(null);
-    }
-  };
-
-  const handleContextMenu = (event: React.MouseEvent, message: MessagesDTO) => {
-    event.preventDefault();
-    setContextMenu({
-      mouseX: event.clientX - 2,
-      mouseY: event.clientY - 4,
-      message,
-    });
-  };
+    },
+    []
+  );
 
   const handleCloseContextMenu = () => {
     setContextMenu(null);
   };
 
-  const handleUnsendMessage = (messageId: string | undefined) => {
-    if (!messageId) return;
-    socket?.emit("unsendMessage", { roomId, messageId });
+  const handleUnsendMessage = useCallback(
+    (messageId: string | undefined) => {
+      if (!messageId) return;
+      socket?.emit("unsendMessage", { roomId, messageId });
+      setContextMenu(null);
+    },
+    [roomId]
+  );
 
-    setContextMenu(null);
-  };
-
-  const isValidUrl = (url: string): boolean => {
+  const isValidUrl = useCallback((url: string): boolean => {
     try {
       new URL(url);
       return true;
     } catch {
       return false;
     }
-  };
+  }, []);
 
-  useEffect(() => {
+ useEffect(() => {
     if (messagesContainerRef.current) {
       messagesContainerRef.current.scrollTop =
         messagesContainerRef.current.scrollHeight;
@@ -173,8 +142,8 @@ const Chat = ({
     }
   };
 
-  const groupMessagesByDate = (messages: MessagesDTO[]) => {
-    const groupedMessages: { [key: string]: MessagesDTO[] } = {};
+  const groupedMessages = useMemo(() => {
+    const grouped: { [key: string]: MessagesDTO[] } = {};
 
     const formatDate = (date: string) => {
       const messageDate = new Date(date);
@@ -188,7 +157,6 @@ const Chat = ({
       if (messageDate.toDateString() === yesterday.toDateString()) {
         return "Yesterday";
       }
-
       return messageDate.toLocaleDateString("en-GB", {
         day: "numeric",
         month: "long",
@@ -196,22 +164,17 @@ const Chat = ({
       });
     };
 
-    messages.forEach((message) => {
+    for (const message of allMessages) {
       const formattedDate = formatDate(
         new Date(message.created_at + "Z").toString()
       );
-
-      if (!groupedMessages[formattedDate]) {
-        groupedMessages[formattedDate] = [];
+      if (!grouped[formattedDate]) {
+        grouped[formattedDate] = [];
       }
-
-      groupedMessages[formattedDate].push(message);
-    });
-
-    return groupedMessages;
-  };
-
-  const groupedMessages = groupMessagesByDate(allMessages);
+      grouped[formattedDate].push(message);
+    }
+    return grouped;
+  }, [allMessages]);
 
   return (
     <>
@@ -306,7 +269,10 @@ const Chat = ({
                               </>
                             ) : (
                               <span className="text-preview">
-                                {message.parent_message_id.content}
+                                {truncateMessage(
+                                  message.parent_message_id.content,
+                                  150
+                                )}
                               </span>
                             )}
                           </div>
@@ -441,13 +407,6 @@ const Chat = ({
         <SendMessage
           isBlocked={isBlocked}
           isBlocker={isBlocker}
-          messageInput={messageInput}
-          setMessageInput={setMessageInput}
-          handleSendMessage={handleSendMessage}
-          showEmojiPicker={showEmojiPicker}
-          setShowEmojiPicker={setShowEmojiPicker}
-          emojiPickerRef={emojiPickerRef}
-          handleEmojiPicker={handleEmojiPicker}
           roomId={roomId}
           currentUser={currentUser}
           socket={socket}
@@ -455,6 +414,8 @@ const Chat = ({
           handleReplyMessage={handleReplyMessage}
           replyMessage={replyMessage}
           truncateMessage={truncateMessage}
+          setAllMessages={setAllMessages}
+          allMessages={allMessages}
         />
       </section>
     </>

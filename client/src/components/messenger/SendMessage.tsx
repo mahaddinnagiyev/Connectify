@@ -1,4 +1,4 @@
-import React, { useState, KeyboardEvent, useRef } from "react";
+import React, { useState, KeyboardEvent, useRef, useEffect } from "react";
 import { Tooltip } from "@mui/material";
 import {
   HighlightOff as HighlightOffIcon,
@@ -29,32 +29,20 @@ import AudioWaveAnimation from "./utils/audio/AudioWaveAnimation";
 interface SendMessageProps {
   isBlocked: boolean;
   isBlocker: boolean;
-  messageInput: string;
-  setMessageInput: React.Dispatch<React.SetStateAction<string>>;
-  showEmojiPicker: boolean;
-  setShowEmojiPicker: React.Dispatch<React.SetStateAction<boolean>>;
-  emojiPickerRef: React.RefObject<HTMLDivElement>;
   roomId: string;
   currentUser: string;
   socket: Socket | null;
   otherUserUsername?: string;
   replyMessage?: MessagesDTO | null;
+  allMessages: MessagesDTO[];
+  setAllMessages: (messages: MessagesDTO[]) => void;
   truncateMessage: (message: string, maxLength: number) => string;
-  handleSendMessage: () => void;
-  handleEmojiPicker: (emoji: { emoji: string }) => void;
   handleReplyMessage: (message: MessagesDTO | null) => void;
 }
 
 const SendMessage: React.FC<SendMessageProps> = ({
   isBlocked,
   isBlocker,
-  messageInput,
-  setMessageInput,
-  handleSendMessage,
-  showEmojiPicker,
-  setShowEmojiPicker,
-  emojiPickerRef,
-  handleEmojiPicker,
   roomId,
   currentUser,
   socket,
@@ -62,19 +50,63 @@ const SendMessage: React.FC<SendMessageProps> = ({
   otherUserUsername,
   handleReplyMessage,
   replyMessage,
+  setAllMessages,
+  allMessages
 }) => {
+  const [prevMessages, setPrevMessages] = useState<MessagesDTO[]>([]);
+  const [messageInput, setMessageInput] = useState("");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [showAttachModal, setShowAttachModal] = useState(false);
-  const [showSelectedModal, setShowSelectedModal] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [isRecording, setIsRecording] = useState(false);
   const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(
     null
   );
-  const [recordingTime, setRecordingTime] = useState<number>(0);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+
+  const [recordingTime, setRecordingTime] = useState<number>(0);
+
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [showAttachModal, setShowAttachModal] = useState(false);
+  const [showSelectedModal, setShowSelectedModal] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
+
   const recordingCanceled = useRef(false);
+  const emojiPickerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        emojiPickerRef.current &&
+        !emojiPickerRef.current.contains(event.target as Node)
+      ) {
+        setShowEmojiPicker(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  const handleEmojiPicker = (emojiObject: { emoji: string }) => {
+    setMessageInput((prevInput) => prevInput + emojiObject.emoji);
+  };
+
+  const handleSendMessage = () => {
+    if (messageInput.trim()) {
+      socket?.emit("sendMessage", {
+        roomId: roomId,
+        content: messageInput,
+        message_type: "text",
+        parent_message_id: replyMessage?.id,
+      });
+      setMessageInput("");
+      setPrevMessages(allMessages)
+      setAllMessages([...prevMessages]);
+      handleReplyMessage(null);
+    }
+  };
 
   const onKeyPressHandler = (e: KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {
