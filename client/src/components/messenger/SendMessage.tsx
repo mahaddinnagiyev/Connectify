@@ -1,14 +1,5 @@
 import React, { useState, KeyboardEvent, useRef, useEffect } from "react";
-import { Tooltip } from "@mui/material";
-import {
-  HighlightOff as HighlightOffIcon,
-  Mic as MicIcon,
-  Send as SendIcon,
-  AttachFile as AttachFileIcon,
-  InsertEmoticon as InsertEmoticonIcon,
-  Delete as DeleteIcon,
-} from "@mui/icons-material";
-import EmojiPicker from "emoji-picker-react";
+import { HighlightOff as HighlightOffIcon } from "@mui/icons-material";
 import CheckModal from "../modals/spinner/CheckModal";
 import ErrorMessage from "../messages/ErrorMessage";
 import AttachModal from "../modals/chat/AttachModal";
@@ -24,7 +15,7 @@ import {
   MessageType,
 } from "../../services/socket/dto/messages-dto";
 import { Socket } from "socket.io-client";
-import AudioWaveAnimation from "./utils/audio/AudioWaveAnimation";
+import { SendMessageInput } from "./utils/SendMessageInput";
 
 interface SendMessageProps {
   isBlocked: boolean;
@@ -51,7 +42,7 @@ const SendMessage: React.FC<SendMessageProps> = ({
   handleReplyMessage,
   replyMessage,
   setAllMessages,
-  allMessages
+  allMessages,
 }) => {
   const [prevMessages, setPrevMessages] = useState<MessagesDTO[]>([]);
   const [messageInput, setMessageInput] = useState("");
@@ -89,10 +80,6 @@ const SendMessage: React.FC<SendMessageProps> = ({
     };
   }, []);
 
-  const handleEmojiPicker = (emojiObject: { emoji: string }) => {
-    setMessageInput((prevInput) => prevInput + emojiObject.emoji);
-  };
-
   const handleSendMessage = () => {
     if (messageInput.trim()) {
       socket?.emit("sendMessage", {
@@ -102,7 +89,7 @@ const SendMessage: React.FC<SendMessageProps> = ({
         parent_message_id: replyMessage?.id,
       });
       setMessageInput("");
-      setPrevMessages(allMessages)
+      setPrevMessages(allMessages);
       setAllMessages([...prevMessages]);
       handleReplyMessage(null);
     }
@@ -259,14 +246,6 @@ const SendMessage: React.FC<SendMessageProps> = ({
     setIsRecording(false);
   };
 
-  const formatRecordingTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins.toString().padStart(2, "0")}:${secs
-      .toString()
-      .padStart(2, "0")}`;
-  };
-
   const handleAudioUpload = async (audioFile: File) => {
     if (!audioFile) return;
 
@@ -353,190 +332,24 @@ const SendMessage: React.FC<SendMessageProps> = ({
           </button>
         </div>
       )}
-      <div className="send-message-container">
-        {isBlocked ? (
-          <>
-            <Tooltip title="Emotes" placement="top">
-              <button
-                className="insert-emoticon-button cursor-not-allowed"
-                disabled
-              >
-                <InsertEmoticonIcon />
-              </button>
-            </Tooltip>
-            <Tooltip title="Attach File" placement="top">
-              <button
-                className="attach-file-button cursor-not-allowed"
-                disabled
-              >
-                <AttachFileIcon />
-              </button>
-            </Tooltip>
-            <Tooltip
-              title={`You have blocked ${otherUserUsername || "this user"}!`}
-              placement="top"
-            >
-              <textarea
-                value={messageInput}
-                onChange={(e) => setMessageInput(e.target.value)}
-                placeholder="Type your message..."
-                className="message-input cursor-not-allowed"
-                onKeyPress={onKeyPressHandler}
-                disabled
-              ></textarea>
-            </Tooltip>
-            {messageInput.trim() ? (
-              <button
-                type="submit"
-                className="send-button"
-                style={{ cursor: "not-allowed" }}
-                disabled
-              >
-                <SendIcon />
-              </button>
-            ) : (
-              <button
-                type="submit"
-                className="send-button"
-                style={{ cursor: "not-allowed" }}
-                disabled
-              >
-                <MicIcon />
-              </button>
-            )}
-          </>
-        ) : isBlocker ? (
-          <>
-            <Tooltip title="Emotes" placement="top">
-              <button
-                className="insert-emoticon-button cursor-not-allowed"
-                disabled
-              >
-                <InsertEmoticonIcon />
-              </button>
-            </Tooltip>
-            <Tooltip title="Attach File" placement="top">
-              <button
-                className="attach-file-button cursor-not-allowed"
-                disabled
-              >
-                <AttachFileIcon />
-              </button>
-            </Tooltip>
-            <Tooltip
-              title={`${otherUserUsername || "The user"} has blocked you!`}
-              placement="top"
-            >
-              <textarea
-                value={messageInput}
-                onChange={(e) => setMessageInput(e.target.value)}
-                placeholder="Type your message..."
-                className="message-input cursor-not-allowed"
-                onKeyPress={onKeyPressHandler}
-                disabled
-              ></textarea>
-            </Tooltip>
-            {messageInput.trim() ? (
-              <button
-                type="submit"
-                className="send-button"
-                style={{ cursor: "not-allowed" }}
-                disabled
-              >
-                <SendIcon />
-              </button>
-            ) : (
-              <button
-                type="submit"
-                className="send-button"
-                style={{ cursor: "not-allowed" }}
-                disabled
-              >
-                <MicIcon />
-              </button>
-            )}
-          </>
-        ) : (
-          <>
-            {isRecording ? (
-              <div className="recording-ui flex items-center md:gap-8 gap-3 w-full">
-                <button
-                  className="cancel-recording-button text-[red] border-2 border-[red] rounded-md p-2 hover:text-white hover:bg-[red] transition-all duration-300 ease-in-out"
-                  onClick={cancelRecording}
-                  title="Cancel Recording"
-                >
-                  <DeleteIcon />
-                </button>
-
-                <div className="recording-timer text-lg font-medium">
-                  {formatRecordingTime(recordingTime)}
-                </div>
-                <AudioWaveAnimation mediaRecorder={mediaRecorder!} />
-                <button
-                  type="submit"
-                  className="send-button"
-                  onClick={stopRecordingAndUpload}
-                >
-                  <SendIcon />
-                </button>
-              </div>
-            ) : (
-              <>
-                <Tooltip title="Emotes" placement="top">
-                  <button
-                    className="insert-emoticon-button"
-                    onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-                  >
-                    <InsertEmoticonIcon />
-                  </button>
-                </Tooltip>
-                {showEmojiPicker && (
-                  <div className="emoji-picker-container" ref={emojiPickerRef}>
-                    <EmojiPicker onEmojiClick={handleEmojiPicker} />
-                  </div>
-                )}
-                <Tooltip title="Attach File" placement="top">
-                  <button
-                    className="attach-file-button"
-                    onClick={() => setShowAttachModal(true)}
-                  >
-                    <AttachFileIcon />
-                  </button>
-                </Tooltip>
-                <textarea
-                  value={messageInput}
-                  onChange={(e) => setMessageInput(e.target.value)}
-                  placeholder="Type your message..."
-                  className="message-input"
-                  onKeyPress={onKeyPressHandler}
-                ></textarea>
-                {messageInput.trim() ? (
-                  <button
-                    type="submit"
-                    className="send-button"
-                    onClick={handleSendMessage}
-                  >
-                    <SendIcon />
-                  </button>
-                ) : (
-                  <Tooltip
-                    title="Click to send a voice message"
-                    placement="top"
-                  >
-                    <button
-                      type="button"
-                      className="send-button"
-                      onClick={startRecording}
-                    >
-                      <MicIcon />
-                    </button>
-                  </Tooltip>
-                )}
-              </>
-            )}
-          </>
-        )}
-      </div>
+      <SendMessageInput
+        isBlocked={isBlocked}
+        isBlocker={isBlocker}
+        messageInput={messageInput}
+        isRecording={isRecording}
+        recordingTime={recordingTime}
+        showEmojiPicker={showEmojiPicker}
+        mediaRecorder={mediaRecorder}
+        otherUserUsername={otherUserUsername}
+        setMessageInput={setMessageInput}
+        setShowEmojiPicker={setShowEmojiPicker}
+        setShowAttachModal={setShowAttachModal}
+        handleSendMessage={handleSendMessage}
+        startRecording={startRecording}
+        cancelRecording={cancelRecording}
+        stopRecordingAndUpload={stopRecordingAndUpload}
+        onKeyPressHandler={onKeyPressHandler}
+      />
 
       {showAttachModal && (
         <AttachModal
