@@ -217,6 +217,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       roomId: string;
       content: string;
       message_type: MessageType;
+      parent_message_id?: string;
       message_name?: string;
       message_size?: number;
     },
@@ -247,6 +248,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         client.data.user.id,
         payload.content,
         payload.message_type,
+        payload.parent_message_id,
         payload.message_name,
         payload.message_size,
       );

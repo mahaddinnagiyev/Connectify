@@ -161,6 +161,7 @@ export class MessengerService {
     senderId: string,
     content: string,
     messageType: MessageType,
+    parent_message_id?: string,
     message_name?: string,
     message_size?: number,
   ) {
@@ -172,13 +173,14 @@ export class MessengerService {
           {
             room_id: roomId,
             sender_id: senderId,
+            parent_message_id,
             content,
             message_type: messageType,
             message_name,
             message_size,
           },
         ])
-        .select()
+        .select("*, parent_message_id!left(*)")
         .single();
 
       if (error) {
@@ -285,7 +287,7 @@ export class MessengerService {
       const { data } = await this.supabase
         .getClient()
         .from('messages')
-        .select('*')
+        .select('*, parent_message_id!left(*)')
         .eq('room_id', roomId)
         .order('created_at', { ascending: true });
 
