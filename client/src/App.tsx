@@ -12,8 +12,15 @@ import FriendPage from "./pages/friends/FriendPage";
 import UserProfilePage from "./pages/profile/user/UserProfilePage";
 import SettingsPage from "./pages/settings/SettingsPage";
 import DeleteAccount from "./pages/DeleteAccount";
+import { useEffect } from "react";
 
 function App() {
+  useEffect(() => {
+    if ("serviceWorker" in navigator && "PushManager" in window) {
+      navigator.serviceWorker.register("/service-worker.js");
+    }
+  }, []);
+
   return (
     <BrowserRouter>
       <Routes>

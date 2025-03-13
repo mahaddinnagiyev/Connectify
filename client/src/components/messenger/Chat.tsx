@@ -262,7 +262,7 @@ const Chat = ({
                                 {truncateMessage(
                                   message.parent_message_id.content,
                                   50
-                                )}
+                                ) ?? "Deleted Message"}
                               </span>
                             ) : message.parent_message_id.message_type ===
                               MessageType.IMAGE ? (
@@ -289,7 +289,7 @@ const Chat = ({
                                 {truncateMessage(
                                   message.parent_message_id.content,
                                   150
-                                )}
+                                ) ?? "Deleted Message"}
                               </span>
                             )}
                           </div>
@@ -415,7 +415,7 @@ const Chat = ({
                       gap: "3px",
                     }}
                   >
-                    <ContentCopyIcon fontSize="small"/> Copy Message
+                    <ContentCopyIcon fontSize="small" /> Copy Message
                   </Button>
                 )}
                 {contextMenu.message?.sender_id === currentUser && (

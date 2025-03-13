@@ -21,6 +21,7 @@ import SlideshowIcon from "@mui/icons-material/Slideshow";
 import ImageTwoToneIcon from "@mui/icons-material/ImageTwoTone";
 import KeyboardVoiceTwoToneIcon from "@mui/icons-material/KeyboardVoiceTwoTone";
 import { PrivacySettingsDTO } from "../../services/account/dto/privacy-settings-dto";
+import ErrorMessage from "../messages/ErrorMessage";
 
 const Messenger = () => {
   const [chats, setChats] = useState<
@@ -32,10 +33,66 @@ const Messenger = () => {
   >([]);
   const [currentUser, setCurrentUser] = useState<string | null>(null);
   const [messages, setMessages] = useState<MessagesDTO[]>([]);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [searchParams] = useSearchParams();
   const currentRoomId = searchParams.get("room");
   const lastJoinedRoomRef = useRef<string | null>(null);
   const socketRef = useRef(socket);
+
+  const [isSubscribed, setIsSubscribed] = useState(false);
+
+  const subscribeToPushNotifications = async () => {
+    try {
+      const token = await getToken();
+      if (!token) return;
+
+      const reg = await navigator.serviceWorker.ready;
+      const existingSubscription = await reg.pushManager.getSubscription();
+
+      if (existingSubscription) {
+        setIsSubscribed(true);
+        return;
+      }
+
+      const newSubscription = await reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: process.env.VAPID_PUBLIC_KEY,
+      });
+
+      const response = await fetch(
+        `${process.env.SERVER_USER_URL}/api/webpush/subscribe`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(newSubscription),
+        }
+      );
+
+      if (response.ok) {
+        setIsSubscribed(true);
+      }
+    } catch {
+      setErrorMessage("Failed to subscribe to push notifications");
+    }
+  };
+
+  const requestNotificationPermission = async () => {
+    const permission = await Notification.requestPermission();
+    if (permission === "granted") {
+      subscribeToPushNotifications();
+    } else {
+      console.log("Bildiriş icazəsi verilmədi");
+    }
+  };
+
+  useEffect(() => {
+    if ("Notification" in window && !isSubscribed) {
+      requestNotificationPermission();
+    }
+  });
 
   useEffect(() => {
     getToken().then((token) => {
@@ -215,6 +272,8 @@ const Messenger = () => {
   const currentChat = chats.find((chat) => chat.id === currentRoomId);
 
   const truncateMessage = (message: string, maxLength: number) => {
+    if (!message) return "";
+
     return message.length > maxLength
       ? message.substring(0, maxLength) + "..."
       : message;
@@ -222,6 +281,13 @@ const Messenger = () => {
 
   return (
     <>
+      {errorMessage && (
+        <ErrorMessage
+          message={errorMessage}
+          onClose={() => setErrorMessage(null)}
+        />
+      )}
+
       <section className="messenger-container">
         <div className="messenger flex gap-3">
           {/* Chat List */}
