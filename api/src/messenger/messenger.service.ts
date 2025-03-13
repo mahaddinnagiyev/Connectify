@@ -180,7 +180,7 @@ export class MessengerService {
             message_size,
           },
         ])
-        .select("*, parent_message_id!left(*)")
+        .select('*, parent_message_id!left(*)')
         .single();
 
       if (error) {
@@ -354,6 +354,33 @@ export class MessengerService {
         throw new ForbiddenException(
           'You are not allowed to delete this message',
         );
+      }
+
+      const { data: childMessages } = (await this.supabase
+        .getClient()
+        .from('messages')
+        .select('*')
+        .eq('parent_message_id', messageId)) as { data: IMessage[] };
+
+      if (childMessages.length > 0) {
+        for (const childMessage of childMessages) {
+          await this.supabase
+            .getClient()
+            .from('messages')
+            .update({
+              parent_message_id: null,
+              is_parent_deleted: true,
+            })
+            .eq('id', childMessage.id);
+        }
+        await this.supabase
+          .getClient()
+          .from('messages')
+          .update({
+            is_deleted: true,
+          })
+          .eq('id', messageId)
+          .eq('room_id', roomId);
       }
 
       if (message.message_type !== MessageType.TEXT) {

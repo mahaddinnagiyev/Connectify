@@ -8,6 +8,7 @@ export interface IMessage {
   room_id: IChatRoom;
   sender_id: IUser;
   parent_message_id: IMessage;
+  is_parent_deleted: boolean;
   message_type: MessageType;
   content: string;
   status: MessageStatus;
