@@ -178,8 +178,35 @@ const SendMessage: React.FC<SendMessageProps> = ({
   };
 
   const startRecording = async () => {
+    let stream;
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const permissionStatus = await navigator.permissions.query({
+        name: "microphone",
+      });
+      if (permissionStatus.state === "granted") {
+        stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      } else {
+        try {
+          stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        } catch {
+          setErrorMessage(
+            "Microphone permission is required to record audio. Please grant the permission"
+          );
+          return;
+        }
+      }
+    } catch {
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      } catch {
+        setErrorMessage(
+          "Microphone permission is required to record audio. Please grant the permission"
+        );
+        return;
+      }
+    }
+
+    try {
       const recorder = new MediaRecorder(stream, {
         mimeType: "audio/webm; codecs=opus",
         audioBitsPerSecond: 192000,
@@ -216,8 +243,10 @@ const SendMessage: React.FC<SendMessageProps> = ({
       timerRef.current = setInterval(() => {
         setRecordingTime((prev) => prev + 1);
       }, 1000);
-    } catch (error) {
-      console.error("Error accessing microphone:", error);
+    } catch {
+      setErrorMessage(
+        "Something went wrong while recording - Please try again later"
+      );
     }
   };
 
