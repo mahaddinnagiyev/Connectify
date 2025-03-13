@@ -11,7 +11,6 @@ export class WebpushController {
   @UseGuards(JwtAuthGuard)
   @Post('subscribe')
   async subscribe(@Req() req: Request, @Body() subscription: any) {
-    console.log("controller", subscription);
     const userId = (req.user as IUser).id;
     const result = await this.webPushService.saveSubscription(
       userId,

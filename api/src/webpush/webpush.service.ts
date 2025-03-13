@@ -15,7 +15,6 @@ export class WebpushService {
 
   async saveSubscription(userId: string, subscription: any) {
     try {
-      console.log("service", subscription);
       const { data, error } = await this.supabase
         .getClient()
         .from('push_subscriptions')
@@ -33,7 +32,6 @@ export class WebpushService {
 
   async sendPushNotification(userId: string, payload: any) {
     try {
-      console.log("service webpush", payload);
       const { data: subscriptions, error } = await this.supabase
         .getClient()
         .from('push_subscriptions')
@@ -41,13 +39,12 @@ export class WebpushService {
         .eq('user_id', userId);
 
       if (error) console.log(error);
-      console.log(subscriptions);
+      
       if (!subscriptions) return;
 
       const notifications = subscriptions.map((sub) =>
         webPush.sendNotification(sub.subscription, JSON.stringify(payload)),
       );
-      console.log(notifications);
 
       return Promise.allSettled(notifications);
     } catch (error) {

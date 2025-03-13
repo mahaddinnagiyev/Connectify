@@ -283,17 +283,11 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
           });
         }
 
-        // const recipientSocket = Array.from(
-        //   this.server.sockets.sockets.values(),
-        // ).find((socket) => socket.data.user?.id === recipientId);
-
-        // if (recipientSocket) {
-        //   await this.webPushService.sendPushNotification(recipientId, {
-        //     title: `${client.data.user.username} sent you a message`,
-        //     body: payload.content,
-        //     data: { roomId: payload.roomId },
-        //   });
-        // }
+        await this.webPushService.sendPushNotification(recipientId, {
+          title: `${client.data.user.username} sent you a message`,
+          body: payload.content,
+          data: { roomId: payload.roomId },
+        });
 
         const { count } = await this.supabase
           .getClient()
