@@ -243,58 +243,74 @@ const Chat = ({
                         : undefined
                     }
                   >
-                    {message.parent_message_id && (
+                    {message.is_parent_deleted ? (
                       <div className="parent-message-container">
                         <div className="parent-message">
-                          <div className="parent-message-header">
-                            <span className="parent-message-icon">↩</span>
-                            <span className="parent-message-username">
-                              {message.parent_message_id.sender_id ===
-                              currentUser
-                                ? "You"
-                                : otherUser?.username}
-                            </span>
-                          </div>
                           <div className="parent-message-content">
-                            {message.parent_message_id.message_type ===
-                            MessageType.TEXT ? (
-                              <span className="text-preview">
-                                {truncateMessage(
-                                  message.parent_message_id.content,
-                                  50
-                                ) ?? "Deleted Message"}
-                              </span>
-                            ) : message.parent_message_id.message_type ===
-                              MessageType.IMAGE ? (
-                              <span className="media-preview">🖼 Image</span>
-                            ) : message.parent_message_id.message_type ===
-                              MessageType.VIDEO ? (
-                              <span className="media-preview">🎬 Video</span>
-                            ) : message.parent_message_id.message_type ===
-                              MessageType.FILE ? (
-                              <span className="file-preview">
-                                📎{" "}
-                                {message.parent_message_id.message_name ??
-                                  "Imported File"}
-                              </span>
-                            ) : message.parent_message_id.message_type ===
-                              MessageType.AUDIO ? (
-                              <>
-                                <span className="audio-preview">
-                                  🎵 {"Audio"}
-                                </span>
-                              </>
-                            ) : (
-                              <span className="text-preview">
-                                {truncateMessage(
-                                  message.parent_message_id.content,
-                                  150
-                                ) ?? "Deleted Message"}
-                              </span>
-                            )}
+                            <span className="text-preview">
+                              This message was deleted
+                            </span>
                           </div>
                         </div>
                       </div>
+                    ) : (
+                      <>
+                        {message.parent_message_id && (
+                          <div className="parent-message-container">
+                            <div className="parent-message">
+                              <div className="parent-message-header">
+                                <span className="parent-message-icon">↩</span>
+                                <span className="parent-message-username">
+                                  {message.parent_message_id.sender_id ===
+                                  currentUser
+                                    ? "You"
+                                    : otherUser?.username}
+                                </span>
+                              </div>
+                              <div className="parent-message-content">
+                                {message.parent_message_id.message_type ===
+                                MessageType.TEXT ? (
+                                  <span className="text-preview">
+                                    {truncateMessage(
+                                      message.parent_message_id.content,
+                                      50
+                                    )}
+                                  </span>
+                                ) : message.parent_message_id.message_type ===
+                                  MessageType.IMAGE ? (
+                                  <span className="media-preview">🖼 Image</span>
+                                ) : message.parent_message_id.message_type ===
+                                  MessageType.VIDEO ? (
+                                  <span className="media-preview">
+                                    🎬 Video
+                                  </span>
+                                ) : message.parent_message_id.message_type ===
+                                  MessageType.FILE ? (
+                                  <span className="file-preview">
+                                    📎{" "}
+                                    {message.parent_message_id.message_name ??
+                                      "Imported File"}
+                                  </span>
+                                ) : message.parent_message_id.message_type ===
+                                  MessageType.AUDIO ? (
+                                  <>
+                                    <span className="audio-preview">
+                                      🎵 {"Audio"}
+                                    </span>
+                                  </>
+                                ) : (
+                                  <span className="text-preview">
+                                    {truncateMessage(
+                                      message.parent_message_id.content,
+                                      150
+                                    )}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </>
                     )}
 
                     {message.message_type === MessageType.IMAGE && (
@@ -303,6 +319,7 @@ const Chat = ({
                         currentUser={currentUser}
                         handleReplyMessage={handleReplyMessage}
                         handleUnsendMessage={handleUnsendMessage}
+                        onLoadedData={scrollToBottom}
                       />
                     )}
                     {message.message_type === MessageType.VIDEO && (
@@ -320,6 +337,7 @@ const Chat = ({
                         currentUser={currentUser}
                         handleReplyMessage={handleReplyMessage}
                         handleUnsendMessage={handleUnsendMessage}
+                        onLoadedData={scrollToBottom}
                       />
                     )}
 

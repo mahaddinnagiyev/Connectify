@@ -19,6 +19,7 @@ export interface MessagesDTO {
   room_id: string;
   sender_id: string;
   parent_message_id: MessagesDTO;
+  is_parent_deleted: boolean;
   message_type: MessageType;
   content: string;
   status: MessageStatus;

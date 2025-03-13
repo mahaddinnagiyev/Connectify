@@ -14,6 +14,7 @@ import SuccessMessage from "../../../messages/SuccessMessage";
 interface ChatImageProps {
   message: MessagesDTO;
   currentUser?: string;
+  onLoadedData?: () => void;
   handleReplyMessage: (message: MessagesDTO | null) => void;
   handleUnsendMessage?: (messageId: string | undefined) => void;
 }
@@ -21,6 +22,7 @@ interface ChatImageProps {
 const ChatImage = ({
   message,
   currentUser,
+  onLoadedData,
   handleReplyMessage,
   handleUnsendMessage,
 }: ChatImageProps) => {
@@ -99,6 +101,7 @@ const ChatImage = ({
         className="bg-white rounded-lg cursor-pointer"
         onClick={() => setIsOpen(true)}
         onContextMenu={(e) => handleContextMenu(e, message)}
+        onLoad={onLoadedData}
       />
 
       {contextMenu !== null &&

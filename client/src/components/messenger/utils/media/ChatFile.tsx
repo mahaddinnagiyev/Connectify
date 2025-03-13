@@ -22,6 +22,7 @@ import SuccessMessage from "../../../messages/SuccessMessage";
 interface ChatFileProps {
   message: MessagesDTO;
   currentUser: string;
+  onLoadedData?: () => void;
   handleUnsendMessage: (messageId: string | undefined) => void;
   handleReplyMessage: (message: MessagesDTO | null) => void;
 }
@@ -29,6 +30,7 @@ interface ChatFileProps {
 const ChatFile = ({
   message,
   currentUser,
+  onLoadedData,
   handleUnsendMessage,
   handleReplyMessage,
 }: ChatFileProps) => {
@@ -141,6 +143,7 @@ const ChatFile = ({
       <div
         className="file-message-container"
         onContextMenu={(e) => handleContextMenu(e, message)}
+        onLoad={onLoadedData}
       >
         <div className="doc-file-icon">{getFileIcon(message.message_name)}</div>
         <div className="doc-file-info">
