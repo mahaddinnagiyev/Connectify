@@ -1,7 +1,6 @@
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { SupabaseService } from 'src/supabase/supabase.service';
 import * as webPush from 'web-push';
-import { SubscriptionDTO } from './dto/subscription-dto';
 
 @Injectable()
 export class WebpushService {
@@ -21,6 +20,7 @@ export class WebpushService {
         .upsert({ user_id: userId, subscription });
 
       if (error) throw new Error(error.message);
+
       return data;
     } catch (error) {
       console.log(error);
@@ -32,14 +32,12 @@ export class WebpushService {
 
   async sendPushNotification(userId: string, payload: any) {
     try {
-      const { data: subscriptions, error } = await this.supabase
+      const { data: subscriptions } = await this.supabase
         .getClient()
         .from('push_subscriptions')
         .select('subscription')
         .eq('user_id', userId);
 
-      if (error) console.log(error);
-      
       if (!subscriptions) return;
 
       const notifications = subscriptions.map((sub) =>

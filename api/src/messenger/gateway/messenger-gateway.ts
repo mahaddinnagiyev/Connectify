@@ -84,13 +84,26 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       });
       const user = await this.validateUser(payload.id);
 
+      const { data: account } = await this.supabase
+        .getClient()
+        .from('accounts')
+        .select('*')
+        .eq('user_id', user.id)
+        .single();
+
       await this.supabase
         .getClient()
         .from('accounts')
         .update({ last_login: new Date() })
         .eq('user_id', user.id);
 
-      const { password, is_admin, ...safeUser } = user;
+      const { password, is_admin, ...userWithoutSensitive } = user;
+
+      const safeUser = {
+        ...userWithoutSensitive,
+        profile_picture: account?.profile_picture,
+      };
+
       client.data.user = safeUser;
       client.join(`user:${user.id}`);
       this.logger.info(
@@ -283,9 +296,20 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
           });
         }
 
+        let notificationBody = payload.content;
+        if (payload.message_type === MessageType.IMAGE) {
+          notificationBody = '🖼 Image';
+        } else if (payload.message_type === MessageType.VIDEO) {
+          notificationBody = '🎬 Video';
+        } else if (payload.message_type === MessageType.FILE) {
+          notificationBody = '📎 File';
+        } else if (payload.message_type === MessageType.AUDIO) {
+          notificationBody = '🎵 Audio';
+        }
+
         await this.webPushService.sendPushNotification(recipientId, {
           title: `${client.data.user.username} sent you a message`,
-          body: payload.content,
+          body: notificationBody,
           data: { roomId: payload.roomId },
         });
 

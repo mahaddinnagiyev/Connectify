@@ -71,11 +71,14 @@ const Messenger = () => {
         }
       );
 
+      console.log("Push subscription response:", response);
+
       if (response.ok) {
         setIsSubscribed(true);
       }
-    } catch {
-      setErrorMessage("Failed to subscribe to push notifications");
+    } catch (error) {
+      console.error("Error subscribing to push notifications:", error);
+      setErrorMessage("Error subscribing to push notifications");
     }
   };
 
