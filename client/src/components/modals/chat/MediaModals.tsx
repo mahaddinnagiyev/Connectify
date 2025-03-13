@@ -152,7 +152,7 @@ const MediaModal = ({ messages, setIsMediaModalOpen }: MediaModalProps) => {
                         key={message.id || index}
                         className="aspect-square bg-gradient-to-r from-blue-100 to-purple-100 rounded-xl cursor-pointer"
                       >
-                        <ChatImage message={message} />
+                        <ChatImage message={message} isInModal={true} />
                       </div>
                     ))}
                   </>
@@ -223,7 +223,7 @@ const MediaModal = ({ messages, setIsMediaModalOpen }: MediaModalProps) => {
                         </div>
                         <div className="flex items-center">
                           <button onClick={() => handleDownloadFile(message)}
-                            className="text-white">
+                            className="text-white hover:text-[var(--primary-color)] transition-color duration-500">
                             <Tooltip
                               placement="top"
                               title={`Download "${message.message_name ?? "Imported File"}"`}

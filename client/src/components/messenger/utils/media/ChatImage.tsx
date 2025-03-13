@@ -14,8 +14,9 @@ import SuccessMessage from "../../../messages/SuccessMessage";
 interface ChatImageProps {
   message: MessagesDTO;
   currentUser?: string;
+  isInModal?: boolean;
   onLoadedData?: () => void;
-  handleReplyMessage: (message: MessagesDTO | null) => void;
+  handleReplyMessage?: (message: MessagesDTO | null) => void;
   handleUnsendMessage?: (messageId: string | undefined) => void;
 }
 
@@ -23,6 +24,7 @@ const ChatImage = ({
   message,
   currentUser,
   onLoadedData,
+  isInModal = false,
   handleReplyMessage,
   handleUnsendMessage,
 }: ChatImageProps) => {
@@ -102,6 +104,10 @@ const ChatImage = ({
         onClick={() => setIsOpen(true)}
         onContextMenu={(e) => handleContextMenu(e, message)}
         onLoad={onLoadedData}
+        style={{
+          maxHeight: isInModal ? "157px" : "auto",
+          objectFit: "contain",
+        }}
       />
 
       {contextMenu !== null &&
@@ -138,18 +144,20 @@ const ChatImage = ({
               >
                 <DownloadIcon /> Download Image
               </Button>
-              <Button
-                onClick={() => handleReplyMessage(contextMenu.message!)}
-                style={{
-                  color: "var(--primary-color)",
-                  fontWeight: 600,
-                  padding: "10px",
-                  textTransform: "none",
-                  width: "100%",
-                }}
-              >
-                <ReplyIcon /> Reply
-              </Button>
+              {isInModal == false && (
+                <Button
+                  onClick={() => handleReplyMessage!(contextMenu.message!)}
+                  style={{
+                    color: "var(--primary-color)",
+                    fontWeight: 600,
+                    padding: "10px",
+                    textTransform: "none",
+                    width: "100%",
+                  }}
+                >
+                  <ReplyIcon /> Reply
+                </Button>
+              )}
               {currentUser === message.sender_id && (
                 <Button
                   onClick={() => handleUnsendMessage!(contextMenu.message?.id)}

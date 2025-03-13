@@ -17,7 +17,7 @@ interface ChatVideoProps {
   currentUser?: string;
   isInModal?: boolean;
   onLoadedData?: () => void;
-  handleReplyMessage: (message: MessagesDTO | null) => void;
+  handleReplyMessage?: (message: MessagesDTO | null) => void;
   handleUnsendMessage?: (messageId: string | undefined) => void;
 }
 
@@ -112,7 +112,7 @@ const ChatVideo = ({
           style={{
             width: "100%",
             display: "block",
-            maxHeight: isInModal ? "152px" : "90vh",
+            maxHeight: isInModal ? "152px" : "auto",
             height: isInModal ? "100%" : "auto",
             objectFit: isInModal ? "cover" : "contain",
           }}
@@ -172,18 +172,20 @@ const ChatVideo = ({
               >
                 <DownloadIcon /> Download Video
               </Button>
-              <Button
-                onClick={() => handleReplyMessage(contextMenu.message!)}
-                style={{
-                  color: "var(--primary-color)",
-                  fontWeight: 600,
-                  padding: "10px",
-                  textTransform: "none",
-                  width: "100%",
-                }}
-              >
-                <ReplyIcon /> Reply
-              </Button>
+              {isInModal === false && (
+                <Button
+                  onClick={() => handleReplyMessage!(contextMenu.message!)}
+                  style={{
+                    color: "var(--primary-color)",
+                    fontWeight: 600,
+                    padding: "10px",
+                    textTransform: "none",
+                    width: "100%",
+                  }}
+                >
+                  <ReplyIcon /> Reply
+                </Button>
+              )}
               {currentUser === message.sender_id && (
                 <Button
                   onClick={() => handleUnsendMessage!(contextMenu.message?.id)}

@@ -209,6 +209,8 @@ const Chat = ({
           otherUserPrivacySettings={otherUserPrivacySettings!}
           otherUser={otherUser!}
           messages={allMessages}
+          socket={socket!}
+          roomId={roomId}
         />
       </div>
       <hr className="font-bold" />

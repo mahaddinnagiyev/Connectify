@@ -71,8 +71,6 @@ const Messenger = () => {
         }
       );
 
-      console.log("Push subscription response:", response);
-
       if (response.ok) {
         setIsSubscribed(true);
       }
@@ -86,8 +84,6 @@ const Messenger = () => {
     const permission = await Notification.requestPermission();
     if (permission === "granted") {
       subscribeToPushNotifications();
-    } else {
-      console.log("Bildiriş icazəsi verilmədi");
     }
   };
 

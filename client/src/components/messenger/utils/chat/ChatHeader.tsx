@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Tooltip } from "@mui/material";
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import no_profile_photo from "../../../../assets/no-profile-photo.png";
 import { Account } from "../../../../services/account/dto/account-dto";
 import { PrivacySettingsDTO } from "../../../../services/account/dto/privacy-settings-dto";
@@ -17,25 +17,36 @@ import {
 } from "@mui/icons-material";
 import MediaModal from "../../../modals/chat/MediaModals";
 import { MessagesDTO } from "../../../../services/socket/dto/messages-dto";
+import { Socket } from "socket.io-client";
 
 interface ChatHeaderProps {
   otherUserAccount: Account;
   otherUserPrivacySettings: PrivacySettingsDTO;
   otherUser: Users;
-  messages: MessagesDTO[]
+  messages: MessagesDTO[];
+  roomId: string;
+  socket: Socket | null;
 }
 
 const ChatHeader = ({
   otherUserAccount,
   otherUserPrivacySettings,
   otherUser,
-  messages
+  messages,
+  roomId,
+  socket,
 }: ChatHeaderProps) => {
   const [isHovered, setIsHovered] = useState(false);
   const [isMediaModalOpen, setIsMediaModalOpen] = useState(false);
   const [visibleChatOptions, setVisibleChatOptions] = useState(false);
   const screenSize = window.innerWidth;
   const chatOptionsRef = useRef<HTMLDivElement>(null);
+  const navigate = useNavigate();
+
+  const handleLeaveRoom = () => {
+    socket?.emit("leaveRoom", { roomId });
+    navigate("/chat");
+  };
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -69,9 +80,9 @@ const ChatHeader = ({
       <div className="flex items-center gap-5">
         <div className="flex items-center gap-2">
           <Tooltip title="Back" placement="top">
-            <Link to={"/chat"}>
+            <button onClick={handleLeaveRoom}>
               <ChevronLeftIcon />
-            </Link>
+            </button>
           </Tooltip>
           <img
             src={otherUserAccount?.profile_picture ?? no_profile_photo}
@@ -130,7 +141,10 @@ const ChatHeader = ({
               >
                 <AccountBoxIcon className="profile-icon" /> User Profile
               </button>
-              <button className="user-profile-btn" onClick={(e) => showMediaModal(e)}>
+              <button
+                className="user-profile-btn"
+                onClick={(e) => showMediaModal(e)}
+              >
                 <PermMediaIcon className="profile-icon" /> Medias
               </button>
               {screenSize < 768 && (
@@ -152,9 +166,11 @@ const ChatHeader = ({
       </div>
 
       {isMediaModalOpen && (
-        <MediaModal messages={messages} setIsMediaModalOpen={setIsMediaModalOpen}/>
+        <MediaModal
+          messages={messages}
+          setIsMediaModalOpen={setIsMediaModalOpen}
+        />
       )}
-
     </>
   );
 };
