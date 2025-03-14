@@ -255,8 +255,10 @@ export class MessengerService {
             .neq('sender_id', userId)
             .neq('status', MessageStatus.READ);
 
+          const { messages, ...chatWithoutMessages } = room;
+
           return {
-            ...room,
+            ...chatWithoutMessages,
             unreadCount: count,
             lastMessageDate: lastMessage?.created_at || null,
             lastMessage: lastMessage || null,

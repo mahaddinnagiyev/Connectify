@@ -16,6 +16,7 @@ import { IUser } from 'src/interfaces/user.interface';
 import { MessageStatus } from 'src/enums/message-status.enum';
 import { WebpushService } from 'src/webpush/webpush.service';
 import { LoggerService } from 'src/logger/logger.service';
+import { IAccount } from 'src/interfaces/account.interface';
 
 @WebSocketGateway(3636, {
   cors: {
@@ -409,6 +410,19 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @SubscribeMessage('leaveRoom')
   async handleLeaveRoom(client: Socket, payload: { roomId: string }) {
     try {
+      const { data: account } = (await this.supabase
+        .getClient()
+        .from('accounts')
+        .select('*')
+        .eq('user_id', client.data.user.id)
+        .single()) as { data: IAccount };
+
+      await this.supabase
+        .getClient()
+        .from('accounts')
+        .update({ last_login: new Date() })
+        .eq('id', account.id);
+
       client.leave(payload.roomId);
       this.logger.info(
         `Client ${client.id} left room ${payload.roomId}`,
