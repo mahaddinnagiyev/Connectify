@@ -256,6 +256,7 @@ const Messenger = () => {
             return chat;
           })
         );
+        console.log(chatsWithUsers);
 
         setChats(chatsWithUsers);
       });

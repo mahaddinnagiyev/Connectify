@@ -9,5 +9,4 @@ export interface ChatRoomsDTO {
   lastMessage?: MessagesDTO;
   unreadCount?: number;
   lastMessageDate?: Date;
-  messages?: MessagesDTO[];
 }

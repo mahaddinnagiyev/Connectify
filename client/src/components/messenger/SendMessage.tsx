@@ -40,11 +40,8 @@ const SendMessage: React.FC<SendMessageProps> = ({
   truncateMessage,
   otherUserUsername,
   handleReplyMessage,
-  replyMessage,
-  setAllMessages,
-  allMessages,
+  replyMessage
 }) => {
-  const [prevMessages, setPrevMessages] = useState<MessagesDTO[]>([]);
   const [messageInput, setMessageInput] = useState("");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -89,8 +86,6 @@ const SendMessage: React.FC<SendMessageProps> = ({
         parent_message_id: replyMessage?.id,
       });
       setMessageInput("");
-      setPrevMessages(allMessages);
-      setAllMessages([...prevMessages]);
       handleReplyMessage(null);
     }
   };
