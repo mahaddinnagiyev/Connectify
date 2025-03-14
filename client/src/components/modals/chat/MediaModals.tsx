@@ -144,7 +144,7 @@ const MediaModal = ({ messages, setIsMediaModalOpen }: MediaModalProps) => {
           {/* Content */}
           <div className="flex-1 overflow-y-auto p-6">
             {activeTab === "images" && (
-              <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+              <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 h-">
                 {images.length > 0 ? (
                   <>
                     {images.map((message, index) => (

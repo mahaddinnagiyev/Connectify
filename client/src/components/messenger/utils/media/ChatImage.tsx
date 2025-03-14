@@ -105,8 +105,9 @@ const ChatImage = ({
         onContextMenu={(e) => handleContextMenu(e, message)}
         onLoad={onLoadedData}
         style={{
-          maxHeight: isInModal ? "157px" : "auto",
-          objectFit: "contain",
+          width: "100%",
+          height: isInModal ? "100%" : "auto",
+          objectFit: "cover",
         }}
       />
 

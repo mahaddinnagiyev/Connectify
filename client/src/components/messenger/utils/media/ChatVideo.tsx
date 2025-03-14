@@ -101,6 +101,7 @@ const ChatVideo = ({
           position: "relative",
           cursor: "pointer",
           maxWidth: "95vw",
+          maxHeight: isInModal ? "155px" : "auto",
           borderRadius: "8px",
           overflow: "hidden",
         }}
@@ -112,9 +113,9 @@ const ChatVideo = ({
           style={{
             width: "100%",
             display: "block",
-            maxHeight: isInModal ? "152px" : "auto",
             height: isInModal ? "100%" : "auto",
-            objectFit: isInModal ? "cover" : "contain",
+            objectFit: isInModal ? "contain" : "contain",
+            objectPosition: "center",
           }}
           muted
           playsInline
