@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import DownloadIcon from "@mui/icons-material/Download";
+import LinkIcon from "@mui/icons-material/Link";
+import LaunchIcon from "@mui/icons-material/Launch";
 import {
   MessagesDTO,
   MessageType,
@@ -19,12 +21,22 @@ const MediaModal = ({ messages, setIsMediaModalOpen }: MediaModalProps) => {
   const [images, setImages] = useState<MessagesDTO[]>([]);
   const [videos, setVideos] = useState<MessagesDTO[]>([]);
   const [files, setFiles] = useState<MessagesDTO[]>([]);
+  const [links, setLinks] = useState<MessagesDTO[]>([]);
 
-  const [activeTab, setActiveTab] = useState<"images" | "videos" | "files">(
-    "images"
-  );
+  const [activeTab, setActiveTab] = useState<
+    "images" | "videos" | "files" | "links"
+  >("images");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+
+  const isValidUrl = (url: string) => {
+    try {
+      new URL(url);
+      return true;
+    } catch {
+      return false;
+    }
+  };
 
   useEffect(() => {
     const filteredImages = messages.filter(
@@ -36,9 +48,15 @@ const MediaModal = ({ messages, setIsMediaModalOpen }: MediaModalProps) => {
     const filteredFiles = messages.filter(
       (message) => message.message_type === MessageType.FILE
     );
+    const filteredLinks = messages.filter(
+      (message) =>
+        message.message_type === MessageType.TEXT && isValidUrl(message.content)
+    );
+
     setImages(filteredImages);
     setVideos(filteredVideos);
     setFiles(filteredFiles);
+    setLinks(filteredLinks);
   }, [messages]);
 
   const formatFileSize = (bytes: number) => {
@@ -124,12 +142,13 @@ const MediaModal = ({ messages, setIsMediaModalOpen }: MediaModalProps) => {
           </div>
 
           {/* Tabs */}
-          <div className="flex border-b dark:border-gray-700 justify-center">
-            {(["images", "videos", "files"] as const).map((tab) => (
+          <div className="flex border-b dark:border-gray-700 justify-center overflow-x-auto"
+          >
+            {(["images", "videos", "files", "links"] as const).map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
-                className={`px-8 py-4 font-medium capitalize transition-colors
+                className={`px-8 py-4 font-medium capitalize text-xs md:text-lg transition-colors
                 ${
                   activeTab === tab
                     ? "text-blue-600 dark:text-blue-400 border-b-2 border-blue-500"
@@ -222,11 +241,15 @@ const MediaModal = ({ messages, setIsMediaModalOpen }: MediaModalProps) => {
                           </div>
                         </div>
                         <div className="flex items-center">
-                          <button onClick={() => handleDownloadFile(message)}
-                            className="text-white hover:text-[var(--primary-color)] transition-color duration-500">
+                          <button
+                            onClick={() => handleDownloadFile(message)}
+                            className="text-white hover:text-[var(--primary-color)] transition-color duration-500"
+                          >
                             <Tooltip
                               placement="top"
-                              title={`Download "${message.message_name ?? "Imported File"}"`}
+                              title={`Download "${
+                                message.message_name ?? "Imported File"
+                              }"`}
                             >
                               <DownloadIcon />
                             </Tooltip>
@@ -238,6 +261,65 @@ const MediaModal = ({ messages, setIsMediaModalOpen }: MediaModalProps) => {
                 ) : (
                   <div className="text-white text-center">
                     There is no file in this chat
+                  </div>
+                )}
+              </div>
+            )}
+
+            {activeTab === "links" && (
+              <div className="space-y-1">
+                {links.length > 0 ? (
+                  <>
+                    {links.map((message, index) => (
+                      <div
+                        key={message.id || index}
+                        className="flex items-center p-4 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors cursor-pointer"
+                      >
+                        <div className="flex gap-2 justify-between items-center w-full">
+                          <a
+                            href={message.content}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-sm text-gray-500 dark:text-gray-400 hover:text-[var(--primary-color)] transition-color duration-500"
+                          >
+                            {message.content}
+                          </a>
+
+                          <div className="flex items-center gap-3">
+                            <button
+                              className="text-white hover:text-[var(--primary-color)] transition-color duration-500"
+                              onClick={() => {
+                                window.navigator.clipboard.writeText(
+                                  message.content
+                                );
+                                setSuccessMessage("Link copied to clipboard");
+                              }}
+                            >
+                              <Tooltip placement="top" title={`Copy link`}>
+                                <LinkIcon />
+                              </Tooltip>
+                            </button>
+
+                            <a
+                              href={message.content}
+                              target="_blank"
+                              className="text-white hover:text-[var(--primary-color)] transition-color duration-500"
+                            >
+                              <Tooltip
+                                placement="top"
+                                title={`Open link in new tab`}
+                              >
+                                <LaunchIcon />
+                              </Tooltip>
+                            </a>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </>
+                ) : (
+                  <div className="text-white text-center">
+                    There is no link in this chat
                   </div>
                 )}
               </div>
