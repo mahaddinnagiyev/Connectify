@@ -1,27 +1,20 @@
 import { useState, useEffect, useRef } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
 import "../../colors.css";
 import "./css/style.css";
 import Chat from "./Chat";
 import SearchModal from "../modals/search/SearchModal";
-import no_profile_photo from "../../assets/no-profile-photo.png";
 import { socket } from "../../services/socket/socket-service";
 import { ChatRoomsDTO } from "../../services/socket/dto/ChatRoom-dto";
 import { getToken } from "../../services/auth/token-service";
 import { jwtDecode } from "jwt-decode";
 import { getUserById } from "../../services/user/user-service";
 import { Users } from "../../services/user/dto/user-dto";
-import {
-  MessagesDTO,
-  MessageType,
-} from "../../services/socket/dto/messages-dto";
+import { MessagesDTO } from "../../services/socket/dto/messages-dto";
 import { Account } from "../../services/account/dto/account-dto";
-import DescriptionIcon from "@mui/icons-material/Description";
-import SlideshowIcon from "@mui/icons-material/Slideshow";
-import ImageTwoToneIcon from "@mui/icons-material/ImageTwoTone";
-import KeyboardVoiceTwoToneIcon from "@mui/icons-material/KeyboardVoiceTwoTone";
 import { PrivacySettingsDTO } from "../../services/account/dto/privacy-settings-dto";
 import ErrorMessage from "../messages/ErrorMessage";
+import UserChats from "./UserChats";
 
 const Messenger = () => {
   const [chats, setChats] = useState<
@@ -256,7 +249,6 @@ const Messenger = () => {
             return chat;
           })
         );
-        console.log(chatsWithUsers);
 
         setChats(chatsWithUsers);
       });
@@ -303,89 +295,8 @@ const Messenger = () => {
               </div>
             </div>
             <hr className="font-bold" />
-            <div className="message-users flex flex-col gap-1 my-3">
-              {chats.map((chat, index) => (
-                <Link
-                  to={`?room=${chat.id}`}
-                  key={index}
-                  className="message-user px-2 py-2 hover:bg-[var(--secondary-color)] hover:rounded-lg cursor-pointer transition-all duration-500"
-                >
-                  <div className="flex items-center gap-3 relative">
-                    <img
-                      src={
-                        chat.otherUserAccount?.profile_picture ??
-                        no_profile_photo
-                      }
-                      alt="User Profile"
-                      style={{ height: "50px", width: "50px" }}
-                      className="rounded-full border-2 border-[var(--primary-color)]"
-                    />
-                    <div className="flex flex-col gap-1">
-                      <p className="text-sm">
-                        {chat.otherUser?.first_name} {chat.otherUser?.last_name}{" "}
-                        | @{chat.otherUser?.username}
-                      </p>
-                      <p className="text-xs">
-                        {chat?.lastMessage?.message_type ===
-                        MessageType.TEXT ? (
-                          truncateMessage(
-                            chat?.lastMessage?.content ?? "No message",
-                            30
-                          )
-                        ) : (
-                          <span className="inline-flex items-center gap-1">
-                            {chat?.lastMessage?.message_type ===
-                              MessageType.IMAGE && (
-                              <>
-                                <ImageTwoToneIcon /> Image
-                              </>
-                            )}
-                            {chat?.lastMessage?.message_type ===
-                              MessageType.AUDIO && (
-                              <>
-                                <KeyboardVoiceTwoToneIcon
-                                  style={{ fontSize: "16px" }}
-                                />
-                                Voice Message
-                              </>
-                            )}
-                            {chat?.lastMessage?.message_type ===
-                              MessageType.FILE && (
-                              <>
-                                <DescriptionIcon />
-                                File
-                              </>
-                            )}
-                            {chat?.lastMessage?.message_type ===
-                              MessageType.VIDEO && (
-                              <>
-                                <SlideshowIcon />
-                                Video
-                              </>
-                            )}
 
-                            {![
-                              MessageType.IMAGE,
-                              MessageType.AUDIO,
-                              MessageType.FILE,
-                              MessageType.VIDEO,
-                            ].includes(
-                              chat?.lastMessage?.message_type ??
-                                MessageType.DEFAULT
-                            ) && <span>Media</span>}
-                          </span>
-                        )}
-                      </p>
-                    </div>
-                    {chat.unreadCount! > 0 && (
-                      <span className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-red-500 text-white rounded-full px-2 py-0.5 text-xs">
-                        {chat.unreadCount}
-                      </span>
-                    )}
-                  </div>
-                </Link>
-              ))}
-            </div>
+            <UserChats chats={chats} truncateMessage={truncateMessage} />
           </div>
           {/* Chat Room */}
           <div

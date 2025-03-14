@@ -142,8 +142,7 @@ const MediaModal = ({ messages, setIsMediaModalOpen }: MediaModalProps) => {
           </div>
 
           {/* Tabs */}
-          <div className="flex border-b dark:border-gray-700 justify-center overflow-x-auto"
-          >
+          <div className="flex border-b dark:border-gray-700 justify-center overflow-x-auto">
             {(["images", "videos", "files", "links"] as const).map((tab) => (
               <button
                 key={tab}
@@ -163,30 +162,33 @@ const MediaModal = ({ messages, setIsMediaModalOpen }: MediaModalProps) => {
           {/* Content */}
           <div className="flex-1 overflow-y-auto p-6">
             {activeTab === "images" && (
-              <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 h-">
-                {images.length > 0 ? (
-                  <>
-                    {images.map((message, index) => (
-                      <div
-                        key={message.id || index}
-                        className="aspect-square bg-gradient-to-r from-blue-100 to-purple-100 rounded-xl cursor-pointer"
-                      >
-                        <ChatImage message={message} isInModal={true} />
-                      </div>
-                    ))}
-                  </>
-                ) : (
+              <>
+                <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 h-">
+                  {images.length > 0 && (
+                    <>
+                      {images.map((message, index) => (
+                        <div
+                          key={message.id || index}
+                          className="aspect-square bg-gradient-to-r from-blue-100 to-purple-100 rounded-xl cursor-pointer"
+                        >
+                          <ChatImage message={message} isInModal={true} />
+                        </div>
+                      ))}
+                    </>
+                  )}
+                </div>
+                {images.length === 0 && (
                   <div className="text-white text-center">
                     There is no image in this chat
                   </div>
                 )}
-              </div>
+              </>
             )}
 
             {activeTab === "videos" && (
               <div className="space-y-4">
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                  {videos.length > 0 ? (
+                  {videos.length > 0 && (
                     <>
                       {videos.map((message, index) => (
                         <div
@@ -197,12 +199,13 @@ const MediaModal = ({ messages, setIsMediaModalOpen }: MediaModalProps) => {
                         </div>
                       ))}
                     </>
-                  ) : (
-                    <div className="text-white text-center">
-                      There is no video in this chat
-                    </div>
                   )}
                 </div>
+                {videos.length === 0 && (
+                  <div className="text-white text-center" style={{ marginTop: "0" }}>
+                    There is no video in this chat
+                  </div>
+                )}
               </div>
             )}
 

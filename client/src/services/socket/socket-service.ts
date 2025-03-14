@@ -100,3 +100,20 @@ export const uploadAudio = async (
   const data = await response.json();
   return data;
 };
+
+export const getMessagesForRoom = async (roomId: string) => {
+  const response = await fetch(
+    `${process.env.SERVER_USER_URL}/messenger/chat-rooms/${roomId}/messages`,
+    {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json; charset=utf-8",
+        Authorization: `Bearer ${await getToken()}`,
+      },
+      credentials: "include",
+    }
+  );
+
+  const data = await response.json();
+  return data;
+};
