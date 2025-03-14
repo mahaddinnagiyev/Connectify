@@ -12,7 +12,6 @@ import {
   Videocam as VideocamIcon,
   MoreVert as MoreVertIcon,
   AccountBox as AccountBoxIcon,
-  Delete as DeleteIcon,
   ChevronLeft as ChevronLeftIcon,
 } from "@mui/icons-material";
 import MediaModal from "../../../modals/chat/MediaModals";
@@ -157,9 +156,6 @@ const ChatHeader = ({
                   </button>
                 </>
               )}
-              <button className="delete-btn">
-                <DeleteIcon className="delete-icon" /> Delete Chat
-              </button>
             </div>
           )}
         </div>

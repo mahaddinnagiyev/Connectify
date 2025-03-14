@@ -95,6 +95,12 @@ const Chat = ({
 
   const handleReplyMessage = useCallback((message: MessagesDTO | null) => {
     setReplyMessage(message);
+
+    (
+      document.getElementsByClassName("message-input")[0] as HTMLElement
+    ).focus();
+
+    handleCloseContextMenu();
   }, []);
 
   const handleContextMenu = useCallback(
@@ -135,6 +141,7 @@ const Chat = ({
     if (message.message_type === MessageType.TEXT) {
       navigator.clipboard.writeText(message.content);
       setSuccessMessage("Message copied to clipboard");
+      handleCloseContextMenu();
     }
   }, []);
 
@@ -396,11 +403,18 @@ const Chat = ({
               contextMenu.mouseX + menuWidth > window.innerWidth
                 ? contextMenu.mouseX - menuWidth
                 : contextMenu.mouseX;
+
+            const menuHeight = 135;
+            const computedTop =
+              contextMenu.mouseY + menuHeight > window.innerHeight
+                ? contextMenu.mouseY - menuHeight
+                : contextMenu.mouseY;
+
             return (
               <Box
                 sx={{
                   position: "fixed",
-                  top: contextMenu.mouseY,
+                  top: computedTop,
                   left: computedLeft,
                   backgroundColor: "white",
                   boxShadow: 3,

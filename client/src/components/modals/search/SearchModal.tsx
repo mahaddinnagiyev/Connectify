@@ -77,7 +77,7 @@ export default function SearchModal() {
         aria-describedby="alert-dialog-slide-description"
         PaperProps={{
           style: {
-            width: "60%",
+            width: "96%",
             maxWidth: "900px",
             margin: "auto",
             position: "relative",

@@ -178,11 +178,17 @@ const ChatFile = ({
               ? contextMenu.mouseX - menuWidth
               : contextMenu.mouseX;
 
+          const menuHeight = 135;
+          const computedTop =
+            contextMenu.mouseY + menuHeight > window.innerHeight
+              ? contextMenu.mouseY - menuHeight
+              : contextMenu.mouseY;
+
           return (
             <Box
               sx={{
                 position: "fixed",
-                top: contextMenu.mouseY,
+                top: computedTop,
                 left: computedLeft,
                 backgroundColor: "white",
                 boxShadow: 3,
