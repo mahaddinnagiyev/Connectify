@@ -1,0 +1,13 @@
+@media (max-width: 400px) {
+  .call-buttons {
+    font-size: 12px;
+    padding: 6px 9px;
+  }
+}
+
+@media (min-width: 365px) {
+  .call-buttons {
+    font-size: 10px;
+    padding: 4px 16px;
+  }
+}
