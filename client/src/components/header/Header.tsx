@@ -111,7 +111,7 @@ const Header = () => {
           ref={menuRef}
           className={`navbar ${isMenuOpen ? "open" : ""} flex gap-8`}
         >
-          <a href="/chat">
+          <a href="/messenger">
             <ChatIcon className="mt-1" /> Messenger
           </a>
           <a href="/groups">

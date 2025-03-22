@@ -58,6 +58,7 @@ const ConfirmAccount = () => {
         <div className="signup-form-group flex flex-col gap-1">
           <label htmlFor="confirmationCode">Confirmation Code</label>
           <input
+            autoComplete="off"
             type="number"
             id="confirmationCode"
             name="code"

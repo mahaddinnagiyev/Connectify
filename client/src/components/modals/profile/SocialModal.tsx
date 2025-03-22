@@ -51,6 +51,7 @@ const SocialModal: React.FC<SocialModalProps> = ({
       <form onSubmit={handleSubmit}>
         <DialogContent>
           <TextField
+            autoComplete="off"
             autoFocus
             margin="dense"
             id="name"
@@ -63,6 +64,7 @@ const SocialModal: React.FC<SocialModalProps> = ({
             onChange={handleChange}
           />
           <TextField
+            autoComplete="off"
             margin="dense"
             id="link"
             label="Social URL"

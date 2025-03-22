@@ -170,6 +170,7 @@ const SocialLink: React.FC<SocialLinkProps> = ({
             privacy_settings?.social_links === PrivacySettings.everyone ? (
               <>
                 <TextField
+                  autoComplete="off"
                   id={link.id}
                   label={link.name}
                   value={link.link}

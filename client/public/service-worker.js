@@ -37,7 +37,7 @@ self.addEventListener('notificationclick', (event) => {
     }
 
     const urlToOpen = new URL(
-        `/chat?room=${event.notification.data.roomId}`,
+        `/messenger?room=${event.notification.data.roomId}`,
         self.location.origin
     ).href;
 

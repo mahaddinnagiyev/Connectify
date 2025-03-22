@@ -46,6 +46,7 @@ const PersonalInfo: React.FC<PersonalInfoProps> = ({
       >
         <div>
           <TextField
+            autoComplete="off"
             id="firstName"
             label="First Name"
             value={userData?.user.first_name || ""}
@@ -56,6 +57,7 @@ const PersonalInfo: React.FC<PersonalInfoProps> = ({
             sx={{ maxWidth: { xs: "100%", sm: "50%", md: "50%" } }}
           />
           <TextField
+            autoComplete="off"
             id="lastName"
             label="Last Name"
             value={userData?.user.last_name || ""}
@@ -66,6 +68,7 @@ const PersonalInfo: React.FC<PersonalInfoProps> = ({
             sx={{ maxWidth: { xs: "100%", sm: "50%" } }}
           />
           <TextField
+            autoComplete="off"
             id="username"
             label="Username"
             value={userData?.user.username || ""}
@@ -78,6 +81,7 @@ const PersonalInfo: React.FC<PersonalInfoProps> = ({
           {getUrl("my-profile") ||
           privacy_settings?.email === PrivacySettings.everyone ? (
             <TextField
+              autoComplete="off"
               id="email"
               label="Email"
               value={userData?.user.email || ""}

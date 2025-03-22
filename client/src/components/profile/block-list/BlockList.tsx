@@ -163,6 +163,7 @@ const BlockList = () => {
         </Typography>
         <TextField
           fullWidth
+          autoComplete="off"
           label="Search user"
           variant="outlined"
           value={searchQuery}

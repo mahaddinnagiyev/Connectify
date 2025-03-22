@@ -24,9 +24,9 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<Navigate to="/chat" />} />
+        <Route path="/" element={<Navigate to="/messenger" />} />
         <Route
-          path="/chat"
+          path="/messenger"
           element={
             <RouteControl>
               <ChatPage />

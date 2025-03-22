@@ -66,6 +66,7 @@ const ForgotPassword = () => {
               <div className="forgot-password-group">
                 <label htmlFor="email">Email Address</label>
                 <input
+                  autoComplete="off"
                   type="email"
                   id="email"
                   name="email"

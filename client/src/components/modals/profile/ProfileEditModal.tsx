@@ -92,6 +92,7 @@ const ProfileEditModal = ({
               </FormControl>
             ) : (
               <TextField
+                autoComplete="off"
                 label={field.label}
                 value={formData[field.key] || ""}
                 onChange={(e) => handleChange(field.key, e.target.value)}

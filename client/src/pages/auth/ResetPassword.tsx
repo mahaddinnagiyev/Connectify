@@ -94,6 +94,7 @@ const ResetPassword = () => {
               <div className="forgot-password-group">
                 <label htmlFor="password">Password</label>
                 <input
+                  autoComplete="off"
                   type="password"
                   id="password"
                   name="password"

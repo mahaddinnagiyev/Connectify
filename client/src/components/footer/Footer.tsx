@@ -30,16 +30,16 @@ const Footer = () => {
             <b>Account Menu</b>
             <ul>
               <li>
-                <a href="/">Login</a>
+                <a href="/auth/login">Login</a>
               </li>
               <li>
-                <a href="/">Sign Up</a>
+                <a href="/auth/signup">Sign Up</a>
               </li>
               <li>
-                <a href="/">Your Account</a>
+                <a href="/user/my-profile">Your Account</a>
               </li>
               <li>
-                <a href="/">Settings</a>
+                <a href="/settings">Settings</a>
               </li>
             </ul>
           </div>
@@ -48,16 +48,16 @@ const Footer = () => {
             <b>Footer Menu</b>
             <ul>
               <li>
-                <a href="/">FAQ</a>
+                <a href="/faq">FAQ</a>
               </li>
               <li>
-                <a href="/">Contact Us</a>
+                <a href="/contact">Contact Us</a>
               </li>
               <li>
-                <a href="/">Privacy Policy</a>
+                <a href="/privacy-policy">Privacy Policy</a>
               </li>
               <li>
-                <a href="/">Terms and Conditions</a>
+                <a href="/terms">Terms and Conditions</a>
               </li>
             </ul>
           </div>

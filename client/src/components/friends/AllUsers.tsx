@@ -89,7 +89,7 @@ const AllUsers: React.FC = () => {
     socket?.emit("joinRoom", { user2Id: userId });
     socket?.once("joinRoomSuccess", (data: { roomId: string }) => {
       if (data && data.roomId) {
-        navigate(`/chat?room=${data.roomId}`);
+        navigate(`/messenger?room=${data.roomId}`);
       }
     });
   };
@@ -273,6 +273,7 @@ const AllUsers: React.FC = () => {
               All Users
             </Typography>
             <TextField
+              autoComplete="off"
               fullWidth
               label="Search"
               variant="outlined"

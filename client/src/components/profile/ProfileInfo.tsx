@@ -116,7 +116,7 @@ const ProfileInfo: React.FC<ProfileInfoProps> = ({ userData }) => {
     socket?.emit("joinRoom", { user2Id: userId });
     socket?.once("joinRoomSuccess", (data: { roomId: string }) => {
       if (data && data.roomId) {
-        navigate(`/chat?room=${data.roomId}`);
+        navigate(`/messenger?room=${data.roomId}`);
       }
     });
   };

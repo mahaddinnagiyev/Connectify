@@ -31,7 +31,7 @@ const Login = () => {
       localStorage.setItem("successMessage", "Login successfull!");
       setTimeout(() => {
         setIsLoading(false);
-        window.location.href = "/chat";
+        window.location.href = "/messenger";
       }, 2000);
     } else if (error) {
       setErrorMessage("This email already registered with normal way of login");
@@ -64,7 +64,7 @@ const Login = () => {
       if (response.success) {
         setSuccessMessage("Login successfull!");
         setTimeout(() => {
-          window.location.href = "/chat";
+          window.location.href = "/messenger";
         }, 1500);
       } else {
         setIsLoading(false);
@@ -162,6 +162,7 @@ const Login = () => {
             <div className="login-form-group">
               <label htmlFor="password">Password</label>
               <input
+                autoComplete="off"
                 type="password"
                 id="password"
                 name="password"

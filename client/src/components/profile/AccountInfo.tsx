@@ -50,6 +50,7 @@ const AccountInfo: React.FC<AccountInfoProps> = ({
           {getUrl("my-profile") ||
           privacy_settings?.bio === PrivacySettings.everyone ? (
             <TextField
+              autoComplete="off"
               id="bio"
               label="Bio"
               value={userData?.account.bio ?? "There is no bio yet"}
@@ -64,6 +65,7 @@ const AccountInfo: React.FC<AccountInfoProps> = ({
               {privacy_settings?.bio === PrivacySettings.my_friends &&
               accepted ? (
                 <TextField
+                  autoComplete="off"
                   id="bio"
                   label="Bio"
                   value={
@@ -85,6 +87,7 @@ const AccountInfo: React.FC<AccountInfoProps> = ({
           {getUrl("my-profile") ||
           privacy_settings?.location === PrivacySettings.everyone ? (
             <TextField
+              autoComplete="off"
               id="location"
               label="Location"
               value={
@@ -103,6 +106,7 @@ const AccountInfo: React.FC<AccountInfoProps> = ({
               {privacy_settings?.location === PrivacySettings.my_friends &&
               accepted ? (
                 <TextField
+                  autoComplete="off"
                   id="location"
                   label="Location"
                   value={
@@ -128,17 +132,16 @@ const AccountInfo: React.FC<AccountInfoProps> = ({
               label="Last seen"
               value={
                 userData?.account.last_login
-                  ? new Date(userData.account.last_login + "Z").toLocaleTimeString(
-                      "az-AZ",
-                      {
-                        timeZone: "Asia/Baku",
-                        day: "2-digit",
-                        month: "2-digit",
-                        year: "numeric",
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      }
-                    )
+                  ? new Date(
+                      userData.account.last_login + "Z"
+                    ).toLocaleTimeString("az-AZ", {
+                      timeZone: "Asia/Baku",
+                      day: "2-digit",
+                      month: "2-digit",
+                      year: "numeric",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })
                   : "There is no last login yet"
               }
               variant="outlined"

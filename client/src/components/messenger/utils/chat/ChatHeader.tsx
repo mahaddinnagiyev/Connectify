@@ -45,7 +45,7 @@ const ChatHeader = ({
 
   const handleLeaveRoom = () => {
     socket?.emit("leaveRoom", { roomId });
-    navigate("/chat");
+    navigate("/messenger");
   };
 
   useEffect(() => {

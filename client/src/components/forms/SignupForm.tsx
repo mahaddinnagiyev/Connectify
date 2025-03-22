@@ -21,11 +21,8 @@ const SignupForm: React.FC<SignupFormProps> = ({
   handleChange,
   handleSubmit,
 }) => {
-
   const handleGoogleLogin = () => {
-    window.location.replace(
-      `${process.env.GOOGLE_CLIENT_REDIRECT_URL}`
-    );
+    window.location.replace(`${process.env.GOOGLE_CLIENT_REDIRECT_URL}`);
   };
 
   return (
@@ -55,6 +52,7 @@ const SignupForm: React.FC<SignupFormProps> = ({
           <div className="w-1/2">
             <label htmlFor="first_name">First Name</label>
             <input
+              autoComplete="off"
               type="text"
               id="first_name"
               name="first_name"
@@ -69,6 +67,7 @@ const SignupForm: React.FC<SignupFormProps> = ({
           <div className="w-1/2">
             <label htmlFor="last_name">Last Name</label>
             <input
+              autoComplete="off"
               type="text"
               id="last_name"
               name="last_name"
@@ -86,6 +85,7 @@ const SignupForm: React.FC<SignupFormProps> = ({
           <div className="w-1/2">
             <label htmlFor="username">Username</label>
             <input
+              autoComplete="off"
               type="text"
               id="username"
               name="username"
@@ -100,6 +100,7 @@ const SignupForm: React.FC<SignupFormProps> = ({
           <div className="w-1/2">
             <label htmlFor="email">Email</label>
             <input
+              autoComplete="off"
               type="email"
               id="email"
               name="email"
@@ -115,10 +116,13 @@ const SignupForm: React.FC<SignupFormProps> = ({
 
         <div className="signup-form-group flex flex-col">
           <div>
-            <label className="flex items-center gap-2">Select Gender <p className="text-xs font-serif">(Optional)</p></label>
+            <label className="flex items-center gap-2">
+              Select Gender <p className="text-xs font-serif">(Optional)</p>
+            </label>
           </div>
           <div className="gender-group">
             <input
+              autoComplete="off"
               type="radio"
               id="male"
               name="gender"
@@ -129,6 +133,7 @@ const SignupForm: React.FC<SignupFormProps> = ({
             <label htmlFor="male">Male</label>
 
             <input
+              autoComplete="off"
               type="radio"
               id="female"
               name="gender"
@@ -139,6 +144,7 @@ const SignupForm: React.FC<SignupFormProps> = ({
             <label htmlFor="female">Female</label>
 
             <input
+              autoComplete="off"
               type="radio"
               id="other"
               name="gender"
@@ -154,6 +160,7 @@ const SignupForm: React.FC<SignupFormProps> = ({
           <div>
             <label htmlFor="password">Password</label>
             <input
+              autoComplete="off"
               type="password"
               id="password"
               name="password"
@@ -175,6 +182,7 @@ const SignupForm: React.FC<SignupFormProps> = ({
           <div className="w-full">
             <label htmlFor="confirm">Confirm Password</label>
             <input
+              autoComplete="off"
               type="password"
               id="confirm"
               name="confirm"

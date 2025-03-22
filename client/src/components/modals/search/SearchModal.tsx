@@ -26,7 +26,7 @@ export default function SearchModal() {
     socket?.emit("joinRoom", { user2Id: userId });
     socket?.once("joinRoomSuccess", (data: { roomId: string }) => {
       if (data && data.roomId) {
-        navigate(`/chat?room=${data.roomId}`);
+        navigate(`/messenger?room=${data.roomId}`);
         setOpen(false);
       }
     });
