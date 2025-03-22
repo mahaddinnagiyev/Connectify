@@ -1,5 +1,6 @@
 import "./css/login.css";
 import google_logo from "../../assets/google.png";
+import { Visibility, VisibilityOff } from "@mui/icons-material";
 
 import { Link, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
@@ -49,6 +50,11 @@ const Login = () => {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+
+  const togglePasswordVisibility = () => {
+    setShowPassword((prev) => !prev);
+  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormdata({ ...formData, [e.target.name]: e.target.value });
@@ -159,26 +165,23 @@ const Login = () => {
               />
             </div>
 
-            <div className="login-form-group">
+            <div className="login-form-group relative">
               <label htmlFor="password">Password</label>
               <input
                 autoComplete="off"
-                type="password"
+                type={showPassword ? "text" : "password"}
                 id="password"
                 name="password"
                 placeholder="Enter your password"
                 required
                 onChange={handleChange}
               />
-              <p className="text-start pt-2 text-xs">
-                Forgot password?{" "}
-                <Link
-                  to="/auth/forgot-password"
-                  className="font-serif underline hover:text-[#00ff00] transition duration-300"
-                >
-                  Click here
-                </Link>
-              </p>
+              <span
+                onClick={togglePasswordVisibility}
+                className="absolute right-3 top-10 cursor-pointer"
+              >
+                {showPassword ? <VisibilityOff /> : <Visibility />}
+              </span>
             </div>
 
             <div className="login-form-group">

@@ -1,6 +1,7 @@
-import "./css/forgot-password.css";
 import { useState, useEffect } from "react";
+import "./css/forgot-password.css";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import { Visibility, VisibilityOff } from "@mui/icons-material";
 import {
   isResetTokenValid,
   resetPassword,
@@ -14,6 +15,7 @@ const ResetPassword = () => {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
 
@@ -44,6 +46,10 @@ const ResetPassword = () => {
 
     validateToken();
   }, [token, navigate]);
+
+  const togglePasswordVisibility = () => {
+    setShowPassword((prev) => !prev);
+  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setPassword(e.target.value);
@@ -102,6 +108,12 @@ const ResetPassword = () => {
                   required
                   onChange={handleChange}
                 />
+                <span
+                  onClick={togglePasswordVisibility}
+                  className="absolute right-3 top-10 cursor-pointer"
+                >
+                  {showPassword ? <VisibilityOff /> : <Visibility />}
+                </span>
               </div>
               <div className="forgot-password-group">
                 <button type="submit">Reset Password</button>

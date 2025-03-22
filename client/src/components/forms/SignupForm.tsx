@@ -1,4 +1,5 @@
-import React from "react";
+import React, { useState } from "react";
+import { Visibility, VisibilityOff } from "@mui/icons-material";
 import { Link } from "react-router-dom";
 import google_logo from "../../assets/google.png";
 
@@ -21,6 +22,17 @@ const SignupForm: React.FC<SignupFormProps> = ({
   handleChange,
   handleSubmit,
 }) => {
+  const [showPassword, setShowPassword] = useState(false);
+  const [showResetPassword, setShowResetPassword] = useState(false);
+
+  const togglePasswordVisibility = () => {
+    setShowPassword((prev) => !prev);
+  };
+
+  const toggleResetPasswordVisibility = () => {
+    setShowResetPassword((prev) => !prev);
+  };
+
   const handleGoogleLogin = () => {
     window.location.replace(`${process.env.GOOGLE_CLIENT_REDIRECT_URL}`);
   };
@@ -156,21 +168,29 @@ const SignupForm: React.FC<SignupFormProps> = ({
           </div>
         </div>
 
-        <div className="signup-form-group">
+        <div className="signup-form-group relative">
           <div>
-            <label htmlFor="password">Password</label>
-            <input
-              autoComplete="off"
-              type="password"
-              id="password"
-              name="password"
-              placeholder="Enter password"
-              required
-              onChange={handleChange}
-              min={8}
-              max={255}
-              value={formData.password}
-            />
+            <div className="relative pswrd">
+              <label htmlFor="password">Password</label>
+              <input
+                autoComplete="off"
+                type="password"
+                id="password"
+                name="password"
+                placeholder="Enter password"
+                required
+                onChange={handleChange}
+                min={8}
+                max={255}
+                value={formData.password}
+              />
+              <span
+                onClick={togglePasswordVisibility}
+                className="absolute right-3 top-10 cursor-pointer"
+              >
+                {showPassword ? <VisibilityOff /> : <Visibility />}
+              </span>
+            </div>
             <p className="text-xs font-serif">
               Password must contain at least 8 characters, 1 uppercase letter, 1
               lowercase letter, 1 number, and 1 special character
@@ -178,7 +198,7 @@ const SignupForm: React.FC<SignupFormProps> = ({
           </div>
         </div>
 
-        <div className="signup-form-group">
+        <div className="signup-form-group relative">
           <div className="w-full">
             <label htmlFor="confirm">Confirm Password</label>
             <input
@@ -191,6 +211,12 @@ const SignupForm: React.FC<SignupFormProps> = ({
               onChange={handleChange}
               value={formData.confirm}
             />
+            <span
+              onClick={toggleResetPasswordVisibility}
+              className="absolute right-3 top-10 cursor-pointer"
+            >
+              {showResetPassword ? <VisibilityOff /> : <Visibility />}
+            </span>
           </div>
         </div>
 

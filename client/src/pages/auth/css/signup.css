@@ -138,6 +138,20 @@ body {
   transform: scale(1.02);
 }
 
+.signup-form-group span {
+  position: absolute;
+  right: 15px;
+  top: 50%;
+  cursor: pointer;
+}
+
+.pswrd span {
+  position: absolute;
+  right: 15px;
+  top: 50%;
+  cursor: pointer;
+}
+
 .gender-group {
   display: flex;
   justify-content: center;
