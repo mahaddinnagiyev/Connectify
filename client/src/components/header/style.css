@@ -95,7 +95,7 @@
 }
 
 /* Tablet and mobile devices responsive styling */
-@media (max-width: 768px) {
+@media (max-width: 835px) {
   .header {
     padding: 10px 15px;
     flex-direction: row;
