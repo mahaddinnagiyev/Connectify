@@ -5,11 +5,16 @@ import Messenger from "../components/messenger/Messenger";
 import MainSpinner from "../components/modals/spinner/MainSpinner";
 import SuccessMessage from "../components/messages/SuccessMessage";
 import InfoMessage from "../components/messages/InfoMessage";
+import { useLocation } from "react-router-dom";
 
 const ChatPage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [infoMessage, setInfoMessage] = useState<string | null>(null);
+
+  const location = useLocation();
+
+  const screenWidth = window.innerWidth;
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -46,6 +51,10 @@ const ChatPage = () => {
     return () => window.removeEventListener("storage", handleStorageChange);
   }, []);
 
+  const isRoomPage = location.search.includes("room");
+  console.log(location);
+  console.log(isRoomPage);
+
   return (
     <>
       {successMessage && (
@@ -66,9 +75,9 @@ const ChatPage = () => {
         <MainSpinner />
       ) : (
         <>
-          <Header />
+          {screenWidth < 768 && isRoomPage ? null : <Header />}
           <Messenger />
-          <Footer />
+          {screenWidth < 768 && isRoomPage ? null : <Footer />}
         </>
       )}
     </>

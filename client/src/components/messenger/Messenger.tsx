@@ -32,6 +32,8 @@ const Messenger = () => {
   const lastJoinedRoomRef = useRef<string | null>(null);
   const socketRef = useRef(socket);
 
+  const screenWidth = window.innerWidth;
+
   const [isSubscribed, setIsSubscribed] = useState(false);
 
   const subscribeToPushNotifications = async () => {
@@ -280,8 +282,41 @@ const Messenger = () => {
         />
       )}
 
-      <section className="messenger-container">
-        <div className="messenger flex gap-3">
+      <section
+        className="messenger-container"
+        style={{
+          paddingTop:
+            screenWidth < 768 && window.location.href.includes("room")
+              ? "0px"
+              : "",
+
+          margin:
+            screenWidth < 768 && window.location.href.includes("room")
+              ? "0px"
+              : "0 auto",
+        }}
+      >
+        <div
+          className="messenger flex gap-3"
+          style={{
+            marginTop:
+              screenWidth < 768 && window.location.href.includes("room")
+                ? "0px"
+                : "",
+            width:
+              screenWidth < 768 && window.location.href.includes("room")
+                ? "100vw"
+                : "",
+            minHeight:
+              screenWidth < 768 && window.location.href.includes("room")
+                ? "100vh"
+                : "",
+            paddingBottom:
+              screenWidth < 768 && window.location.href.includes("room")
+                ? "0px"
+                : "",
+          }}
+        >
           {/* Chat List */}
           <div
             className={`messenger-left text-left ${
