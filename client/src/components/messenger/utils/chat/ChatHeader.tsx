@@ -1,15 +1,15 @@
 import { useEffect, useRef, useState } from "react";
-import { Tooltip } from "@mui/material";
 import { useNavigate } from "react-router-dom";
+import { Tooltip } from "@mui/material";
 import no_profile_photo from "../../../../assets/no-profile-photo.png";
 import { Account } from "../../../../services/account/dto/account-dto";
 import { PrivacySettingsDTO } from "../../../../services/account/dto/privacy-settings-dto";
-import { Users } from "../../../../services/user/dto/user-dto";
-import { LastSeen } from "./../../utils/LastSeen";
+import { User } from "../../../../services/user/dto/user-dto";
+import { LastSeen } from "../LastSeen";
 import {
   PermMedia as PermMediaIcon,
-  LocalPhone as LocalPhoneIcon,
-  Videocam as VideocamIcon,
+  // LocalPhone as LocalPhoneIcon,
+  // Videocam as VideocamIcon,
   MoreVert as MoreVertIcon,
   AccountBox as AccountBoxIcon,
   ChevronLeft as ChevronLeftIcon,
@@ -17,11 +17,12 @@ import {
 import MediaModal from "../../../modals/chat/MediaModals";
 import { MessagesDTO } from "../../../../services/socket/dto/messages-dto";
 import { Socket } from "socket.io-client";
+import ErrorMessage from "../../../messages/ErrorMessage";
 
 interface ChatHeaderProps {
   otherUserAccount: Account;
   otherUserPrivacySettings: PrivacySettingsDTO;
-  otherUser: Users;
+  otherUser: User;
   messages: MessagesDTO[];
   roomId: string;
   socket: Socket | null;
@@ -38,7 +39,7 @@ const ChatHeader = ({
   const [isHovered, setIsHovered] = useState(false);
   const [isMediaModalOpen, setIsMediaModalOpen] = useState(false);
   const [visibleChatOptions, setVisibleChatOptions] = useState(false);
-  const screenSize = window.innerWidth;
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const chatOptionsRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
 
@@ -76,6 +77,13 @@ const ChatHeader = ({
 
   return (
     <>
+      {errorMessage && (
+        <ErrorMessage
+          message={errorMessage}
+          onClose={() => setErrorMessage(null)}
+        />
+      )}
+
       <div className="flex items-center gap-5">
         <div className="flex items-center gap-2">
           <Tooltip title="Back" placement="top">
@@ -116,16 +124,6 @@ const ChatHeader = ({
         </div>
       </div>
       <div className="flex gap-1 items-center md:mr-3 ml-3">
-        {screenSize >= 768 && (
-          <>
-            <button className="call-btn">
-              <LocalPhoneIcon />
-            </button>
-            <button className="call-btn">
-              <VideocamIcon />
-            </button>
-          </>
-        )}
         <div>
           <button onClick={toggleChatOptions}>
             <MoreVertIcon />
@@ -146,16 +144,6 @@ const ChatHeader = ({
               >
                 <PermMediaIcon className="profile-icon" /> Medias
               </button>
-              {screenSize < 768 && (
-                <>
-                  <button className="user-profile-btn">
-                    <LocalPhoneIcon /> Audio Call
-                  </button>
-                  <button className="user-profile-btn">
-                    <VideocamIcon /> Video Call
-                  </button>
-                </>
-              )}
             </div>
           )}
         </div>
