@@ -5,7 +5,7 @@ import no_profile_photo from "../../../../assets/no-profile-photo.png";
 import { Account } from "../../../../services/account/dto/account-dto";
 import { PrivacySettingsDTO } from "../../../../services/account/dto/privacy-settings-dto";
 import { User } from "../../../../services/user/dto/user-dto";
-import { LastSeen } from "../LastSeen";
+import { LastSeen } from "./LastSeen";
 import {
   PermMedia as PermMediaIcon,
   // LocalPhone as LocalPhoneIcon,
@@ -67,6 +67,16 @@ const ChatHeader = ({
   const toggleChatOptions = (e: React.MouseEvent) => {
     e.stopPropagation();
     setVisibleChatOptions(!visibleChatOptions);
+
+    if (!visibleChatOptions) {
+      const buttonRect = (e.target as HTMLElement).getBoundingClientRect();
+      const menu = chatOptionsRef.current;
+
+      if (menu) {
+        menu.style.top = `${buttonRect.bottom}px`;
+        menu.style.left = `${buttonRect.left}px`;
+      }
+    }
   };
 
   const showMediaModal = (e: React.MouseEvent) => {

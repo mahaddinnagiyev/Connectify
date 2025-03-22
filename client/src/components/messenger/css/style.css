@@ -146,11 +146,25 @@
     display: block;
     width: 100%;
   }
+
+  .action-buttons-2 {
+    top: 19%;
+  }
+}
+
+@media (max-width: 780px) {
+  .action-buttons-2 {
+    top: 15%;
+  }
 }
 
 @media (max-width: 768px) {
   .rpv-messenger-right {
     height: 97%;
+  }
+
+  .action-buttons-2 {
+    top: 10%;
   }
 }
 

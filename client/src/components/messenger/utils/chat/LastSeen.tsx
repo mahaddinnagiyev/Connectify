@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
-import { Account } from "../../../services/account/dto/account-dto";
+import { Account } from "../../../../services/account/dto/account-dto";
 import {
   PrivacySettings,
   PrivacySettingsDTO,
-} from "../../../services/account/dto/privacy-settings-dto";
-import { getAllFriendshipRequests } from "../../../services/friendship/friendship-service";
-import { FriendshipStatus } from "../../../services/friendship/enum/friendship-status.enum";
+} from "../../../../services/account/dto/privacy-settings-dto";
+import { getAllFriendshipRequests } from "../../../../services/friendship/friendship-service";
+import { FriendshipStatus } from "../../../../services/friendship/enum/friendship-status.enum";
 
 interface LastSeenProps {
   otherUserAccount: Account;
