@@ -1,7 +1,7 @@
 import "./App.css";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 
-import ChatPage from "./pages/ChatPage";
+import ChatPage from "./pages/chat/ChatPage";
 import Login from "./pages/auth/Login";
 import Signup from "./pages/auth/Signup";
 import ProfilePage from "./pages/profile/ProfilePage";

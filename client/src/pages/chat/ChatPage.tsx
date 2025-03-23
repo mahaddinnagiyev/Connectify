@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
-import Footer from "../components/footer/Footer";
-import Header from "../components/header/Header";
-import Messenger from "../components/messenger/Messenger";
-import MainSpinner from "../components/modals/spinner/MainSpinner";
-import SuccessMessage from "../components/messages/SuccessMessage";
-import InfoMessage from "../components/messages/InfoMessage";
+import Footer from "../../components/footer/Footer";
+import Header from "../../components/header/Header";
+import Messenger from "../../components/messenger/Messenger";
+import MainSpinner from "../../components/modals/spinner/MainSpinner";
+import SuccessMessage from "../../components/messages/SuccessMessage";
+import InfoMessage from "../../components/messages/InfoMessage";
 import { useLocation } from "react-router-dom";
 
 const ChatPage = () => {
@@ -52,8 +52,6 @@ const ChatPage = () => {
   }, []);
 
   const isRoomPage = location.search.includes("room");
-  console.log(location);
-  console.log(isRoomPage);
 
   return (
     <>
