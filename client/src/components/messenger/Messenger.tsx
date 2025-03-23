@@ -341,7 +341,7 @@ const Messenger = () => {
                 : "bg-[var(--chatroom-bg-color)] border-2 border-[var(--chatroom-bg-color)] rounded-lg"
             } ${currentRoomId ? "rpv-messenger-right" : ""}`}
           >
-            {currentRoomId && currentChat && (
+            {currentRoomId && currentChat ? (
               <Chat
                 key={currentRoomId}
                 currentUser={currentUser ?? ""}
@@ -352,6 +352,12 @@ const Messenger = () => {
                 messages={messages}
                 truncateMessage={truncateMessage}
               />
+            ) : (
+              <div className="flex flex-col items-center justify-center h-full">
+                <p className="text-lg font-semibold">
+                  Select a chat to start messaging
+                </p>
+              </div>
             )}
           </div>
         </div>

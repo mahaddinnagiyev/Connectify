@@ -91,82 +91,92 @@ const UserChats = ({ chats, truncateMessage }: UserChatsProps) => {
   return (
     <>
       <div className="message-users flex flex-col gap-1 my-3">
-        {chats.map((chat, index) => (
-          <Link
-            to={`?room=${chat.id}`}
-            key={index}
-            className="message-user px-2 py-2 hover:bg-[var(--secondary-color)] hover:rounded-lg cursor-pointer transition-all duration-500"
-            onContextMenu={(event) => handleContextMenu(event, chat)}
-          >
-            <div className="flex items-center gap-3 relative">
-              <img
-                src={chat.otherUserAccount?.profile_picture ?? no_profile_photo}
-                alt="User Profile"
-                style={{ height: "50px", width: "50px" }}
-                className="rounded-full border-2 border-[var(--primary-color)]"
-              />
-              <div className="flex flex-col gap-1">
-                <p className="text-sm">
-                  {chat.otherUser?.first_name} {chat.otherUser?.last_name} | @
-                  {chat.otherUser?.username}
-                </p>
-                <p className="text-xs">
-                  {chat?.lastMessage?.message_type === MessageType.TEXT ? (
-                    truncateMessage(
-                      chat?.lastMessage?.content ?? "No message",
-                      30
-                    )
-                  ) : (
-                    <span className="inline-flex items-center gap-1">
-                      {chat?.lastMessage?.message_type ===
-                        MessageType.IMAGE && (
-                        <>
-                          <ImageTwoToneIcon /> Image
-                        </>
-                      )}
-                      {chat?.lastMessage?.message_type ===
-                        MessageType.AUDIO && (
-                        <>
-                          <KeyboardVoiceTwoToneIcon
-                            style={{ fontSize: "16px" }}
-                          />
-                          Voice Message
-                        </>
-                      )}
-                      {chat?.lastMessage?.message_type === MessageType.FILE && (
-                        <>
-                          <DescriptionIcon />
-                          File
-                        </>
-                      )}
-                      {chat?.lastMessage?.message_type ===
-                        MessageType.VIDEO && (
-                        <>
-                          <SlideshowIcon />
-                          Video
-                        </>
-                      )}
+        {chats.length > 0 ? (
+          <>
+            {chats.map((chat, index) => (
+              <Link
+                to={`?room=${chat.id}`}
+                key={index}
+                className="message-user px-2 py-2 hover:bg-[var(--secondary-color)] hover:rounded-lg cursor-pointer transition-all duration-500"
+                onContextMenu={(event) => handleContextMenu(event, chat)}
+              >
+                <div className="flex items-center gap-3 relative">
+                  <img
+                    src={
+                      chat.otherUserAccount?.profile_picture ?? no_profile_photo
+                    }
+                    alt="User Profile"
+                    style={{ height: "50px", width: "50px" }}
+                    className="rounded-full border-2 border-[var(--primary-color)]"
+                  />
+                  <div className="flex flex-col gap-1">
+                    <p className="text-sm">
+                      {chat.otherUser?.first_name} {chat.otherUser?.last_name} |
+                      @{chat.otherUser?.username}
+                    </p>
+                    <p className="text-xs">
+                      {chat?.lastMessage?.message_type === MessageType.TEXT ? (
+                        truncateMessage(
+                          chat?.lastMessage?.content ?? "No message",
+                          30
+                        )
+                      ) : (
+                        <span className="inline-flex items-center gap-1">
+                          {chat?.lastMessage?.message_type ===
+                            MessageType.IMAGE && (
+                            <>
+                              <ImageTwoToneIcon /> Image
+                            </>
+                          )}
+                          {chat?.lastMessage?.message_type ===
+                            MessageType.AUDIO && (
+                            <>
+                              <KeyboardVoiceTwoToneIcon
+                                style={{ fontSize: "16px" }}
+                              />
+                              Voice Message
+                            </>
+                          )}
+                          {chat?.lastMessage?.message_type ===
+                            MessageType.FILE && (
+                            <>
+                              <DescriptionIcon />
+                              File
+                            </>
+                          )}
+                          {chat?.lastMessage?.message_type ===
+                            MessageType.VIDEO && (
+                            <>
+                              <SlideshowIcon />
+                              Video
+                            </>
+                          )}
 
-                      {![
-                        MessageType.IMAGE,
-                        MessageType.AUDIO,
-                        MessageType.FILE,
-                        MessageType.VIDEO,
-                      ].includes(
-                        chat?.lastMessage?.message_type ?? MessageType.DEFAULT
-                      ) && <span>Media</span>}
+                          {![
+                            MessageType.IMAGE,
+                            MessageType.AUDIO,
+                            MessageType.FILE,
+                            MessageType.VIDEO,
+                          ].includes(
+                            chat?.lastMessage?.message_type ??
+                              MessageType.DEFAULT
+                          ) && <span>Media</span>}
+                        </span>
+                      )}
+                    </p>
+                  </div>
+                  {chat.unreadCount! > 0 && (
+                    <span className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-red-500 text-white rounded-full px-2 py-0.5 text-xs">
+                      {chat.unreadCount}
                     </span>
                   )}
-                </p>
-              </div>
-              {chat.unreadCount! > 0 && (
-                <span className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-red-500 text-white rounded-full px-2 py-0.5 text-xs">
-                  {chat.unreadCount}
-                </span>
-              )}
-            </div>
-          </Link>
-        ))}
+                </div>
+              </Link>
+            ))}
+          </>
+        ) : (
+          <p className="text-center text-gray-500">No chats found</p>
+        )}
       </div>
 
       {contextMenu !== null &&
