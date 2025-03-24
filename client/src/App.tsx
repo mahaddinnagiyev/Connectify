@@ -14,6 +14,8 @@ import SettingsPage from "./pages/settings/SettingsPage";
 import DeleteAccount from "./pages/DeleteAccount";
 import { useEffect } from "react";
 import FAQPage from "./pages/faq/FAQPage";
+import TermsAndConditionPage from "./pages/terms/TermsAndConditionPage";
+import PrivacyPolicyPage from "./pages/privacy/PrivacyPolicyPage";
 
 function App() {
   useEffect(() => {
@@ -74,6 +76,8 @@ function App() {
             </RouteControl>
           }
         />
+        <Route path="/terms" element={<TermsAndConditionPage />} />
+        <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
         <Route path="/auth/login" element={<Login />} />
         <Route path="/auth/signup" element={<Signup />} />
         <Route path="/auth/delete-account" element={<DeleteAccount />} />
