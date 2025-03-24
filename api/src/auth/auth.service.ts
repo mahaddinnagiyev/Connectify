@@ -147,7 +147,6 @@ export class AuthService {
         message: 'Confirm code has been sent. Please check your inbox',
       };
     } catch (error) {
-      console.log(error);
       await this.logger.error(
         error.message,
         'auth',
@@ -374,7 +373,6 @@ export class AuthService {
         success: true,
       };
     } catch (error) {
-      console.log(error);
       await this.logger.error(
         error.message,
         'auth',
@@ -830,7 +828,6 @@ export class AuthService {
 
       return { success: true, access_token };
     } catch (error) {
-      console.log(error);
       await this.logger.error(
         error.message,
         'auth',

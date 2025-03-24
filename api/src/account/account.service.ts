@@ -188,7 +188,6 @@ export class AccountService {
         message: 'Social link added successfully',
       };
     } catch (error) {
-      console.log(error);
       await this.logger.error(
         error.message,
         'account',

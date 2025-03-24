@@ -175,7 +175,6 @@ export class AuthController {
         `${process.env.GOOGLE_CLIENT_REDIRECT_URL}/auth/login?access_token=${userData.access_token}`,
       );
     } catch (error) {
-      console.log(error);
       return res.redirect(
         `${process.env.GOOGLE_CLIENT_REDIRECT_URL}/auth/login/?error=true`,
       );

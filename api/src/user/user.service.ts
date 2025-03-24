@@ -111,7 +111,6 @@ export class UserService {
         privacy_settings,
       };
     } catch (error) {
-      console.log(error);
       await this.logger.error(
         `Error getting user by id: ${id}\nError: ${error}`,
         'user',
@@ -277,7 +276,6 @@ export class UserService {
         blockList: mappedBlockList,
       };
     } catch (error) {
-      console.log(error);
       await this.logger.error(
         `Error getting block list\nError: ${error}`,
         'user',
@@ -327,7 +325,6 @@ export class UserService {
         blockerList: mappedBlockList,
       };
     } catch (error) {
-      console.log(error);
       await this.logger.error(
         `Error getting block list by id\nError: ${error}`,
         'user',

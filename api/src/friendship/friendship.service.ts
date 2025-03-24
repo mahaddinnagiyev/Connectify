@@ -68,7 +68,6 @@ export class FriendshipService {
         friends: mappedFriendships,
       };
     } catch (error) {
-      console.log(error);
       await this.logger.error(
         error,
         'friendship',
@@ -131,7 +130,6 @@ export class FriendshipService {
         friends: mappedFriends,
       };
     } catch (error) {
-      console.log(error);
       await this.logger.error(
         error,
         'friendship',
@@ -415,7 +413,6 @@ export class FriendshipService {
         message: `${friendship.requester_id.username} now is your friend`,
       };
     } catch (error) {
-      console.log(error);
       await this.logger.error(
         error,
         'friendship',

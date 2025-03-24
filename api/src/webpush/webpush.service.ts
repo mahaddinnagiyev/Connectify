@@ -23,7 +23,6 @@ export class WebpushService {
 
       return data;
     } catch (error) {
-      console.log(error);
       return new InternalServerErrorException(
         'Failed to save subscription - Due To Internal Server Error',
       );
@@ -46,7 +45,6 @@ export class WebpushService {
 
       return Promise.allSettled(notifications);
     } catch (error) {
-      console.log(error);
       return new InternalServerErrorException(
         'Failed to send push notification - Due To Internal Server Error',
       );
