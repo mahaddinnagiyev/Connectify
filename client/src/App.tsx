@@ -13,6 +13,7 @@ import UserProfilePage from "./pages/profile/user/UserProfilePage";
 import SettingsPage from "./pages/settings/SettingsPage";
 import DeleteAccount from "./pages/DeleteAccount";
 import { useEffect } from "react";
+import FAQPage from "./pages/faq/FAQPage";
 
 function App() {
   useEffect(() => {
@@ -62,6 +63,14 @@ function App() {
           element={
             <RouteControl>
               <SettingsPage />
+            </RouteControl>
+          }
+        />
+        <Route
+          path="/faq"
+          element={
+            <RouteControl>
+              <FAQPage />
             </RouteControl>
           }
         />

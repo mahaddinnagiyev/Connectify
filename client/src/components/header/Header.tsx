@@ -10,6 +10,7 @@ import ChatIcon from "@mui/icons-material/Chat";
 import GroupsIcon from "@mui/icons-material/Groups";
 import PeopleIcon from "@mui/icons-material/People";
 import SmartToyIcon from "@mui/icons-material/SmartToy";
+import LiveHelpIcon from "@mui/icons-material/LiveHelp";
 // import ForumIcon from '@mui/icons-material/Forum';
 import AccountBoxIcon from "@mui/icons-material/AccountBox";
 import LogoutIcon from "@mui/icons-material/Logout";
@@ -154,6 +155,9 @@ const Header = () => {
               <a href="/settings">
                 <SettingsIcon /> Settings
               </a>
+              <a href="/faq">
+                <LiveHelpIcon /> FAQ
+              </a>
               <a onClick={handleLogout} className="text-center cursor-pointer">
                 <LogoutIcon /> Logout
               </a>
@@ -181,6 +185,9 @@ const Header = () => {
             </a>
             <a href="/settings" className="rounded-lg">
               <SettingsIcon /> Settings
+            </a>
+            <a href="/faq" className="rounded-lg">
+              <LiveHelpIcon /> FAQ
             </a>
             <a onClick={handleLogout} className="cursor-pointer rounded-lg">
               <LogoutIcon /> Logout
