@@ -24,6 +24,7 @@ const SignupForm: React.FC<SignupFormProps> = ({
 }) => {
   const [showPassword, setShowPassword] = useState(false);
   const [showResetPassword, setShowResetPassword] = useState(false);
+  const [termsAccepted, setTermsAccepted] = useState(false);
 
   const togglePasswordVisibility = () => {
     setShowPassword((prev) => !prev);
@@ -35,6 +36,10 @@ const SignupForm: React.FC<SignupFormProps> = ({
 
   const handleGoogleLogin = () => {
     window.location.replace(`${process.env.GOOGLE_CLIENT_REDIRECT_URL}`);
+  };
+
+  const handleTermsChange = () => {
+    setTermsAccepted((prev) => !prev);
   };
 
   return (
@@ -129,7 +134,11 @@ const SignupForm: React.FC<SignupFormProps> = ({
         <div className="signup-form-group flex flex-col">
           <div>
             <label className="flex items-center gap-2">
-              Select Gender <p className="text-xs font-serif">(Optional)</p>
+              Select Gender{" "}
+              <p className="text-xs font-serif">
+                (Optional. If you don't choose gender, it will be "Not
+                Provided")
+              </p>
             </label>
           </div>
           <div className="gender-group">
@@ -220,8 +229,38 @@ const SignupForm: React.FC<SignupFormProps> = ({
           </div>
         </div>
 
-        <div className="signup-form-group">
-          <button type="submit">Sign up</button>
+        <div className="flex items-center gap-2 justify-center">
+          <input
+            type="checkbox"
+            id="terms-and-conditions"
+            name="terms-and-conditions"
+            onChange={handleTermsChange}
+            required
+          />
+          <label htmlFor="terms-and-conditions">
+            I read the{" "}
+            <a href="/terms" className="underline text-[#00ff00]">
+              Terms and conditions
+            </a>{" "}
+            and agree
+          </label>
+        </div>
+
+        <div
+          className="signup-form-group"
+          style={{
+            opacity: termsAccepted ? 1 : 0.4,
+          }}
+        >
+          <button
+            type="submit"
+            disabled={!termsAccepted}
+            style={{
+              cursor: termsAccepted ? "pointer" : "not-allowed",
+            }}
+          >
+            Sign up
+          </button>
         </div>
 
         <p className="text-center">
