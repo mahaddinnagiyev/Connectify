@@ -182,6 +182,15 @@ const Login = () => {
               >
                 {showPassword ? <VisibilityOff /> : <Visibility />}
               </span>
+              <p className="text-start pt-2 text-xs">
+                Forgot password?{" "}
+                <Link
+                  to="/auth/forgot-password"
+                  className="font-serif underline hover:text-[#00ff00] transition duration-300"
+                >
+                  Click here
+                </Link>
+              </p>
             </div>
 
             <div className="login-form-group">

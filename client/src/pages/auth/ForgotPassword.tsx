@@ -1,5 +1,5 @@
 import "./css/forgot-password.css";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import ErrorMessage from "../../components/messages/ErrorMessage";
 import SuccessMessage from "../../components/messages/SuccessMessage";
@@ -11,6 +11,8 @@ const ForgotPassword = () => {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+
+  const navigate = useNavigate();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setEmail(e.target.value);
@@ -24,6 +26,7 @@ const ForgotPassword = () => {
       const response = await forgot_password(email);
       if (response.success) {
         setSuccessMessage(response.message);
+        navigate("/auth/login");
       } else {
         setErrorMessage(
           response.response.error ||
