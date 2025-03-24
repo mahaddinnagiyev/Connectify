@@ -1,4 +1,6 @@
+import { MailerService } from '@nestjs-modules/mailer';
 import { Injectable } from '@nestjs/common';
+import { errorMessage } from 'src/auth/utils/messages/error/error-message';
 import { LogLevels } from 'src/enums/log-levels.enum';
 import { SupabaseService } from 'src/supabase/supabase.service';
 
@@ -6,6 +8,7 @@ import { SupabaseService } from 'src/supabase/supabase.service';
 export class LoggerService {
   constructor(
     private readonly supabase: SupabaseService,
+    private readonly mailService: MailerService,
   ) {}
 
   private async log(
@@ -30,6 +33,12 @@ export class LoggerService {
     details?: string,
     stack?: string,
   ) {
+    await this.mailService.sendMail({
+      from: process.env.EMAIL_USER,
+      to: process.env.EMAIL_SECOND_USER,
+      subject: 'There is an error(emerg) in the application - Connectify',
+      text: errorMessage(message, module, details, stack),
+    });
     return this.log(LogLevels.emerg, message, module, details, stack);
   }
 
@@ -57,6 +66,12 @@ export class LoggerService {
     details?: string,
     stack?: string,
   ) {
+    await this.mailService.sendMail({
+      from: process.env.EMAIL_USER,
+      to: process.env.EMAIL_SECOND_USER,
+      subject: 'There is an error in the application - Connectify',
+      text: errorMessage(message, module, details, stack),
+    });
     return this.log(LogLevels.error, message, module, details, stack);
   }
 
