@@ -28,50 +28,54 @@ const Signup = () => {
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+    try {
+      e.preventDefault();
 
-    const isFormComplete = Object.values(formData).every(
-      (value) => value.trim() !== ""
-    );
+      const isFormComplete = Object.values(formData).every(
+        (value) => value.trim() !== ""
+      );
 
-    if (!formData.gender) {
-      setErrorMessage("Please select your gender");
-      return;
-    }
-
-    if (isFormComplete) {
-      setIsLoading(true);
-
-      const signupDTO: SignupDTO = {
-        ...formData,
-        gender: formData.gender as Gender,
-      };
-
-      const response = await signup(signupDTO);
-
-      if (response.success) {
-        setShowConfirmForm(true);
-        setSuccessMessage(
-          "Confirm code has been sent to your email. Please check your inbox."
-        );
-      } else {
-        setIsLoading(false);
-        if (Array.isArray(response.message)) {
-          setErrorMessage(response.message[0]);
-        }
-        setErrorMessage(
-          response.response.message ??
-            response.response.error ??
-            response.message ??
-            response.error ??
-            "An error occurred"
-        );
+      if (!formData.gender) {
+        setErrorMessage("Please select your gender");
+        return;
       }
 
-      setIsLoading(false);
-    } else {
-      setErrorMessage("Please fill all the fields");
-      setIsLoading(false);
+      if (isFormComplete) {
+        setIsLoading(true);
+
+        const signupDTO: SignupDTO = {
+          ...formData,
+          gender: formData.gender as Gender,
+        };
+
+        const response = await signup(signupDTO);
+
+        if (response.success) {
+          setShowConfirmForm(true);
+          setSuccessMessage(
+            "Confirm code has been sent to your email. Please check your inbox."
+          );
+        } else {
+          setIsLoading(false);
+          if (Array.isArray(response.message)) {
+            setErrorMessage(response.message[0]);
+          }
+          setErrorMessage(
+            response.response.message ??
+              response.response.error ??
+              response.message ??
+              response.error ??
+              "An error occurred"
+          );
+        }
+
+        setIsLoading(false);
+      } else {
+        setErrorMessage("Please fill all the fields");
+        setIsLoading(false);
+      }
+    } catch (error) {
+      console.log(error);
     }
   };
 

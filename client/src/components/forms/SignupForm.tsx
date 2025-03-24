@@ -133,13 +133,7 @@ const SignupForm: React.FC<SignupFormProps> = ({
 
         <div className="signup-form-group flex flex-col">
           <div>
-            <label className="flex items-center gap-2">
-              Select Gender{" "}
-              <p className="text-xs font-serif">
-                (Optional. If you don't choose gender, it will be "Not
-                Provided")
-              </p>
-            </label>
+            <label className="flex items-center gap-2">Select Gender</label>
           </div>
           <div className="gender-group">
             <input
@@ -183,7 +177,7 @@ const SignupForm: React.FC<SignupFormProps> = ({
               <label htmlFor="password">Password</label>
               <input
                 autoComplete="off"
-                type="password"
+                type={showPassword ? "text" : "password"}
                 id="password"
                 name="password"
                 placeholder="Enter password"
@@ -212,7 +206,7 @@ const SignupForm: React.FC<SignupFormProps> = ({
             <label htmlFor="confirm">Confirm Password</label>
             <input
               autoComplete="off"
-              type="password"
+              type={showResetPassword ? "text" : "password"}
               id="confirm"
               name="confirm"
               placeholder="Enter password again"
