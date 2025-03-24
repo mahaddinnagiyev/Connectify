@@ -36,9 +36,10 @@ const ResetPassword = () => {
           navigate("/auth/login");
         }
       } catch (error) {
-        console.log(error);
-        setErrorMessage("Something went wrong. Please try again.");
-        navigate("/auth/login");
+        if (error) {
+          setErrorMessage("Something went wrong. Please try again.");
+          navigate("/auth/login");
+        }
       } finally {
         setIsLoading(false);
       }
@@ -69,8 +70,9 @@ const ResetPassword = () => {
         setErrorMessage(response.message || "Failed to reset password.");
       }
     } catch (error) {
-      console.log(error);
-      setErrorMessage("Something went wrong. Please try again.");
+      if (error) {
+        setErrorMessage("Something went wrong. Please try again.");
+      }
     } finally {
       setIsLoading(false);
     }

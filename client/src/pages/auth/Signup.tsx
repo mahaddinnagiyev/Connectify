@@ -75,7 +75,9 @@ const Signup = () => {
         setIsLoading(false);
       }
     } catch (error) {
-      console.log(error);
+      if (error) {
+        setErrorMessage("An error occurred. Please try again.");
+      }
     }
   };
 

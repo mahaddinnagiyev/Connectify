@@ -192,12 +192,13 @@ const FriendRequests: React.FC = () => {
 
       window.location.reload();
     } catch (error) {
-      console.log(error);
-      localStorage.setItem(
-        "errorMessage",
-        "Failed to accept/reject friend request."
-      );
-      window.location.reload();
+      if (error) {
+        localStorage.setItem(
+          "errorMessage",
+          "Failed to accept/reject friend request."
+        );
+        window.location.reload();
+      }
     }
   };
 

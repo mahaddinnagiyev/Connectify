@@ -87,8 +87,9 @@ const ProfileInfo: React.FC<ProfileInfoProps> = ({ userData }) => {
       navigator.clipboard.writeText(link);
       setSuccessMessage("Link copied to clipboard");
     } catch (error) {
-      console.log(error);
-      setErrorMessage("Something went wrong - Link copy failed");
+      if (error) {
+        setErrorMessage("Something went wrong - Link copy failed");
+      }
     }
   };
 
@@ -104,7 +105,9 @@ const ProfileInfo: React.FC<ProfileInfoProps> = ({ userData }) => {
     try {
       const result = await get_block_list();
       if (result.success) {
-        const blocked = result.blockList.map((item: BlockListDTO) => item.blocked_id);
+        const blocked = result.blockList.map(
+          (item: BlockListDTO) => item.blocked_id
+        );
         setBlockedUsers(blocked);
       }
     } catch (error) {
@@ -146,8 +149,9 @@ const ProfileInfo: React.FC<ProfileInfoProps> = ({ userData }) => {
         }
       }
     } catch (error) {
-      console.log(error);
-      setErrorMessage("Something went wrong - Please try again later");
+      if (error) {
+        setErrorMessage("Something went wrong - Please try again later");
+      }
     }
   };
 
@@ -214,8 +218,9 @@ const ProfileInfo: React.FC<ProfileInfoProps> = ({ userData }) => {
         }
       }
     } catch (error) {
-      console.log(error);
-      setErrorMessage("Something went wrong - Please try again later");
+      if (error) {
+        setErrorMessage("Something went wrong - Please try again later");
+      }
     }
   };
 
@@ -363,7 +368,7 @@ const ProfileInfo: React.FC<ProfileInfoProps> = ({ userData }) => {
       localStorage.removeItem("successMessage");
     }
   }, []);
-  
+
   return (
     <>
       {errorMessage && (

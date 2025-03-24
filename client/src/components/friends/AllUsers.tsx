@@ -283,11 +283,8 @@ const AllUsers: React.FC = () => {
             />
             <List>
               {filterUsers(users).map((user) => {
-                console.log(pendingFriends);
                 const isPending = pendingFriends.includes(user.id);
-                console.log(isPending);
                 const isAccepted = acceptedFriends.includes(user.id);
-                console.log(isAccepted);
                 return (
                   <ListItem key={user.id} divider>
                     {isSmallScreen ? (

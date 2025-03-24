@@ -82,9 +82,10 @@ const BlockList = () => {
         window.location.reload();
       }
     } catch (error) {
-      console.log(error);
-      localStorage.setItem("errorMessage", "Failed to unblock user.");
-      window.location.reload();
+      if (error) {
+        localStorage.setItem("errorMessage", "Failed to unblock user.");
+        window.location.reload();
+      }
     }
   };
 

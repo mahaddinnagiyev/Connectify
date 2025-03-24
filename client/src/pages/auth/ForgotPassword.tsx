@@ -35,8 +35,9 @@ const ForgotPassword = () => {
         );
       }
     } catch (error) {
-      console.log(error);
-      setErrorMessage("An error occurred while processing your request.");
+      if (error) {
+        setErrorMessage("An error occurred while processing your request.");
+      }
     } finally {
       setIsLoading(false);
     }

@@ -24,7 +24,11 @@ if ('serviceWorker' in navigator) {
     navigator.serviceWorker.addEventListener('message', event => {
         if (event.data.type === 'PLAY_SOUND') {
             const audio = new Audio(event.data.url);
-            audio.play().catch(error => console.log('Audio error:', error));
+            audio.play().catch(error => {
+                if (error) {
+                    return;
+                }
+            });
         }
     });
 }

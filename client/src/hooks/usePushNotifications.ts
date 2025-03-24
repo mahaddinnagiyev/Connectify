@@ -2,9 +2,7 @@ import { useEffect } from "react";
 
 function urlBase64ToUint8Array(base64String: string) {
   const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
-  const base64 = (base64String + padding)
-    .replace(/-/g, "+")
-    .replace(/_/g, "/");
+  const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
   const rawData = window.atob(base64);
   const outputArray = new Uint8Array(rawData.length);
   for (let i = 0; i < rawData.length; ++i) {
@@ -19,11 +17,8 @@ const usePushNotifications = () => {
       navigator.serviceWorker
         .register("/service-worker.js")
         .then((registration) => {
-          console.log("Service Worker registered:", registration.scope);
-
           Notification.requestPermission().then((permission) => {
             if (permission !== "granted") {
-              console.log("Bildiriş icazəsi verilmədi");
               return;
             }
 
@@ -45,21 +40,18 @@ const usePushNotifications = () => {
                       body: JSON.stringify(newSubscription),
                     })
                       .then((res) => res.json())
-                      .then((data) => {
-                        console.log("Abunəlik saxlanıldı:", data);
-                      })
                       .catch((error) =>
-                        console.error("Abunəlik göndərmə xətası:", error)
+                        console.error("Send subscription error:", error)
                       );
                   });
               } else {
-                console.log("Mövcud abunəlik:", subscription);
+                return;
               }
             });
           });
         })
         .catch((error) => {
-          console.error("Service Worker qeydiyyatı xətası:", error);
+          console.error("Service worker registration failed:", error);
         });
     }
   }, []);
