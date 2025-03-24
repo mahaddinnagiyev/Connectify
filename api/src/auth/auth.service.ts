@@ -124,7 +124,7 @@ export class AuthService {
       await this.mailService.sendMail({
         to: email,
         subject: 'Confirm your email',
-        text: signup_confirm_message(first_name, last_name, confirm_code),
+        html: signup_confirm_message(first_name, last_name, confirm_code),
       });
 
       session.confirm_code = confirm_code;
