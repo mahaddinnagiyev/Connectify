@@ -13,6 +13,7 @@ import * as crypto from 'crypto';
 import { v4 as uuid } from 'uuid';
 import { SignupDTO } from './dto/signup-dto';
 import { MailerService } from '@nestjs-modules/mailer';
+import { sendMail } from './utils/email/sendMail';
 import { signup_confirm_message } from './utils/messages/signup-confirm';
 import { generate_confirm_code } from './utils/generate-codes';
 import { ConfirmAccountDTO } from './dto/confirm-account-dto';
@@ -118,8 +119,9 @@ export class AuthService {
 
       const confirm_code = generate_confirm_code();
 
+      sendMail();
+
       await this.mailService.sendMail({
-        from: process.env.EMAIL_USER,
         to: email,
         subject: 'Confirm your email',
         text: signup_confirm_message(first_name, last_name, confirm_code),
@@ -145,6 +147,7 @@ export class AuthService {
         message: 'Confirm code has been sent. Please check your inbox',
       };
     } catch (error) {
+      console.log(error);
       await this.logger.error(
         error.message,
         'auth',
@@ -494,7 +497,7 @@ export class AuthService {
         from: process.env.EMAIL_USER,
         to: email,
         subject: 'Password reset - Connectify',
-        text: forgotPasswordMessage(reset_token),
+        html: forgotPasswordMessage(reset_token),
       });
 
       await this.logger.info(
@@ -642,7 +645,7 @@ export class AuthService {
         from: process.env.EMAIL_USER,
         to: user.email,
         subject: 'Delete Account Request - Connectify',
-        text: deleteAccountMessage(delete_token),
+        html: deleteAccountMessage(delete_token),
       });
 
       await this.logger.info(
