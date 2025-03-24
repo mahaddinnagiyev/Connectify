@@ -387,6 +387,7 @@ const ProfileInfo: React.FC<ProfileInfoProps> = ({ userData }) => {
       <Box sx={{ width: "100%", padding: 0 }}>
         <Typography
           variant="h4"
+          component={"div"}
           gutterBottom
           sx={{
             display: { xs: "flex", md: "block" },
@@ -428,7 +429,7 @@ const ProfileInfo: React.FC<ProfileInfoProps> = ({ userData }) => {
             onClick={handleImageClick}
           />
           {getUrl("my-profile") ? (
-            <Typography variant="h6">
+            <Typography variant="h6" component="div">
               <button
                 type="button"
                 className="text-white text-sm bg-[#00ff00] px-2 py-1 rounded border-2 border-[#00ff00] hover:bg-white hover:text-[#00ff00] transition duration-300 cursor-pointer"

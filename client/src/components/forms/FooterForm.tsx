@@ -136,9 +136,8 @@ const FooterForm = () => {
               placeholder="Write your message here..."
               required
               onChange={handleChange}
-            >
-              {data.message}
-            </textarea>
+              defaultValue={data.message}
+            ></textarea>
           </div>
 
           <button type="submit" className="footer-submit-btn">

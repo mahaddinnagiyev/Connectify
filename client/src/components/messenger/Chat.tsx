@@ -24,6 +24,7 @@ import ChatImage from "./utils/media/ChatImage";
 import ChatVideo from "./utils/media/ChatVideo";
 import ChatFile from "./utils/media/ChatFile";
 import SuccessMessage from "../messages/SuccessMessage";
+import React from "react";
 
 interface ChatProps {
   roomId: string;
@@ -225,12 +226,12 @@ const Chat = ({
       <section className="chat">
         <div className="messages-container" ref={messagesContainerRef}>
           {Object.entries(groupedMessages).map(([date, messages]) => (
-            <>
+            <React.Fragment key={date}>
               <div className="message-date w-full text-center text-sm border-y-2 border-[var(--primary-color)] my-2 py-2">
                 {date}
               </div>
               {messages.map((message, index) => (
-                <>
+                <React.Fragment key={`${message.id}-${index}`}>
                   <div
                     key={index}
                     className={`message ${
@@ -390,9 +391,9 @@ const Chat = ({
                       </span>
                     )}
                   </div>
-                </>
+                </React.Fragment>
               ))}
-            </>
+            </React.Fragment>
           ))}
         </div>
 

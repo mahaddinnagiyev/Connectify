@@ -87,7 +87,7 @@ export default function SearchModal() {
       >
         <DialogTitle className="dialog-title">Search Friends</DialogTitle>
         <DialogContent>
-          <DialogContentText id="alert-dialog-slide-description">
+          <DialogContentText id="alert-dialog-slide-description" component={"div"}>
             {/* SearchBar goes here */}
             <div className="friend-search-input">
               <input
@@ -103,7 +103,7 @@ export default function SearchModal() {
             <div className="message-users flex flex-col gap-3 mb-2 mt-6">
               {filterFriends(userFriendData).length > 0 &&
                 filterFriends(userFriendData).map((friend) => (
-                  <>
+                  <React.Fragment key={friend.id}>
                     <Tooltip placement="right" title="Go Chat">
                       <button
                         key={friend.id}
@@ -141,7 +141,7 @@ export default function SearchModal() {
                       </button>
                     </Tooltip>
                     <hr />
-                  </>
+                  </React.Fragment>
                 ))}
             </div>
           </DialogContentText>

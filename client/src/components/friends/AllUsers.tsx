@@ -333,27 +333,27 @@ const AllUsers: React.FC = () => {
                               <ChatIcon fontSize="small" />
                             </Button>
                           </Tooltip>
-                          <Tooltip title="Add Friend" placement="top">
-                            <>
-                              {isPending ? (
-                                <Button
-                                  variant="contained"
-                                  color="success"
-                                  size="small"
-                                  disabled
-                                >
-                                  <TimerIcon fontSize="small" />
-                                </Button>
-                              ) : isAccepted ? (
-                                <Button
-                                  variant="contained"
-                                  color="success"
-                                  size="small"
-                                  disabled
-                                >
-                                  <CheckIcon fontSize="small" />
-                                </Button>
-                              ) : (
+                          <>
+                            {isPending ? (
+                              <Button
+                                variant="contained"
+                                color="success"
+                                size="small"
+                                disabled
+                              >
+                                <TimerIcon fontSize="small" />
+                              </Button>
+                            ) : isAccepted ? (
+                              <Button
+                                variant="contained"
+                                color="success"
+                                size="small"
+                                disabled
+                              >
+                                <CheckIcon fontSize="small" />
+                              </Button>
+                            ) : (
+                              <Tooltip title="Add Friend" placement="top">
                                 <Button
                                   variant="contained"
                                   color="success"
@@ -362,9 +362,9 @@ const AllUsers: React.FC = () => {
                                 >
                                   <PersonAddIcon fontSize="small" />
                                 </Button>
-                              )}
-                            </>
-                          </Tooltip>
+                              </Tooltip>
+                            )}
+                          </>
                           {blockedUsers.includes(user.id) ? (
                             <Tooltip title="Unblock User" placement="top">
                               <Button
@@ -443,26 +443,27 @@ const AllUsers: React.FC = () => {
                               <ChatIcon />
                             </Button>
                           </Tooltip>
-                          <Tooltip title="Add Friend" placement="top">
-                            {isPending ? (
-                              <Button
-                                variant="contained"
-                                color="success"
-                                sx={{ mr: 1 }}
-                                disabled
-                              >
-                                <TimerIcon />
-                              </Button>
-                            ) : isAccepted ? (
-                              <Button
-                                variant="contained"
-                                color="success"
-                                sx={{ mr: 1 }}
-                                disabled
-                              >
-                                <CheckIcon />
-                              </Button>
-                            ) : (
+
+                          {isPending ? (
+                            <Button
+                              variant="contained"
+                              color="success"
+                              sx={{ mr: 1 }}
+                              disabled
+                            >
+                              <TimerIcon />
+                            </Button>
+                          ) : isAccepted ? (
+                            <Button
+                              variant="contained"
+                              color="success"
+                              sx={{ mr: 1 }}
+                              disabled
+                            >
+                              <CheckIcon />
+                            </Button>
+                          ) : (
+                            <Tooltip title="Add Friend" placement="top">
                               <Button
                                 variant="contained"
                                 color="success"
@@ -471,8 +472,8 @@ const AllUsers: React.FC = () => {
                               >
                                 <PersonAddIcon />
                               </Button>
-                            )}
-                          </Tooltip>
+                            </Tooltip>
+                          )}
                           {blockedUsers.includes(user.id) ? (
                             <Tooltip title="Unblock User" placement="top">
                               <Button
