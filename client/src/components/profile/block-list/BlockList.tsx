@@ -27,6 +27,7 @@ import GppGoodIcon from "@mui/icons-material/GppGood";
 import ConfirmModal from "../../modals/confirm/ConfirmModal";
 import ErrorMessage from "../../messages/ErrorMessage";
 import SuccessMessage from "../../messages/SuccessMessage";
+import CheckModal from "../../modals/spinner/CheckModal";
 
 const BlockList = () => {
   const [confirmModalOpen, setConfirmModalOpen] = useState(false);
@@ -40,6 +41,7 @@ const BlockList = () => {
   const [blockList, setBlockList] = useState<BlockListDTO[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
+  const [pending, setPending] = useState(false);
 
   const theme = useTheme();
   const isSmallScreen = useMediaQuery(theme.breakpoints.down("sm"));
@@ -63,10 +65,10 @@ const BlockList = () => {
 
   const unblock_user = async (id: string) => {
     try {
+      setPending(true);
       const response = await block_and_unblock_user(id, BlockAction.unblock);
       if (response.success) {
         localStorage.setItem("successMessage", response.message);
-        window.location.reload();
       } else {
         if (Array.isArray(response.message)) {
           localStorage.setItem("errorMessage", response.message[0]);
@@ -79,13 +81,14 @@ const BlockList = () => {
               "Failed to unblock user."
           );
         }
-        window.location.reload();
       }
     } catch (error) {
       if (error) {
         localStorage.setItem("errorMessage", "Failed to unblock user.");
-        window.location.reload();
       }
+    } finally {
+      setPending(false);
+      window.location.reload();
     }
   };
 
@@ -152,6 +155,7 @@ const BlockList = () => {
           onClose={() => setSuccessMessage(null)}
         />
       )}
+      {pending && <CheckModal message="Processing..." />}
 
       <Box sx={{ width: "100%", padding: 2, paddingTop: 0 }}>
         <Typography

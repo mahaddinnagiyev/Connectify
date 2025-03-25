@@ -18,6 +18,7 @@ import {
 } from "../../../services/account/dto/privacy-settings-dto";
 import { User } from "../../../services/user/dto/user-dto";
 import { Account } from "../../../services/account/dto/account-dto";
+import CheckModal from "../../modals/spinner/CheckModal";
 
 interface UserProfile {
   user: User;
@@ -29,7 +30,10 @@ interface PrivacySettingsProps {
   userData: UserProfile | null;
 }
 
-const PrivacySettingsComponent: React.FC<PrivacySettingsProps> = ({ userData }) => {
+const PrivacySettingsComponent: React.FC<PrivacySettingsProps> = ({
+  userData,
+}) => {
+  const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
@@ -67,6 +71,7 @@ const PrivacySettingsComponent: React.FC<PrivacySettingsProps> = ({ userData }) 
 
   const handleSave = async () => {
     try {
+      setLoading(true);
       const response = await update_privacy_settings(privacy);
       if (response.success) {
         setSuccessMessage(
@@ -76,8 +81,11 @@ const PrivacySettingsComponent: React.FC<PrivacySettingsProps> = ({ userData }) 
         setErrorMessage(response.error || "Failed to update privacy settings");
       }
     } catch (error) {
-      console.error(error);
-      setErrorMessage("An error occurred while updating privacy settings");
+      if (error) {
+        setErrorMessage("An error occurred while updating privacy settings");
+      }
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -95,6 +103,7 @@ const PrivacySettingsComponent: React.FC<PrivacySettingsProps> = ({ userData }) 
           onClose={() => setSuccessMessage(null)}
         />
       )}
+      {loading && <CheckModal message="Updating privacy settings" />}
 
       <Typography
         variant="h5"

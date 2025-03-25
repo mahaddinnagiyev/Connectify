@@ -55,7 +55,10 @@ interface ProfileInfoProps {
   isDataLoaded: boolean;
 }
 
-const ProfileInfo: React.FC<ProfileInfoProps> = ({ userData, isDataLoaded }) => {
+const ProfileInfo: React.FC<ProfileInfoProps> = ({
+  userData,
+  isDataLoaded,
+}) => {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
@@ -68,6 +71,7 @@ const ProfileInfo: React.FC<ProfileInfoProps> = ({ userData, isDataLoaded }) => 
 
   const [accepted, setAccepted] = useState(false);
   const [pending, setPending] = useState(false);
+  const [processing, setProcessing] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const [confirmModalOpen, setConfirmModalOpen] = useState(false);
@@ -116,7 +120,9 @@ const ProfileInfo: React.FC<ProfileInfoProps> = ({ userData, isDataLoaded }) => 
         setBlockedUsers(blocked);
       }
     } catch (error) {
-      console.error("Failed to fetch block list:", error);
+      if (error) {
+        setErrorMessage("Something went wrong - Failed to get block list");
+      }
     }
   };
 
@@ -193,8 +199,9 @@ const ProfileInfo: React.FC<ProfileInfoProps> = ({ userData, isDataLoaded }) => 
         }
       }
     } catch (error) {
-      console.error(error);
-      setErrorMessage("Something went wrong - Please try again later");
+      if (error) {
+        setErrorMessage("Something went wrong - Please try again later");
+      }
     }
   };
 
@@ -251,7 +258,9 @@ const ProfileInfo: React.FC<ProfileInfoProps> = ({ userData, isDataLoaded }) => 
             setPending(pendingFriends.includes(userData.user.id));
           }
         } catch (error) {
-          console.error("Error fetching friendship status:", error);
+          if (error) {
+            setErrorMessage("Failed to get friendship status");
+          }
         }
       };
       fetchFriendshipStatus();
@@ -275,14 +284,16 @@ const ProfileInfo: React.FC<ProfileInfoProps> = ({ userData, isDataLoaded }) => 
         );
       }
     } catch (error) {
-      setErrorMessage("Failed to send friend request");
-      console.error("Failed to send friend request:", error);
+      if (error) {
+        setErrorMessage("Failed to send friend request");
+      }
     }
   };
 
   const block_user = async () => {
     if (!userData) return;
     try {
+      setProcessing(true);
       const response = await block_and_unblock_user(
         userData.user.id,
         BlockAction.block
@@ -291,13 +302,17 @@ const ProfileInfo: React.FC<ProfileInfoProps> = ({ userData, isDataLoaded }) => 
         setSuccessMessage("User blocked successfully");
       }
     } catch (error) {
-      console.error("Failed to block user:", error);
-      setErrorMessage("Failed to block user");
+      if (error) {
+        setErrorMessage("Failed to block user");
+      }
+    } finally {
+      setProcessing(false);
     }
   };
 
   const unblock_user = async (id: string) => {
     try {
+      setProcessing(true);
       const response = await block_and_unblock_user(id, BlockAction.unblock);
       if (response.success) {
         localStorage.setItem("successMessage", response.message);
@@ -316,13 +331,17 @@ const ProfileInfo: React.FC<ProfileInfoProps> = ({ userData, isDataLoaded }) => 
       }
       window.location.reload();
     } catch (error) {
-      console.error(error);
-      localStorage.setItem("errorMessage", "Failed to unblock user.");
+      if (error) {
+        localStorage.setItem("errorMessage", "Failed to unblock user.");
+      }
+    } finally {
+      setProcessing(false);
     }
   };
 
   const remove_friend = async (id: string) => {
     try {
+      setProcessing(true);
       const response = await removeFriendship(id);
       if (response.success) {
         localStorage.setItem("successMessage", response.message);
@@ -341,8 +360,11 @@ const ProfileInfo: React.FC<ProfileInfoProps> = ({ userData, isDataLoaded }) => 
       }
       window.location.reload();
     } catch (error) {
-      console.error(error);
-      localStorage.setItem("errorMessage", "Failed to remove friend.");
+      if (error) {
+        localStorage.setItem("errorMessage", "Failed to remove friend.");
+      }
+    } finally {
+      setProcessing(false);
       window.location.reload();
     }
   };
@@ -393,6 +415,7 @@ const ProfileInfo: React.FC<ProfileInfoProps> = ({ userData, isDataLoaded }) => 
       )}
       {loading && <CheckModal message="Uploading Photo..." />}
       {isDataLoaded && <CheckModal message="Loading Profile..." />}
+      {processing && <CheckModal message="Processing..." />}
 
       <Box sx={{ width: "100%", padding: 0 }}>
         <Typography

@@ -32,6 +32,7 @@ import ConfirmModal from "../modals/confirm/ConfirmModal";
 import { FriendshipAction } from "../../services/friendship/enum/friendship-status.enum";
 import ErrorMessage from "../messages/ErrorMessage";
 import SuccessMessage from "../messages/SuccessMessage";
+import CheckModal from "../modals/spinner/CheckModal";
 
 const FilterToggleButton = styled(ToggleButton)(({ theme }) => ({
   "&.MuiToggleButton-root": {
@@ -70,6 +71,7 @@ const FriendRequests: React.FC = () => {
     []
   );
   const [loading, setLoading] = useState<boolean>(true);
+  const [pending, setPending] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -130,6 +132,7 @@ const FriendRequests: React.FC = () => {
 
   const block_user = async (id: string) => {
     try {
+      setPending(true);
       const response = await block_and_unblock_user(id, BlockAction.block);
       if (response.success) {
         setSuccessMessage(response.message);
@@ -148,8 +151,11 @@ const FriendRequests: React.FC = () => {
       }
       window.location.reload();
     } catch (error) {
-      console.error(error);
-      localStorage.setItem("errorMessage", "Failed to block user.");
+      if (error) {
+        localStorage.setItem("errorMessage", "Failed to block user.");
+      }
+    } finally {
+      setPending(false);
       window.location.reload();
     }
   };
@@ -172,6 +178,7 @@ const FriendRequests: React.FC = () => {
     id: string
   ) => {
     try {
+      setPending(true);
       const response = await acceptAndRejectFriendship(status, id);
 
       if (response.success) {
@@ -197,8 +204,10 @@ const FriendRequests: React.FC = () => {
           "errorMessage",
           "Failed to accept/reject friend request."
         );
-        window.location.reload();
       }
+    } finally {
+      setPending(false);
+      window.location.reload();
     }
   };
 
@@ -416,6 +425,8 @@ const FriendRequests: React.FC = () => {
           onClose={() => setSuccessMessage(null)}
         />
       )}
+
+      {pending && <CheckModal message="Processing..." />}
 
       <Box sx={{ width: "100%", padding: 2, paddingTop: 0 }}>
         <Typography

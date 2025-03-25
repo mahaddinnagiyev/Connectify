@@ -44,11 +44,13 @@ import ErrorMessage from "../messages/ErrorMessage";
 import SuccessMessage from "../messages/SuccessMessage";
 import { socket } from "../../services/socket/socket-service";
 import { useNavigate } from "react-router-dom";
+import CheckModal from "../modals/spinner/CheckModal";
 
 const AllUsers: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [users, setUsers] = useState<Users[]>([]);
   const [loading, setLoading] = useState(false);
+  const [pending, setPending] = useState(false);
   const [acceptedFriends, setAcceptedFriends] = useState<string[]>([]);
   const [pendingFriends, setPendingFriends] = useState<string[]>([]);
   const [blockedUsers, setBlockedUsers] = useState<string[]>([]);
@@ -122,7 +124,9 @@ const AllUsers: React.FC = () => {
         setAcceptedFriends(accepted);
       }
     } catch (error) {
-      console.error("Error fetching accepted friends:", error);
+      if (error) {
+        setErrorMessage("Failed to get accepted friends");
+      }
     }
   };
 
@@ -139,7 +143,9 @@ const AllUsers: React.FC = () => {
         setPendingFriends(pending);
       }
     } catch (error) {
-      console.error("Error fetching pending friends:", error);
+      if (error) {
+        setErrorMessage("Failed to get pending friends");
+      }
     }
   };
 
@@ -156,6 +162,7 @@ const AllUsers: React.FC = () => {
 
   const block_user = async (id: string) => {
     try {
+      setPending(true);
       const response = await block_and_unblock_user(id, BlockAction.block);
       if (response.success) {
         fetchAllUsers();
@@ -171,12 +178,17 @@ const AllUsers: React.FC = () => {
         );
       }
     } catch (error) {
-      console.error("Failed to block user:", error);
+      if (error) {
+        setErrorMessage("Failed to block user");
+      }
+    } finally {
+      setPending(false);
     }
   };
 
   const unblock_user = async (id: string) => {
     try {
+      setPending(true);
       const response = await block_and_unblock_user(id, BlockAction.unblock);
       if (response.success) {
         fetchAllUsers();
@@ -192,12 +204,17 @@ const AllUsers: React.FC = () => {
         );
       }
     } catch (error) {
-      console.error("Failed to unblock user:", error);
+      if (error) {
+        setErrorMessage("Failed to unblock user");
+      }
+    } finally {
+      setPending(false);
     }
   };
 
   const send_friend_request = async (id: string) => {
     try {
+      setPending(true);
       const response = await sendFriendshipRequest(id);
       if (response.success) {
         setSuccessMessage(response.message);
@@ -211,8 +228,11 @@ const AllUsers: React.FC = () => {
         );
       }
     } catch (error) {
-      setErrorMessage("Failed to send friend request");
-      console.error("Failed to send friend request:", error);
+      if (error) {
+        setErrorMessage("Failed to send friend request");
+      }
+    } finally {
+      setPending(false);
     }
   };
 
@@ -252,6 +272,7 @@ const AllUsers: React.FC = () => {
           onClose={() => setSuccessMessage(null)}
         />
       )}
+      {pending && <CheckModal message="Processing..." />}
 
       <Box>
         {loading ? (

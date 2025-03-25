@@ -37,11 +37,13 @@ import ConfirmModal from "../modals/confirm/ConfirmModal";
 import ErrorMessage from "../messages/ErrorMessage";
 import SuccessMessage from "../messages/SuccessMessage";
 import { socket } from "../../services/socket/socket-service";
+import CheckModal from "../modals/spinner/CheckModal";
 
 const FriendList = () => {
   const [friends, setFriends] = useState<UserFriendsDTO[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
+  const [pending, setPending] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>("");
   const [successMessage, setSuccessMessage] = useState<string | null>("");
   const [confirmModalOpen, setConfirmModalOpen] = useState(false);
@@ -95,6 +97,7 @@ const FriendList = () => {
 
   const block_user = async (id: string) => {
     try {
+      setPending(true);
       const response = await block_and_unblock_user(id, BlockAction.block);
       if (response.success) {
         localStorage.setItem("successMessage", response.message);
@@ -113,13 +116,17 @@ const FriendList = () => {
       }
       window.location.reload();
     } catch (error) {
-      console.error(error);
-      localStorage.setItem("errorMessage", "Failed to block user.");
+      if (error) {
+        localStorage.setItem("errorMessage", "Failed to block user.");
+      }
+    } finally {
+      setPending(false);
     }
   };
 
   const unblock_user = async (id: string) => {
     try {
+      setPending(true);
       const response = await block_and_unblock_user(id, BlockAction.unblock);
       if (response.success) {
         localStorage.setItem("successMessage", response.message);
@@ -138,13 +145,17 @@ const FriendList = () => {
       }
       window.location.reload();
     } catch (error) {
-      console.error(error);
-      localStorage.setItem("errorMessage", "Failed to unblock user.");
+      if (error) {
+        localStorage.setItem("errorMessage", "Failed to unblock user.");
+      }
+    } finally {
+      setPending(false);
     }
   };
 
   const remove_friend = async (id: string) => {
     try {
+      setPending(true);
       const response = await removeFriendship(id);
       if (response.success) {
         localStorage.setItem("successMessage", response.message);
@@ -163,8 +174,11 @@ const FriendList = () => {
       }
       window.location.reload();
     } catch (error) {
-      console.error(error);
-      localStorage.setItem("errorMessage", "Failed to remove friend.");
+      if (error) {
+        localStorage.setItem("errorMessage", "Failed to remove friend.");
+      }
+    } finally {
+      setPending(false);
       window.location.reload();
     }
   };
@@ -233,6 +247,7 @@ const FriendList = () => {
           onClose={() => setSuccessMessage(null)}
         />
       )}
+      {pending && <CheckModal message="Processing..." />}
 
       <Box
         sx={{
