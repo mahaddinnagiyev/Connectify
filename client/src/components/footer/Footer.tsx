@@ -71,7 +71,7 @@ const Footer = () => {
               <li>
                 <p>Email:</p>{" "}
                 <i onClick={copyEmail} className="cursor-pointer">
-                  example@gmail.com
+                  nagiyev.mahaddin@gmail.com
                 </i>
               </li>
               <li>
