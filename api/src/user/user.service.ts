@@ -293,7 +293,7 @@ export class UserService {
       const { data: blockList } = await this.supabase
         .getClient()
         .from('block_lists')
-        .select('*, blocker!inner(id, first_name, last_name, username)')
+        .select('*, blocker_id!inner(id, first_name, last_name, username)')
         .eq('blocked_id', req_user.id);
 
       const blocks: IBlockList[] = blockList ?? [];
