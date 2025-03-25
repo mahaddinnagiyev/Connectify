@@ -285,6 +285,24 @@ export class AuthService {
         'auth',
       );
 
+      const payload: JwtPayload = {
+        id: newUser.id,
+        username: newUser.username,
+        is_banned: newUser.is_banned,
+      };
+
+      const access_token = jwt.sign(
+        payload,
+        process.env.JWT_ACCESS_SECRET_KEY,
+        {
+          expiresIn: '5d',
+        },
+      );
+      session.access_token = access_token;
+      session.cookie.maxAge = 5 * 24 * 60 * 60 * 1000;
+
+      await session.save();
+
       return {
         success: true,
         message: 'User created successfully',

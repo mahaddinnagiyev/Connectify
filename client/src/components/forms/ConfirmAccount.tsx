@@ -20,7 +20,7 @@ const ConfirmAccount = () => {
     const response = await confirm_account(formData);
 
     if (response.success) {
-      window.location.replace("/auth/login");
+      window.location.replace("/messenger");
       setSuccessMessage("Account confirmed successfully!");
     } else {
       if (Array.isArray(response.message)) {
