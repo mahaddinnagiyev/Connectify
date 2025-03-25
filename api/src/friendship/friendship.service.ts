@@ -265,7 +265,7 @@ export class FriendshipService {
 
       const { data: isRequesteeBlocked } = (await this.supabase
         .getClient()
-        .from('block_list')
+        .from('block_lists')
         .select(
           '*, blocker_id!inner(id, first_name, last_name, username), blocked_id!inner(id, first_name, last_name, username)',
         )
@@ -275,7 +275,7 @@ export class FriendshipService {
 
       const { data: isRequesterBlocked } = (await this.supabase
         .getClient()
-        .from('block_list')
+        .from('block_lists')
         .select(
           '*, blocker_id!inner(id, first_name, last_name, username), blocked_id!inner(id, first_name, last_name, username)',
         )
