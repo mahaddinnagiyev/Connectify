@@ -1,5 +1,5 @@
 import { getToken } from "../auth/token-service";
-import { BlockAction, BlockerListDTO, BlockListDTO } from "./dto/block-list-dto";
+import { BlockAction, BlockListDTO } from "./dto/block-list-dto";
 import { jwtDecode } from "jwt-decode";
 
 export const get_block_list = async (): Promise<{
@@ -24,7 +24,7 @@ export const get_block_list = async (): Promise<{
 
 export const get_blocker_list = async (): Promise<{
   success: boolean;
-  blockerList: BlockerListDTO[];
+  blockerList: BlockListDTO[];
   response: { success: boolean; error?: string; message?: string };
 }> => {
   const token: string | null = await getToken();

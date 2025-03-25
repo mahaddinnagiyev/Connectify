@@ -70,14 +70,14 @@ const Chat = ({
   useEffect(() => {
     get_block_list().then((response) => {
       if (response.success && otherUser) {
-        const blockedUsers = response.blockList.map((user) => user.id);
+        const blockedUsers = response.blockList.map((user) => user.blocked_id);
         setIsBlocked(blockedUsers.includes(otherUser.id));
       }
     });
 
     get_blocker_list().then((response) => {
       if (response.success && otherUser) {
-        const blockUsers = response.blockerList.map((user) => user.id);
+        const blockUsers = response.blockerList.map((user) => user.blocked_id);
         setIsBlocker(blockUsers.includes(otherUser.id));
       }
     });
