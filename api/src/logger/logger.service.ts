@@ -37,7 +37,7 @@ export class LoggerService {
       from: process.env.EMAIL_USER,
       to: process.env.EMAIL_SECOND_USER,
       subject: 'There is an error(emerg) in the application - Connectify',
-      text: errorMessage(message, module, details, stack),
+      html: errorMessage(message, module, details, stack),
     });
     return this.log(LogLevels.emerg, message, module, details, stack);
   }
@@ -70,7 +70,7 @@ export class LoggerService {
       from: process.env.EMAIL_USER,
       to: process.env.EMAIL_SECOND_USER,
       subject: 'There is an error in the application - Connectify',
-      text: errorMessage(message, module, details, stack),
+      html: errorMessage(message, module, details, stack),
     });
     return this.log(LogLevels.error, message, module, details, stack);
   }
