@@ -42,6 +42,7 @@ import { FriendshipStatus } from "../../services/friendship/enum/friendship-stat
 import { useNavigate } from "react-router-dom";
 import { socket } from "../../services/socket/socket-service";
 import { PrivacySettingsDTO } from "../../services/account/dto/privacy-settings-dto";
+import CheckModal from "../modals/spinner/CheckModal";
 
 interface UserProfile {
   user: User;
@@ -51,9 +52,10 @@ interface UserProfile {
 
 interface ProfileInfoProps {
   userData: UserProfile | null;
+  isDataLoaded: boolean;
 }
 
-const ProfileInfo: React.FC<ProfileInfoProps> = ({ userData }) => {
+const ProfileInfo: React.FC<ProfileInfoProps> = ({ userData, isDataLoaded }) => {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
@@ -66,6 +68,7 @@ const ProfileInfo: React.FC<ProfileInfoProps> = ({ userData }) => {
 
   const [accepted, setAccepted] = useState(false);
   const [pending, setPending] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const [confirmModalOpen, setConfirmModalOpen] = useState(false);
   const [confirmModalTitle, setConfirmModalTitle] = useState("");
@@ -128,6 +131,7 @@ const ProfileInfo: React.FC<ProfileInfoProps> = ({ userData }) => {
 
   const handleProfilePictureChange = async (file: File) => {
     try {
+      setLoading(true);
       const response = await update_profile_pic(file);
       if (response.success) {
         localStorage.setItem(
@@ -154,6 +158,8 @@ const ProfileInfo: React.FC<ProfileInfoProps> = ({ userData }) => {
       if (error) {
         setErrorMessage("Something went wrong - Please try again later");
       }
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -385,6 +391,8 @@ const ProfileInfo: React.FC<ProfileInfoProps> = ({ userData }) => {
           onClose={() => setSuccessMessage(null)}
         />
       )}
+      {loading && <CheckModal message="Uploading Photo..." />}
+      {isDataLoaded && <CheckModal message="Loading Profile..." />}
 
       <Box sx={{ width: "100%", padding: 0 }}>
         <Typography

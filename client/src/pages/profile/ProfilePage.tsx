@@ -64,6 +64,7 @@ const ProfilePage = () => {
     null
   );
   const [userData, setUserData] = React.useState<UserProfile | null>(null);
+  const [isDataLoaded, setIsDataLoaded] = React.useState(false);
 
   React.useEffect(() => {
     const handleResize = () => {
@@ -96,37 +97,49 @@ const ProfilePage = () => {
   }, []);
 
   React.useEffect(() => {
-    getUserById().then((response) => {
-      if (response.success) {
-        setUserData({
-          user: response.user ?? {
-            id: null,
-            first_name: null,
-            last_name: null,
-            email: null,
-            username: null,
-            gender: null,
-          },
-          account: response.account ?? {
-            id: null,
-            bio: null,
-            location: null,
-            profile_picture: null,
-            social_links: [],
-            last_login: null,
-          },
-          privacy_settings: response.privacy_settings ?? null,
-        });
-      } else {
-        setErrorMessage(
-          response.response?.message ??
-            response.response?.error ??
-            response.message ??
-            response.error ??
-            "Something went wrong"
-        );
+    const fetchData = async () => {
+      try {
+        setIsDataLoaded(true);
+        const response = await getUserById();
+        if (response.success) {
+          setUserData({
+            user: response.user ?? {
+              id: null,
+              first_name: null,
+              last_name: null,
+              email: null,
+              username: null,
+              gender: null,
+            },
+            account: response.account ?? {
+              id: null,
+              bio: null,
+              location: null,
+              profile_picture: null,
+              social_links: [],
+              last_login: null,
+            },
+            privacy_settings: response.privacy_settings ?? null,
+          });
+        } else {
+          setErrorMessage(
+            response.response?.message ??
+              response.response?.error ??
+              response.message ??
+              response.error ??
+              "Something went wrong"
+          );
+        }
+      } catch (error) {
+        if (error) {
+          setErrorMessage("Something went wrong - Please try again later");
+        }
+      } finally {
+        setIsDataLoaded(false);
       }
-    });
+    };
+
+    fetchData();
   }, []);
 
   return (
@@ -197,7 +210,7 @@ const ProfilePage = () => {
             }}
           >
             <TabPanel value={value} index={0}>
-              <ProfileInfo userData={userData} />
+              <ProfileInfo userData={userData} isDataLoaded={isDataLoaded} />
             </TabPanel>
             <TabPanel value={value} index={1}>
               <FriendList />

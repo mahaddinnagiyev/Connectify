@@ -61,6 +61,7 @@ const UserProfilePage = () => {
     null
   );
   const [userData, setUserData] = React.useState<UserProfile | null>(null);
+  const [isDataLoaded, setIsDataLoaded] = React.useState(false);
   // const [friends, setFriends] = React.useState<UserFriendsDTO[]>([]);
 
   React.useEffect(() => {
@@ -96,16 +97,18 @@ const UserProfilePage = () => {
 
   React.useEffect(() => {
     const fetchData = async () => {
-      const pathParts = window.location.pathname.split("/");
-      const usernameWithAt = pathParts[pathParts.length - 1];
-      const username = usernameWithAt.replace("@", "");
+      try {
+        setIsDataLoaded(true);
+        const pathParts = window.location.pathname.split("/");
+        const usernameWithAt = pathParts[pathParts.length - 1];
+        const username = usernameWithAt.replace("@", "");
 
-      const tokenUsername = await decodeTokenAndGetUsername();
-      if (tokenUsername === username) {
-        return window.location.replace("/user/my-profile");
-      }
+        const tokenUsername = await decodeTokenAndGetUsername();
+        if (tokenUsername === username) {
+          return window.location.replace("/user/my-profile");
+        }
 
-      getUserByUsername(username).then((response) => {
+        const response = await getUserByUsername(username);
         if (response.success) {
           setUserData({
             user: response.user ?? {
@@ -134,7 +137,13 @@ const UserProfilePage = () => {
               "Something went wrong"
           );
         }
-      });
+      } catch (error) {
+        if (error) {
+          setErrorMessage("Something went wrong - Please try again later");
+        }
+      } finally {
+        setIsDataLoaded(false);
+      }
     };
 
     fetchData();
@@ -217,7 +226,7 @@ const UserProfilePage = () => {
             }}
           >
             <TabPanel value={0} index={0}>
-              <ProfileInfo userData={userData} />
+              <ProfileInfo userData={userData} isDataLoaded={isDataLoaded} />
             </TabPanel>
           </Box>
         </Box>
