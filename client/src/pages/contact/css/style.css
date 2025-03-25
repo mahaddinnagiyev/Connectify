@@ -31,3 +31,37 @@
   padding: 20px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
 }
+
+.social-media-section {
+  text-align: center;
+  margin-top: 40px;
+  padding: 20px;
+  background-color: #fff;
+  border: 2px solid var(--primary-color);
+  border-radius: 10px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+}
+
+.social-media-section h2 {
+  font-size: 1.8rem;
+  margin-bottom: 20px;
+  font-weight: 600;
+}
+
+.social-icons {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+}
+
+.social-icon {
+  border: 2px solid var(--primary-color);
+  border-radius: 8px;
+  padding: 15px;
+  color: var(--primary-color);
+  transition: transform 0.3s ease, color 0.3s ease;
+}
+
+.social-icon:hover {
+  transform: scale(1.1);
+}
