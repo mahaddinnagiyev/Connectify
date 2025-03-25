@@ -138,9 +138,7 @@ const FooterForm = () => {
               required
               onChange={handleChange}
               defaultValue={data.message}
-            >
-              {data.message}
-            </textarea>
+            ></textarea>
           </div>
 
           <button type="submit" className="footer-submit-btn">

@@ -2,8 +2,11 @@ import { useState } from "react";
 import FooterForm from "../forms/FooterForm";
 import "./style.css";
 
-import Alert from "@mui/material/Alert";
-import Stack from "@mui/material/Stack";
+import LinkedInIcon from "@mui/icons-material/LinkedIn";
+import GitHubIcon from "@mui/icons-material/GitHub";
+import EmailIcon from "@mui/icons-material/Email";
+import { Tooltip } from "@mui/material";
+import SuccessMessage from "../messages/SuccessMessage";
 
 const Footer = () => {
   const [copied, setCopied] = useState(false);
@@ -20,7 +23,7 @@ const Footer = () => {
 
   return (
     <>
-      <section id="footer">
+      <section id="footer" className="relative">
         <div className="footer-form">
           <FooterForm />
         </div>
@@ -72,18 +75,47 @@ const Footer = () => {
                 </i>
               </li>
               <li>
-                <p>Phone:</p> +1 (123) 456-7890
+                <p>Social Media</p>
+                <div className="flex gap-3 mt-1">
+                  <Tooltip title="LinkedIn" placement="top">
+                    <a
+                      href="https://www.linkedin.com/in/nagiyev-mahaddin-3395a72a0/"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      <LinkedInIcon style={{ fontSize: "1.7rem" }} />
+                    </a>
+                  </Tooltip>
+                  <Tooltip title="GitHub" placement="top">
+                    <a
+                      href="https://github.com/mahaddinnagiyev"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      <GitHubIcon style={{ fontSize: "1.7rem" }} />
+                    </a>
+                  </Tooltip>
+                  <Tooltip title="Email" placement="top">
+                    <a
+                      href="mailto:nagiyev.mahaddin@gmail.com"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      <EmailIcon style={{ fontSize: "1.7rem" }} />
+                    </a>
+                  </Tooltip>
+                </div>
               </li>
             </ul>
           </div>
         </div>
 
+        <div className="footer-copyright absolute bottom-3 left-1/2 transform -translate-x-1/2 md:text-sm text-xs">
+          <b>All rights reserved. Copyright &copy; 2025</b>
+        </div>
+
         {copied && (
-          <div className="copied-alert">
-            <Stack sx={{ width: "100%" }} spacing={2}>
-              <Alert severity="success" variant="filled">Email copied to clipboard</Alert>
-            </Stack>
-          </div>
+          <SuccessMessage message="Copied to clipboard!" onClose={() => {}} />
         )}
       </section>
     </>
