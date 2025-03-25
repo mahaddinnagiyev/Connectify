@@ -90,7 +90,7 @@ export class FriendshipService {
           `*, requester_id!inner(id, first_name, last_name, username), requestee_id!inner(id, first_name, last_name, username)`,
         )
         .or(
-          `requester_id.eq.${req_user.id},requestee_id.eq.${req_user.id}`,
+          `and(requester_id.eq.${req_user.id},status.eq.${FriendshipStatus.accepted}),and(requestee_id.eq.${req_user.id},status.eq.${FriendshipStatus.accepted})`,
         )) as { data: IFriendship[] };
 
       const mappedFriends = [];
