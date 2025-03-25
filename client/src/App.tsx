@@ -16,6 +16,7 @@ import { useEffect } from "react";
 import FAQPage from "./pages/faq/FAQPage";
 import TermsAndConditionPage from "./pages/terms/TermsAndConditionPage";
 import PrivacyPolicyPage from "./pages/privacy/PrivacyPolicyPage";
+import ContactUsPage from "./pages/contact/ContactUsPage";
 
 function App() {
   useEffect(() => {
@@ -76,8 +77,11 @@ function App() {
             </RouteControl>
           }
         />
+        <Route path="/contact" element={<ContactUsPage />} />
         <Route path="/terms" element={<TermsAndConditionPage />} />
         <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
+
+        {/* Auth Routes */}
         <Route path="/auth/login" element={<Login />} />
         <Route path="/auth/signup" element={<Signup />} />
         <Route path="/auth/delete-account" element={<DeleteAccount />} />

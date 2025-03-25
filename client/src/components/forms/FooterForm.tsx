@@ -34,6 +34,7 @@ const FooterForm = () => {
 
       if (response.success) {
         setSuccessMessage(response.message ?? "Feedback sent successfully!");
+        setData({ first_name: "", last_name: "", email: "", message: "" });
       } else {
         if (Array.isArray(response.message)) {
           setErrorMessage(response.message[0]);
@@ -137,7 +138,9 @@ const FooterForm = () => {
               required
               onChange={handleChange}
               defaultValue={data.message}
-            ></textarea>
+            >
+              {data.message}
+            </textarea>
           </div>
 
           <button type="submit" className="footer-submit-btn">

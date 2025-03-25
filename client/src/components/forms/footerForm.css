@@ -51,11 +51,12 @@
   display: block;
   margin: 0 auto;
   font-weight: 800;
-  transition: .3s ease-in-out;
+  transition: .3s all ease-in-out;
 }
 
 .footer-submit-btn:hover {
   background-color: var(--secondary-color);
   border-color: var(--secondary-color);
   color: var(--primary-color);
+  transform: scale(1.02);
 }
