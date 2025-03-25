@@ -7,6 +7,7 @@ import {
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
+import { Request } from 'express';
 import * as bcrypt from 'bcrypt';
 import * as jwt from 'jsonwebtoken';
 import * as crypto from 'crypto';
@@ -35,8 +36,9 @@ import { deleteAccountMessage } from './utils/messages/delete-account-message';
 import { SupabaseService } from 'src/supabase/supabase.service';
 import { IUser } from 'src/interfaces/user.interface';
 import { IAccount } from 'src/interfaces/account.interface';
-import { IPrivacySettings } from 'src/interfaces/privacy-settings.interface';
 import { ITokenBlackList } from 'src/interfaces/token-black-list.interface';
+import * as geoip from 'geoip-lite';
+import * as countries from 'i18n-iso-countries';
 
 @Injectable()
 export class AuthService {
@@ -163,6 +165,7 @@ export class AuthService {
   async confirmAccount(
     confirmDTO: ConfirmAccountDTO,
     session: Record<string, any>,
+    req: Request,
   ): Promise<{ success: boolean; message: string; user: any } | HttpException> {
     try {
       const { code } = confirmDTO;
@@ -216,6 +219,7 @@ export class AuthService {
           gender: unconfirmed_user.gender,
           password: hashedPassword,
         })
+        .select()
         .single()) as { data: IUser };
 
       let userProfilePicture = '';
@@ -232,22 +236,46 @@ export class AuthService {
           break;
       }
 
+      const forwarded = req.headers['x-forwarded-for'];
+      let ip: string;
+      if (forwarded) {
+        if (Array.isArray(forwarded)) {
+          ip = forwarded[0];
+        } else {
+          ip = forwarded.split(',')[0].trim();
+        }
+      } else {
+        ip = req.socket.remoteAddress;
+      }
+
+      let countryName: string | null;
+
+      const geo = geoip.lookup(ip);
+      if (geo) {
+        const countryCode = geo.country;
+        countryName = countries.getName(countryCode, 'en', {
+          select: 'official',
+        });
+      }
+
       const { data: newAccount } = (await this.supabase
         .getClient()
         .from('accounts')
         .insert({
-          user: newUser.id,
+          user_id: newUser.id,
           profile_picture: userProfilePicture,
+          location: countryName,
         })
+        .select()
         .single()) as { data: IAccount };
 
-      const { data: newPrivacySettings } = (await this.supabase
+      await this.supabase
         .getClient()
         .from('privacy_settings')
         .insert({
-          account: newAccount.id,
+          account_id: newAccount.id,
         })
-        .single()) as { data: IPrivacySettings };
+        .single();
 
       delete session.unconfirmed_user;
       delete session.confirm_code;
@@ -745,6 +773,7 @@ export class AuthService {
   // Google User Authentication
   async validateGoogleUser(
     user: any,
+    ip: string,
   ): Promise<{ success: boolean; access_token?: string } | HttpException> {
     try {
       let { data: existUser } =
@@ -768,23 +797,37 @@ export class AuthService {
             provider: Provider.google,
             password: 'signed_up_with_google',
           })
+          .select()
           .single()) as { data: IUser };
+
+        let countryName: string | null;
+
+        const geo = geoip.lookup(ip);
+        if (geo) {
+          const countryCode = geo.country;
+          countryName = countries.getName(countryCode, 'en', {
+            select: 'official',
+          });
+        }
 
         const { data: newAccount } = (await this.supabase
           .getClient()
-          .from('account')
+          .from('accounts')
           .insert({
-            user: newUser.id,
+            user_id: newUser.id,
             profile_picture:
+              user.profile_picture ||
               'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQUy9s7L2aRDadM1KxmVNkNQ9Edar2APzIeHw&s',
+            location: countryName || null,
           })
+          .select()
           .single()) as { data: IAccount };
 
         await this.supabase
           .getClient()
           .from('privacy_settings')
           .insert({
-            account: newAccount.id,
+            account_id: newAccount.id,
           })
           .single();
 
@@ -825,7 +868,6 @@ export class AuthService {
         `Login successfully:\nFull name: ${existUser.first_name} ${existUser.last_name},\nusername: ${existUser.username},\nemail: ${existUser.email}`,
         'auth',
       );
-
       return { success: true, access_token };
     } catch (error) {
       await this.logger.error(

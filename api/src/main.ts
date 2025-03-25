@@ -38,6 +38,9 @@ async function bootstrap() {
     }),
   );
 
+  const expressApp = app.getHttpAdapter().getInstance();
+  expressApp.set('trust proxy', true);
+
   await app.listen(process.env.PORT ?? 3535);
 }
 bootstrap();

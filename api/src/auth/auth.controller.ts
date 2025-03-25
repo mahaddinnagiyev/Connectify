@@ -50,10 +50,11 @@ export class AuthController {
     default: { limit: 40, ttl: 60 * 1000, blockDuration: 60 * 1000 },
   })
   async confirmAccount(
+    @Req() req: Request,
     @Body() confirmDTO: ConfirmAccountDTO,
     @Session() session: Record<string, any>,
   ) {
-    return this.authService.confirmAccount(confirmDTO, session);
+    return this.authService.confirmAccount(confirmDTO, session, req);
   }
 
   // Login
@@ -163,7 +164,7 @@ export class AuthController {
       const userData = req.user;
       if (!userData || !userData.access_token) {
         return res.redirect(
-          `${process.env.GOOGLE_CLIENT_REDIRECT_URL}/auth/login/?error=true`,
+          `${process.env.GOOGLE_CLIENT_REDIRECT_URL}/auth/login/?error=true&condition=1`,
         );
       }
 
