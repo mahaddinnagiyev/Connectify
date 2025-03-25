@@ -1,13 +1,15 @@
 import { useState, useRef, useEffect } from "react";
 import { IconButton, Slider, Box, styled, Typography } from "@mui/material";
-import PlayArrowIcon from "@mui/icons-material/PlayArrow";
-import PauseIcon from "@mui/icons-material/Pause";
-import VolumeUpIcon from "@mui/icons-material/VolumeUp";
-import VolumeOffIcon from "@mui/icons-material/VolumeOff";
-import PictureInPictureAltIcon from "@mui/icons-material/PictureInPictureAlt";
-import FullscreenExitIcon from "@mui/icons-material/FullscreenExit";
-import DownloadIcon from "@mui/icons-material/Download";
-import MoreVertIcon from "@mui/icons-material/MoreVert";
+import {
+  PlayArrow as PlayArrowIcon,
+  Pause as PauseIcon,
+  VolumeUp as VolumeUpIcon,
+  VolumeOff as VolumeOffIcon,
+  PictureInPictureAlt as PictureInPictureAltIcon,
+  FullscreenExit as FullscreenExitIcon,
+  Download as DownloadIcon,
+  MoreVert as MoreVertIcon,
+} from "@mui/icons-material";
 import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
 import { MessagesDTO } from "../../../../services/socket/dto/messages-dto";

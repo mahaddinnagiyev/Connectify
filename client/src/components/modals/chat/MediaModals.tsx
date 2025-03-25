@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
-import DownloadIcon from "@mui/icons-material/Download";
-import LinkIcon from "@mui/icons-material/Link";
-import LaunchIcon from "@mui/icons-material/Launch";
+import {
+  Download as DownloadIcon,
+  Link as LinkIcon,
+  Launch as LaunchIcon,
+} from "@mui/icons-material";
 import {
   MessagesDTO,
   MessageType,
@@ -202,7 +204,10 @@ const MediaModal = ({ messages, setIsMediaModalOpen }: MediaModalProps) => {
                   )}
                 </div>
                 {videos.length === 0 && (
-                  <div className="text-white text-center" style={{ marginTop: "0" }}>
+                  <div
+                    className="text-white text-center"
+                    style={{ marginTop: "0" }}
+                  >
                     There is no video in this chat
                   </div>
                 )}

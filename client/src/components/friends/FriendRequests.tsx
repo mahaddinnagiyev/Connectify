@@ -159,7 +159,7 @@ const FriendRequests: React.FC = () => {
   }, []);
 
   const handleFilterChange = (
-    event: React.MouseEvent<HTMLElement>,
+    _: React.MouseEvent<HTMLElement>,
     newFilter: "received" | "sent" | null
   ) => {
     if (newFilter !== null) {

@@ -1,9 +1,11 @@
 import React, { useEffect } from "react";
-import FileCopyIcon from "@mui/icons-material/FileCopy";
-import ImageIcon from "@mui/icons-material/Image";
-import SlowMotionVideoIcon from "@mui/icons-material/SlowMotionVideo";
-import CloudUploadIcon from "@mui/icons-material/CloudUpload";
-import CloseIcon from "@mui/icons-material/Close";
+import {
+  FileCopy as FileCopyIcon,
+  Image as ImageIcon,
+  SlowMotionVideo as SlowMotionVideoIcon,
+  CloudUpload as CloudUploadIcon,
+  Close as CloseIcon,
+} from "@mui/icons-material";
 import "./css/selected-modal.css";
 
 interface SelectedModalProps {

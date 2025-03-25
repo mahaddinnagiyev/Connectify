@@ -1,9 +1,11 @@
 import { useState } from "react";
 import { Modal, Box, IconButton, Button } from "@mui/material";
-import CloseIcon from "@mui/icons-material/Close";
-import DownloadIcon from "@mui/icons-material/Download";
-import TurnLeftIcon from "@mui/icons-material/TurnLeft";
-import ReplyIcon from "@mui/icons-material/Reply";
+import {
+  Close as CloseIcon,
+  Download as DownloadIcon,
+  TurnLeft as TurnLeftIcon,
+  Reply as ReplyIcon,
+} from "@mui/icons-material";
 import {
   MessagesDTO,
   MessageType,

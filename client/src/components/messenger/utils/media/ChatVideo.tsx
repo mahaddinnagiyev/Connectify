@@ -1,9 +1,11 @@
 import { useState } from "react";
 import { Modal, Box, Button } from "@mui/material";
-import PlayArrowIcon from "@mui/icons-material/PlayArrow";
-import DownloadIcon from "@mui/icons-material/Download";
-import TurnLeftIcon from "@mui/icons-material/TurnLeft";
-import ReplyIcon from "@mui/icons-material/Reply";
+import {
+  PlayArrow as PlayArrowIcon,
+  Download as DownloadIcon,
+  TurnLeft as TurnLeftIcon,
+  Reply as ReplyIcon,
+} from "@mui/icons-material";
 import VideoPlayer from "./VideoPlayer";
 import {
   MessagesDTO,

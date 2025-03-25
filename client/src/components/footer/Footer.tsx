@@ -2,9 +2,11 @@ import { useState } from "react";
 import FooterForm from "../forms/FooterForm";
 import "./style.css";
 
-import LinkedInIcon from "@mui/icons-material/LinkedIn";
-import GitHubIcon from "@mui/icons-material/GitHub";
-import EmailIcon from "@mui/icons-material/Email";
+import {
+  LinkedIn as LinkedInIcon,
+  GitHub as GitHubIcon,
+  Email as EmailIcon,
+} from "@mui/icons-material";
 import { Tooltip } from "@mui/material";
 import SuccessMessage from "../messages/SuccessMessage";
 

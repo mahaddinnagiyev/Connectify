@@ -14,9 +14,11 @@ import {
   useTheme,
   useMediaQuery,
 } from "@mui/material";
-import ChatIcon from "@mui/icons-material/Chat";
-import GppBadIcon from "@mui/icons-material/GppBad";
-import PersonRemoveIcon from "@mui/icons-material/PersonRemove";
+import {
+  Chat as ChatIcon,
+  GppBad as GppBadIcon,
+  PersonRemove as PersonRemoveIcon,
+} from "@mui/icons-material";
 import {
   getFriends,
   removeFriendship,

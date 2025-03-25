@@ -1,9 +1,11 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import "./css/chat-style.css";
 import { Box, Button } from "@mui/material";
-import TurnLeftIcon from "@mui/icons-material/TurnLeft";
-import ReplyIcon from "@mui/icons-material/Reply";
-import ContentCopyIcon from "@mui/icons-material/ContentCopy";
+import {
+  TurnLeft as TurnLeftIcon,
+  Reply as ReplyIcon,
+  ContentCopy as ContentCopyIcon,
+} from "@mui/icons-material";
 import {
   MessagesDTO,
   MessageType,

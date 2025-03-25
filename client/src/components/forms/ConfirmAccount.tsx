@@ -2,17 +2,14 @@ import React, { useState } from "react";
 import { confirm_account } from "../../services/auth/auth-service";
 import SuccessMessage from "../messages/SuccessMessage";
 import ErrorMessage from "../messages/ErrorMessage";
-// import { useNavigate } from "react-router-dom";
 
 const ConfirmAccount = () => {
   const [formData, setFormData] = useState({ code: 0 });
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
-  // const navigate = useNavigate();
-
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({ ...formData, [e.target.name]: Number(e.target.value) }); // Convert to number
+    setFormData({ ...formData, [e.target.name]: Number(e.target.value) });
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {

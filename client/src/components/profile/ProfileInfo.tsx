@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { Box, Typography, Avatar, Tooltip, Button } from "@mui/material";
-import PersonAddIcon from "@mui/icons-material/PersonAdd";
-import TimerIcon from "@mui/icons-material/Timer";
-import ChatIcon from "@mui/icons-material/Chat";
-import GppBadIcon from "@mui/icons-material/GppBad";
-import PersonRemoveIcon from "@mui/icons-material/PersonRemove";
+import {
+  PersonAdd as PersonAddIcon,
+  Timer as TimerIcon,
+  Chat as ChatIcon,
+  GppBad as GppBadIcon,
+  PersonRemove as PersonRemoveIcon,
+} from "@mui/icons-material";
 import ErrorMessage from "../messages/ErrorMessage";
 import SuccessMessage from "../messages/SuccessMessage";
 import ImageModal from "../modals/profile/ImageModal";

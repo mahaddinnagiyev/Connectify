@@ -13,11 +13,13 @@ import {
   useTheme,
   useMediaQuery,
 } from "@mui/material";
-import PersonAddIcon from "@mui/icons-material/PersonAdd";
-import TimerIcon from "@mui/icons-material/Timer";
-import CheckIcon from "@mui/icons-material/Check";
-import ChatIcon from "@mui/icons-material/Chat";
-import GppBadIcon from "@mui/icons-material/GppBad";
+import {
+  PersonAdd as PersonAddIcon,
+  Timer as TimerIcon,
+  Chat as ChatIcon,
+  GppBad as GppBadIcon,
+  Check as CheckIcon,
+} from "@mui/icons-material";
 import no_profile_photo from "../../assets/no-profile-photo.png";
 import { getAllUsers } from "../../services/user/user-service";
 import {

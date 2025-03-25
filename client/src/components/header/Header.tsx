@@ -6,21 +6,25 @@ import no_profile_photo from "../../assets/no-profile-photo.png";
 import "../../colors.css";
 import "./style.css";
 
-import ChatIcon from "@mui/icons-material/Chat";
-import GroupsIcon from "@mui/icons-material/Groups";
-import PeopleIcon from "@mui/icons-material/People";
-import SmartToyIcon from "@mui/icons-material/SmartToy";
-import LiveHelpIcon from "@mui/icons-material/LiveHelp";
-// import ForumIcon from '@mui/icons-material/Forum';
-import AccountBoxIcon from "@mui/icons-material/AccountBox";
-import LogoutIcon from "@mui/icons-material/Logout";
+import {
+  Chat as ChatIcon,
+  Groups as GroupsIcon,
+  People as PeopleIcon,
+  SmartToy as SmartToyIcon,
+  LiveHelp as LiveHelpIcon,
+  // Forum as ForumIcon,
+  ImportContacts as ImportContactsIcon,
+  AccountBox as AccountBoxIcon,
+  Logout as LogoutIcon,
+  Settings as SettingsIcon,
+} from "@mui/icons-material";
+
+import { Badge } from "@mui/material";
 import { logout } from "../../services/auth/auth-service";
 import ErrorMessage from "../messages/ErrorMessage";
 import CheckModal from "../modals/spinner/CheckModal";
-import SettingsIcon from "@mui/icons-material/Settings";
 import { getUserById } from "../../services/user/user-service";
 import { getFriendRequests } from "../../services/friendship/friendship-service";
-import { Badge } from "@mui/material";
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -155,6 +159,9 @@ const Header = () => {
               <a href="/settings">
                 <SettingsIcon /> Settings
               </a>
+              <a href="/contact">
+                <ImportContactsIcon /> Contact Us
+              </a>
               <a href="/faq">
                 <LiveHelpIcon /> FAQ
               </a>
@@ -185,6 +192,9 @@ const Header = () => {
             </a>
             <a href="/settings" className="rounded-lg">
               <SettingsIcon /> Settings
+            </a>
+            <a href="/contact" className="rounded-lg">
+              <ImportContactsIcon /> Contact Us
             </a>
             <a href="/faq" className="rounded-lg">
               <LiveHelpIcon /> FAQ

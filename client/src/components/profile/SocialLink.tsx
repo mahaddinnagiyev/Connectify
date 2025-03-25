@@ -8,10 +8,12 @@ import {
   DialogTitle,
   Button,
 } from "@mui/material";
-import InsertLinkIcon from "@mui/icons-material/InsertLink";
-import OpenInNewIcon from "@mui/icons-material/OpenInNew";
-import HighlightOffIcon from "@mui/icons-material/HighlightOff";
-import EditIcon from "@mui/icons-material/Edit";
+import {
+  InsertLink as InsertLinkIcon,
+  OpenInNew as OpenInNewIcon,
+  HighlightOff as HighlightOffIcon,
+  Edit as EditIcon,
+} from "@mui/icons-material";
 import SocialModal from "../modals/profile/SocialModal";
 import {
   add_social_link,
