@@ -371,8 +371,9 @@ export class UserService {
         .getClient()
         .from('friendships')
         .select('*')
-        .or(`requester_id = ${req_user.id} AND requestee_id = ${user.id}`)
-        .or(`requester_id = ${user.id} AND requestee_id = ${req_user.id}`)
+        .or(
+          `and(requester_id.eq.${req_user.id},requestee_id.eq.${user.id}), and(requester_id.eq.${user.id},requestee_id.eq.${req_user.id})`,
+        )
         .single()) as { data: IFriendship };
 
       if (isFriend) {
