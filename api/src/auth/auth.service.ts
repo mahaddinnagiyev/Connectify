@@ -616,7 +616,7 @@ export class AuthService {
     try {
       const { data: user } = (await this.supabase
         .getClient()
-        .from('*')
+        .from('users')
         .select('*')
         .eq('id', req_user.id)
         .single()) as { data: IUser };
