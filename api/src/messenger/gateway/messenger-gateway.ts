@@ -354,7 +354,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     try {
       const userId = client.data.user?.id;
       if (!userId) {
-        throw new UnauthorizedException('User not authenticated');
+        return new UnauthorizedException('User not authenticated');
       }
 
       const chatRooms = await this.messengerService.getChatRoomsForUser(userId);
