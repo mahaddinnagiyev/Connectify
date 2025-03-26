@@ -164,6 +164,7 @@ const Login = () => {
             <div className="login-form-group">
               <label htmlFor="username_or_email">Username or Email</label>
               <input
+                autoComplete="off"
                 type="text"
                 id="username_or_email"
                 name="username_or_email"

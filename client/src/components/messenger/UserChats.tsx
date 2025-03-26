@@ -175,7 +175,7 @@ const UserChats = ({ chats, truncateMessage }: UserChatsProps) => {
             ))}
           </>
         ) : (
-          <div className="flex flex-col gap-2 items-center">
+          <div className="flex flex-col gap-2 items-center h-full justify-center">
             <p className="text-gray-500">No chats found</p>
             <p className="text-gray-500 text-[10px]">
               If you can not see your chat's{" "}
@@ -185,6 +185,16 @@ const UserChats = ({ chats, truncateMessage }: UserChatsProps) => {
               >
                 click here
               </b>
+            </p>
+            <p className="text-gray-500 text-[10px]">
+              You do not have any friends.{" "}
+              <a
+                href="/friends"
+                className="underline font-extrabold hover:text-[var(--primary-color)] transition-colors duration-200 cursor-pointer"
+              >
+                Click here
+              </a>{" "}
+              and find new friends
             </p>
           </div>
         )}
