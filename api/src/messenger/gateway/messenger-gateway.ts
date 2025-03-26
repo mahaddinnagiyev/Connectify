@@ -6,6 +6,7 @@ import {
   WebSocketServer,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
+import * as dotenv from 'dotenv';
 import { MessageType } from 'src/enums/message-type.enum';
 import { MessengerService } from '../messenger.service';
 import { JwtService } from '@nestjs/jwt';
@@ -18,9 +19,11 @@ import { WebpushService } from 'src/webpush/webpush.service';
 import { LoggerService } from 'src/logger/logger.service';
 import { IAccount } from 'src/interfaces/account.interface';
 
-@WebSocketGateway(3636, {
+dotenv.config();
+
+@WebSocketGateway(Number(process.env.PORT) ?? 3535, {
   cors: {
-    origin: 'http://localhost:5173',
+    origin: process.env.CLIENT_URL || 'http://localhost:5173',
     allowedHeaders: ['Authorization'],
     credentials: true,
   },
@@ -378,7 +381,10 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   @SubscribeMessage('getMessages')
-  async handleGetMessages(client: Socket, payload: { roomId: string, limit?: number }) {
+  async handleGetMessages(
+    client: Socket,
+    payload: { roomId: string; limit?: number },
+  ) {
     try {
       if (!payload || !payload.roomId) {
         throw new BadRequestException('Missing roomId in payload');
