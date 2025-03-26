@@ -31,6 +31,7 @@ const Messenger = () => {
   const currentRoomId = searchParams.get("room");
   const lastJoinedRoomRef = useRef<string | null>(null);
   const socketRef = useRef(socket);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
 
   const screenWidth = window.innerWidth;
 
@@ -104,6 +105,7 @@ const Messenger = () => {
         currentChat?.otherUser?.id &&
         lastJoinedRoomRef.current !== currentRoomId
       ) {
+        scrollToBottom();
         socket?.emit("joinRoom", { user2Id: currentChat.otherUser.id });
         socket?.emit("setMessageRead", { roomId: currentRoomId });
         lastJoinedRoomRef.current = currentRoomId;
@@ -204,7 +206,7 @@ const Messenger = () => {
   useEffect(() => {
     setMessages([]);
     if (!currentRoomId) return;
-    socket?.emit("getMessages", { roomId: currentRoomId });
+    socket?.emit("getMessages", { roomId: currentRoomId, limit: 30 });
     socket?.on("messages", (data) => {
       if (data.messages[0]?.room_id === currentRoomId) {
         setMessages(data.messages);
@@ -271,6 +273,13 @@ const Messenger = () => {
     return message.length > maxLength
       ? message.substring(0, maxLength) + "..."
       : message;
+  };
+
+  const scrollToBottom = () => {
+    if (messagesContainerRef.current) {
+      messagesContainerRef.current.scrollTop =
+        messagesContainerRef.current.scrollHeight;
+    }
   };
 
   return (
@@ -350,6 +359,8 @@ const Messenger = () => {
                 otherUserAccount={currentChat.otherUserAccount}
                 otherUserPrivacySettings={currentChat.otherUserPrivacySettings}
                 messages={messages}
+                messagesContainerRef={messagesContainerRef}
+                scrollToBottom={scrollToBottom}
                 truncateMessage={truncateMessage}
               />
             ) : (

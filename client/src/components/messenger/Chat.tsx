@@ -5,6 +5,7 @@ import {
   TurnLeft as TurnLeftIcon,
   Reply as ReplyIcon,
   ContentCopy as ContentCopyIcon,
+  KeyboardDoubleArrowDown as KeyboardDoubleArrowDownIcon,
 } from "@mui/icons-material";
 import {
   MessagesDTO,
@@ -35,6 +36,8 @@ interface ChatProps {
   otherUserAccount?: Account;
   otherUserPrivacySettings?: PrivacySettingsDTO;
   messages: MessagesDTO[];
+  messagesContainerRef: React.RefObject<HTMLDivElement>;
+  scrollToBottom: () => void;
   truncateMessage: (message: string, maxLength: number) => string;
 }
 
@@ -45,6 +48,8 @@ const Chat = ({
   otherUserAccount,
   otherUserPrivacySettings,
   messages,
+  messagesContainerRef,
+  scrollToBottom,
   truncateMessage,
 }: ChatProps) => {
   const [contextMenu, setContextMenu] = useState<{
@@ -55,17 +60,35 @@ const Chat = ({
   const [allMessages, setAllMessages] = useState<MessagesDTO[]>(messages);
   const [replyMessage, setReplyMessage] = useState<MessagesDTO | null>(null);
 
+  const [hasMoreMessages, setHasMoreMessages] = useState(true);
+  const [newLimit, setNewLimit] = useState(30);
+  const [isLoading, setIsLoading] = useState(false);
+  const prevScrollHeight = useRef<number>(0);
+
   const [errorMessage, setErrorMessage] = useState<string | null>("");
   const [successMessage, setSuccessMessage] = useState<string | null>("");
 
   const [isBlocked, setIsBlocked] = useState(false);
   const [isBlocker, setIsBlocker] = useState(false);
 
-  const messagesContainerRef = useRef<HTMLDivElement>(null);
+  const [initialLoad, setInitialLoad] = useState(true);
+
+  useEffect(() => {
+    const scrollToBottom = document.getElementById("scrollToBottom");
+    scrollToBottom?.click();
+  }, []);
 
   useEffect(() => {
     setAllMessages(messages);
   }, [messages]);
+
+  useEffect(() => {
+    if (messages.length < newLimit) {
+      setHasMoreMessages(false);
+      return;
+    }
+    setHasMoreMessages(messages.length >= newLimit);
+  }, [messages, newLimit]);
 
   useEffect(() => {
     get_block_list().then((response) => {
@@ -95,6 +118,55 @@ const Chat = ({
       socket?.off("messageUnsent", handleMessageUnsent);
     };
   }, []);
+
+  useEffect(() => {
+    if (messagesContainerRef.current && prevScrollHeight.current > 0) {
+      const newScrollHeight = messagesContainerRef.current.scrollHeight;
+      messagesContainerRef.current.scrollTop =
+        newScrollHeight - prevScrollHeight.current;
+      prevScrollHeight.current = 0;
+    }
+    setIsLoading(false);
+  }, [allMessages, messagesContainerRef]);
+
+  const loadMoreMessages = useCallback(
+    (newLimit: number) => {
+      if (!isLoading && hasMoreMessages) {
+        setIsLoading(true);
+        prevScrollHeight.current =
+          messagesContainerRef.current?.scrollHeight || 0;
+        socket?.emit("getMessages", { roomId, limit: newLimit });
+      }
+    },
+    [isLoading, hasMoreMessages, roomId, messagesContainerRef]
+  );
+
+  const handleScroll = useCallback(() => {
+    const container = messagesContainerRef.current;
+    if (!container) return;
+
+    const { scrollTop } = container;
+
+    if (scrollTop < 100 && !isLoading && hasMoreMessages) {
+      const nextLimit = newLimit + 30;
+      setNewLimit(nextLimit);
+      loadMoreMessages(nextLimit);
+    }
+  }, [
+    isLoading,
+    hasMoreMessages,
+    newLimit,
+    loadMoreMessages,
+    messagesContainerRef,
+  ]);
+
+  useEffect(() => {
+    const container = messagesContainerRef.current;
+    if (!container) return;
+
+    container.addEventListener("scroll", handleScroll);
+    return () => container.removeEventListener("scroll", handleScroll);
+  }, [handleScroll, messagesContainerRef]);
 
   const handleReplyMessage = useCallback((message: MessagesDTO | null) => {
     setReplyMessage(message);
@@ -149,18 +221,26 @@ const Chat = ({
   }, []);
 
   useEffect(() => {
-    if (messagesContainerRef.current) {
-      messagesContainerRef.current.scrollTop =
-        messagesContainerRef.current.scrollHeight;
-    }
-  }, [allMessages]);
+    const container = messagesContainerRef.current;
+    if (!container) return;
 
-  const scrollToBottom = () => {
-    if (messagesContainerRef.current) {
-      messagesContainerRef.current.scrollTop =
-        messagesContainerRef.current.scrollHeight;
+    if (prevScrollHeight.current > 0) {
+      const newScrollHeight = container.scrollHeight;
+      container.scrollTop = newScrollHeight - prevScrollHeight.current;
+      prevScrollHeight.current = 0;
+    } else {
+      if (initialLoad && allMessages.length > 0) {
+        container.scrollTop = container.scrollHeight;
+        setInitialLoad(false);
+      } else {
+        const distanceFromBottom =
+          container.scrollHeight - container.scrollTop - container.clientHeight;
+        if (distanceFromBottom < 100) {
+          container.scrollTop = container.scrollHeight;
+        }
+      }
     }
-  };
+  }, [allMessages, initialLoad, messagesContainerRef]);
 
   const groupedMessages = useMemo(() => {
     const grouped: { [key: string]: MessagesDTO[] } = {};
@@ -212,6 +292,14 @@ const Chat = ({
         />
       )}
 
+      <div
+        id="scrollToBottom"
+        className="absolute bottom-24 right-28 border-2 border-[var(--secondary-color)] bg-[var(--secondary-color)] z-[5000] rounded-full px-1.5 py-1 cursor-pointer"
+        onClick={scrollToBottom}
+      >
+        <KeyboardDoubleArrowDownIcon style={{ color: "black" }} />
+      </div>
+
       {/* Header */}
       <div className="right-header pb-2 pr-4 flex items-center justify-between max-h-[57px]">
         <ChatHeader
@@ -227,6 +315,11 @@ const Chat = ({
       {/* Messages Section */}
       <section className="chat">
         <div className="messages-container" ref={messagesContainerRef}>
+          {isLoading && (
+            <div className="loading-indicator">
+              <div className="loading-spinner"></div>
+            </div>
+          )}
           {Object.entries(groupedMessages).map(([date, messages]) => (
             <React.Fragment key={date}>
               <div className="message-date w-full text-center text-sm border-y-2 border-[var(--primary-color)] my-2 py-2">
@@ -331,14 +424,14 @@ const Chat = ({
                         currentUser={currentUser}
                         handleReplyMessage={handleReplyMessage}
                         handleUnsendMessage={handleUnsendMessage}
-                        onLoadedData={scrollToBottom}
+                        // onLoadedData={scrollToBottom}
                       />
                     )}
                     {message.message_type === MessageType.VIDEO && (
                       <ChatVideo
                         message={message}
                         currentUser={currentUser}
-                        onLoadedData={scrollToBottom}
+                        // onLoadedData={scrollToBottom}
                         handleReplyMessage={handleReplyMessage}
                         handleUnsendMessage={handleUnsendMessage}
                       />
@@ -349,7 +442,7 @@ const Chat = ({
                         currentUser={currentUser}
                         handleReplyMessage={handleReplyMessage}
                         handleUnsendMessage={handleUnsendMessage}
-                        onLoadedData={scrollToBottom}
+                        // onLoadedData={scrollToBottom}
                       />
                     )}
 
@@ -357,7 +450,7 @@ const Chat = ({
                       <div className="audio-player-container">
                         <AudioPlayer
                           src={message.content}
-                          onLoadedData={scrollToBottom}
+                          // onLoadedData={scrollToBottom}
                         />
                       </div>
                     )}
