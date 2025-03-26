@@ -378,7 +378,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   @SubscribeMessage('getMessages')
-  async handleGetMessages(client: Socket, payload: { roomId: string }) {
+  async handleGetMessages(client: Socket, payload: { roomId: string, limit?: number }) {
     try {
       if (!payload || !payload.roomId) {
         throw new BadRequestException('Missing roomId in payload');
@@ -386,6 +386,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
       const messages = await this.messengerService.getMessagesForRoom(
         payload.roomId,
+        payload.limit || 30,
       );
 
       client.emit('messages', { roomId: payload.roomId, messages });

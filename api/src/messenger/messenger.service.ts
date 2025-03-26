@@ -284,17 +284,18 @@ export class MessengerService {
     }
   }
 
-  async getMessagesForRoom(roomId: string) {
+  async getMessagesForRoom(roomId: string, limit: number = 30) {
     try {
       const { data } = await this.supabase
         .getClient()
         .from('messages')
         .select('*, parent_message_id!left(*)')
         .eq('room_id', roomId)
-        .order('created_at', { ascending: true });
+        .order('created_at', { ascending: false })
+        .limit(limit);
 
       this.logger.debug(`Retrieved messages for room ${roomId}`, 'messenger');
-      return data;
+      return data.reverse();
     } catch (error) {
       this.logger.error(
         error.message,
