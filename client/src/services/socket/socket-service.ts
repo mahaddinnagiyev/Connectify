@@ -8,7 +8,8 @@ export async function createSocket() {
 
   if (!token) return (window.location.href = "/auth/login");
 
-  socket = io("ws://localhost:3636", {
+  socket = io(`${process.env.VITE_SERVER_WEBSOCKET_URL}`, {
+    transports: ["websocket"],
     auth: { token },
   });
 }
