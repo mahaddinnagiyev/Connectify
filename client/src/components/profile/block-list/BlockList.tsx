@@ -231,7 +231,7 @@ const BlockList = () => {
                         openConfirmModal(
                           "Confirm Unblock",
                           `Are you sure you want to unblock ${blockedUser.username}?`,
-                          () => unblock_user(blockedUser.id)
+                          () => unblock_user(blockedUser.blocked_id)
                         )
                       }
                     >
