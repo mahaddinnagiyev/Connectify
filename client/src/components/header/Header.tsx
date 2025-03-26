@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from "react";
 
-import logo from "../../assets/app-logo.png";
 import no_profile_photo from "../../assets/no-profile-photo.png";
 
 import "../../colors.css";
@@ -19,7 +18,7 @@ import {
   Settings as SettingsIcon,
 } from "@mui/icons-material";
 
-import { Badge } from "@mui/material";
+import { Badge, Tooltip } from "@mui/material";
 import { logout } from "../../services/auth/auth-service";
 import ErrorMessage from "../messages/ErrorMessage";
 import CheckModal from "../modals/spinner/CheckModal";
@@ -33,6 +32,9 @@ const Header = () => {
   const [profilePicture, setProfilePicture] = useState<string | null>(null);
   const [receivedRequestsCount, setReceivedRequestsCount] = useState(0);
   const menuRef = useRef<HTMLDivElement | null>(null);
+
+  const logo =
+    "https://rjxpdgpxdhwulirasumb.supabase.co/storage/v1/object/public/site-configurations/images/app-logo.webp";
 
   const toggleMenu = (event: React.MouseEvent<HTMLDivElement>) => {
     event.stopPropagation();
@@ -119,9 +121,14 @@ const Header = () => {
           <a href="/messenger">
             <ChatIcon className="mt-1" /> Messenger
           </a>
-          <a href="/groups">
-            <GroupsIcon /> Groups
-          </a>
+          <Tooltip
+            title="Project in development phase. Groups will be available soon"
+            placement="top"
+          >
+            <a href="#">
+              <GroupsIcon /> Groups
+            </a>
+          </Tooltip>
           {/* <a href="/channels">
           <ForumIcon /> Channels
         </a> */}
@@ -140,9 +147,14 @@ const Header = () => {
               <PeopleIcon /> Friends
             </Badge>
           </a>
-          <a href="/bot">
-            <SmartToyIcon /> Bots
-          </a>
+          <Tooltip
+            title="Project in development phase. Bots will be available soon"
+            placement="top"
+          >
+            <a href="#">
+              <SmartToyIcon /> Bots
+            </a>
+          </Tooltip>
 
           {/* Show profile actions inside the burger menu when open */}
           {isMenuOpen && (
