@@ -175,7 +175,18 @@ const UserChats = ({ chats, truncateMessage }: UserChatsProps) => {
             ))}
           </>
         ) : (
-          <p className="text-center text-gray-500">No chats found</p>
+          <div className="flex flex-col gap-2 items-center">
+            <p className="text-gray-500">No chats found</p>
+            <p className="text-gray-500 text-[10px]">
+              If you can not see your chat's{" "}
+              <b
+                className="underline hover:text-[var(--primary-color)] transition-colors duration-200 cursor-pointer"
+                onClick={() => window.location.reload()}
+              >
+                click here
+              </b>
+            </p>
+          </div>
         )}
       </div>
 
