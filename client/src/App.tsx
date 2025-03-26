@@ -17,6 +17,7 @@ import FAQPage from "./pages/faq/FAQPage";
 import TermsAndConditionPage from "./pages/terms/TermsAndConditionPage";
 import PrivacyPolicyPage from "./pages/privacy/PrivacyPolicyPage";
 import ContactUsPage from "./pages/contact/ContactUsPage";
+import NotFound from "./pages/error/404";
 
 function App() {
   useEffect(() => {
@@ -87,6 +88,9 @@ function App() {
         <Route path="/auth/delete-account" element={<DeleteAccount />} />
         <Route path="/auth/reset-password" element={<ResetPassword />} />
         <Route path="/auth/forgot-password" element={<ForgotPassword />} />
+
+        {/* Not Found */}
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </BrowserRouter>
   );
