@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import "./css/forgot-password.css";
+import { Helmet } from "react-helmet-async";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
 import {
@@ -94,6 +95,9 @@ const ResetPassword = () => {
       )}
       {isLoading && <CheckModal message={"Processing..."} />}
 
+      <Helmet>
+        <title>Connectify | Reset Password</title>
+      </Helmet>
       <main id="auth-main">
         <section id="forgot-password">
           <div className="forgot-password-container">

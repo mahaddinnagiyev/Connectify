@@ -1,5 +1,6 @@
-import FooterForm from "../../components/forms/FooterForm";
 import "./css/style.css";
+import { Helmet } from "react-helmet-async";
+import FooterForm from "../../components/forms/FooterForm";
 import LinkedInIcon from "@mui/icons-material/LinkedIn";
 import GitHubIcon from "@mui/icons-material/GitHub";
 import EmailIcon from "@mui/icons-material/Email";
@@ -8,6 +9,9 @@ import { Tooltip } from "@mui/material";
 const ContactUsPage = () => {
   return (
     <div className="contact-container">
+      <Helmet>
+        <title>Connectify | Contact</title>
+      </Helmet>
       <section className="contact-header">
         <h1>Contact Us</h1>
         <p>

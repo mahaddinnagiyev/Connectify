@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { Helmet } from "react-helmet-async";
 import {
   Button,
   ToggleButtonGroup,
@@ -90,6 +91,10 @@ const FriendPage: React.FC = () => {
           onClose={() => setSuccessMessage(null)}
         />
       )}
+
+      <Helmet>
+        <title>Connectify | Friends</title>
+      </Helmet>
 
       <Header />
 

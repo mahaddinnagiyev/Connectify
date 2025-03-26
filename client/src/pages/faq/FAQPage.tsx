@@ -1,5 +1,6 @@
 import { useState } from "react";
 import "./css/style.css";
+import { Helmet } from "react-helmet-async";
 import { CSSTransition } from "react-transition-group";
 import Header from "../../components/header/Header";
 
@@ -76,6 +77,9 @@ const FAQPage = () => {
 
   return (
     <div className="min-h-screen bg-gray-100">
+      <Helmet>
+        <title>Connectify | FAQ</title>
+      </Helmet>
       <Header />
 
       <div className="max-w-3xl mx-auto px-4 py-8 w-full flex-1 overflow-y-auto pt-[250px]">

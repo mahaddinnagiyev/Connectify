@@ -1,5 +1,6 @@
 import * as React from "react";
-import "./style.css"
+import { Helmet } from "react-helmet-async";
+import "./style.css";
 import Header from "../../components/header/Header";
 import Tabs from "@mui/material/Tabs";
 import Tab from "@mui/material/Tab";
@@ -141,6 +142,10 @@ const SettingsPage = () => {
           onClose={() => setSuccessMessage(null)}
         />
       )}
+
+      <Helmet>
+        <title>Connectify | Settings</title>
+      </Helmet>
 
       <Header />
       <div id="profile-container">

@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
+import { Helmet } from "react-helmet-async";
+import { useLocation } from "react-router-dom";
 import Footer from "../../components/footer/Footer";
 import Header from "../../components/header/Header";
 import Messenger from "../../components/messenger/Messenger";
 import MainSpinner from "../../components/modals/spinner/MainSpinner";
 import SuccessMessage from "../../components/messages/SuccessMessage";
 import InfoMessage from "../../components/messages/InfoMessage";
-import { useLocation } from "react-router-dom";
 
 const ChatPage = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -68,6 +69,10 @@ const ChatPage = () => {
           onClose={() => setInfoMessage(null)}
         />
       )}
+
+      <Helmet>
+        <title>Connectify | Messenger</title>
+      </Helmet>
 
       {isLoading ? (
         <MainSpinner />

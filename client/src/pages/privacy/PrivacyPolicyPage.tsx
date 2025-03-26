@@ -1,6 +1,12 @@
+import { Helmet } from "react-helmet-async";
+
 const PrivacyPolicyPage = () => {
   return (
     <div className="min-h-screen bg-gray-100 flex items-center justify-center p-6">
+      <Helmet>
+        <title>Connectify | Privacy Policy</title>
+      </Helmet>
+
       <div className="max-w-4xl bg-white p-8 rounded-2xl shadow-lg text-gray-800 w-full">
         <h1 className="text-4xl font-bold text-center mb-6 text-green-500">
           Privacy Policy

@@ -1,6 +1,12 @@
+import { Helmet } from "react-helmet-async";
+
 const TermAndConditionPage = () => {
   return (
     <div className="min-h-screen bg-gradient-to-r from-purple-600 via-blue-500 to-green-500 flex items-center justify-center px-4 py-8">
+      <Helmet>
+        <title>Connectify | Terms And Conditions</title>
+      </Helmet>
+
       <div
         className="bg-white shadow-2xl rounded-2xl max-w-4xl w-full p-10 overflow-y-auto"
         style={{ maxHeight: "90vh" }}

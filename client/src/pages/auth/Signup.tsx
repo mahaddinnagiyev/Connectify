@@ -1,5 +1,6 @@
 import { useState } from "react";
 import "./css/signup.css";
+import { Helmet } from "react-helmet-async";
 import ConfirmAccount from "../../components/forms/ConfirmAccount";
 import { signup } from "../../services/auth/auth-service";
 import { Gender, SignupDTO } from "../../services/auth/dto/singup-dto";
@@ -83,6 +84,9 @@ const Signup = () => {
 
   return (
     <main id="auth-main">
+      <Helmet>
+        <title>Connectify | Signup</title>
+      </Helmet>
       <section id="signup">
         <div className="logo">
           <h1>

@@ -1,5 +1,6 @@
 import "./css/forgot-password.css";
 import { Link, useNavigate } from "react-router-dom";
+import { Helmet } from "react-helmet-async";
 import { useState } from "react";
 import ErrorMessage from "../../components/messages/ErrorMessage";
 import SuccessMessage from "../../components/messages/SuccessMessage";
@@ -58,7 +59,9 @@ const ForgotPassword = () => {
         />
       )}
       {isLoading && <CheckModal message={"Processing..."} />}
-
+      <Helmet>
+        <title>Connectify | Forgot Password</title>
+      </Helmet>
       <main id="auth-main">
         <section id="forgot-password">
           <div className="forgot-password-container">

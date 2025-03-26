@@ -2,6 +2,7 @@ import "./css/login.css";
 import google_logo from "../../assets/google.png";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
 
+import { Helmet } from "react-helmet-async";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { login } from "../../services/auth/auth-service";
@@ -121,6 +122,10 @@ const Login = () => {
       )}
 
       {isLoading && <CheckModal message={"Checking..."} />}
+
+      <Helmet>
+        <title>Connectify | Login</title>
+      </Helmet>
 
       <main id="auth-main">
         <section id="login">

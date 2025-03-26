@@ -1,5 +1,6 @@
 import "./App.css";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
+import { HelmetProvider } from "react-helmet-async";
 
 import ChatPage from "./pages/chat/ChatPage";
 import Login from "./pages/auth/Login";
@@ -28,70 +29,72 @@ function App() {
 
   return (
     <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<Navigate to="/messenger" />} />
-        <Route
-          path="/messenger"
-          element={
-            <RouteControl>
-              <ChatPage />
-            </RouteControl>
-          }
-        />
-        <Route
-          path="user/my-profile"
-          element={
-            <RouteControl>
-              <ProfilePage />
-            </RouteControl>
-          }
-        />
-        <Route
-          path="user/:username"
-          element={
-            <RouteControl>
-              <UserProfilePage />
-            </RouteControl>
-          }
-        />
-        <Route
-          path="/friends"
-          element={
-            <RouteControl>
-              <FriendPage />
-            </RouteControl>
-          }
-        />
-        <Route
-          path="/settings"
-          element={
-            <RouteControl>
-              <SettingsPage />
-            </RouteControl>
-          }
-        />
-        <Route
-          path="/faq"
-          element={
-            <RouteControl>
-              <FAQPage />
-            </RouteControl>
-          }
-        />
-        <Route path="/contact" element={<ContactUsPage />} />
-        <Route path="/terms" element={<TermsAndConditionPage />} />
-        <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
+      <HelmetProvider>
+        <Routes>
+          <Route path="/" element={<Navigate to="/messenger" />} />
+          <Route
+            path="/messenger"
+            element={
+              <RouteControl>
+                <ChatPage />
+              </RouteControl>
+            }
+          />
+          <Route
+            path="user/my-profile"
+            element={
+              <RouteControl>
+                <ProfilePage />
+              </RouteControl>
+            }
+          />
+          <Route
+            path="user/:username"
+            element={
+              <RouteControl>
+                <UserProfilePage />
+              </RouteControl>
+            }
+          />
+          <Route
+            path="/friends"
+            element={
+              <RouteControl>
+                <FriendPage />
+              </RouteControl>
+            }
+          />
+          <Route
+            path="/settings"
+            element={
+              <RouteControl>
+                <SettingsPage />
+              </RouteControl>
+            }
+          />
+          <Route
+            path="/faq"
+            element={
+              <RouteControl>
+                <FAQPage />
+              </RouteControl>
+            }
+          />
+          <Route path="/contact" element={<ContactUsPage />} />
+          <Route path="/terms" element={<TermsAndConditionPage />} />
+          <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
 
-        {/* Auth Routes */}
-        <Route path="/auth/login" element={<Login />} />
-        <Route path="/auth/signup" element={<Signup />} />
-        <Route path="/auth/delete-account" element={<DeleteAccount />} />
-        <Route path="/auth/reset-password" element={<ResetPassword />} />
-        <Route path="/auth/forgot-password" element={<ForgotPassword />} />
+          {/* Auth Routes */}
+          <Route path="/auth/login" element={<Login />} />
+          <Route path="/auth/signup" element={<Signup />} />
+          <Route path="/auth/delete-account" element={<DeleteAccount />} />
+          <Route path="/auth/reset-password" element={<ResetPassword />} />
+          <Route path="/auth/forgot-password" element={<ForgotPassword />} />
 
-        {/* Not Found */}
-        <Route path="*" element={<NotFound />} />
-      </Routes>
+          {/* Not Found */}
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </HelmetProvider>
     </BrowserRouter>
   );
 }
