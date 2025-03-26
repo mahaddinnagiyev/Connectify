@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Navigate } from "react-router-dom";
+import { Navigate, useLocation } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
 import { getToken } from "./services/auth/token-service";
 import CheckModal from "./components/modals/spinner/CheckModal";
@@ -7,6 +7,8 @@ import CheckModal from "./components/modals/spinner/CheckModal";
 export const RouteControl = ({ children }: { children: React.ReactNode }) => {
   const [token, setToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+
+  const location = useLocation();
 
   useEffect(() => {
     const fetchToken = async () => {
@@ -32,7 +34,7 @@ export const RouteControl = ({ children }: { children: React.ReactNode }) => {
   if (loading) return <CheckModal />;
 
   if (!token) {
-    return <Navigate to="/auth/login" />;
+    return <Navigate to="/auth/login" state={{ from: location }} replace />;
   }
 
   try {
@@ -48,11 +50,13 @@ export const RouteControl = ({ children }: { children: React.ReactNode }) => {
     }
 
     if (decodedToken.exp * 1000 < Date.now()) {
-      return <Navigate to="/auth/login" />;
+      return <Navigate to="/auth/login" state={{ from: location }} replace />;
     }
 
     return children;
   } catch (error) {
-    return <Navigate to="/auth/login" />;
+    if (error) {
+      return <Navigate to="/auth/login" />;
+    }
   }
 };

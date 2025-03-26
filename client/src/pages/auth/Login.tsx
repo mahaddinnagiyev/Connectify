@@ -2,7 +2,7 @@ import "./css/login.css";
 import google_logo from "../../assets/google.png";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
 
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { login } from "../../services/auth/auth-service";
 import ErrorMessage from "../../components/messages/ErrorMessage";
@@ -10,6 +10,18 @@ import SuccessMessage from "../../components/messages/SuccessMessage";
 import CheckModal from "../../components/modals/spinner/CheckModal";
 
 const Login = () => {
+  const [formData, setFormdata] = useState({
+    username_or_email: "",
+    password: "",
+  });
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+
+  const navigate = useNavigate();
+  const location = useLocation();
+
   const getUrl = (params: string) => {
     const url = window.location.href;
 
@@ -19,8 +31,6 @@ const Login = () => {
 
     return false;
   };
-
-  const navigate = useNavigate();
 
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -43,15 +53,6 @@ const Login = () => {
     window.location.replace(`${process.env.GOOGLE_CLIENT_REDIRECT_URL}`);
   };
 
-  const [formData, setFormdata] = useState({
-    username_or_email: "",
-    password: "",
-  });
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
-
   const togglePasswordVisibility = () => {
     setShowPassword((prev) => !prev);
   };
@@ -59,6 +60,8 @@ const Login = () => {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormdata({ ...formData, [e.target.name]: e.target.value });
   };
+
+  const from = location.state?.from?.pathname || "/messenger";
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -70,7 +73,7 @@ const Login = () => {
       if (response.success) {
         setSuccessMessage("Login successfull!");
         setTimeout(() => {
-          window.location.href = "/messenger";
+          navigate(from, { replace: true });
         }, 1500);
       } else {
         setIsLoading(false);
