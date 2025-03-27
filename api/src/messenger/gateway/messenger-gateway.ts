@@ -21,7 +21,7 @@ import { IAccount } from 'src/interfaces/account.interface';
 
 dotenv.config();
 
-@WebSocketGateway(Number(process.env.PORT) ?? 3535, {
+@WebSocketGateway(Number(process.env.PORT) ?? 3636, {
   cors: {
     origin: process.env.CLIENT_URL || 'http://localhost:5173',
     allowedHeaders: ['Authorization'],

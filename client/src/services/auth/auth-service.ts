@@ -3,7 +3,7 @@ import { LoginDTO } from "./dto/login-dto";
 import { SignupDTO } from "./dto/singup-dto";
 import { getToken } from "./token-service";
 
-const SERVER_USER_URL = process.env.SERVER_USER_URL || "http://localhost:3535";
+const SERVER_USER_URL = process.env.SERVER_USER_URL || "http://localhost:3636";
 
 // Signup
 export const signup = async (

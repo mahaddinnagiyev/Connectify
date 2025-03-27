@@ -3,7 +3,7 @@ import { Account } from "../account/dto/account-dto";
 import { EditUser, User, Users } from "./dto/user-dto";
 import { PrivacySettingsDTO } from "../account/dto/privacy-settings-dto";
 
-const SERVER_USER_URL = process.env.SERVER_USER_URL || "http://localhost:3535";
+const SERVER_USER_URL = process.env.SERVER_USER_URL || "http://localhost:3636";
 
 // Get All Users
 export const getAllUsers = async (): Promise<{
