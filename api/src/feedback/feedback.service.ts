@@ -1,7 +1,7 @@
 import { MailerService } from '@nestjs-modules/mailer';
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
-import { LoggerService } from 'src/logger/logger.service';
-import { SupabaseService } from 'src/supabase/supabase.service';
+import { LoggerService } from '../logger/logger.service';
+import { SupabaseService } from '../supabase/supabase.service';
 import { CreateFeedbackDTO } from './dto/create-feedback-dto';
 import { newFeedbackMessage } from './utils/messages/new-feedback-message';
 
