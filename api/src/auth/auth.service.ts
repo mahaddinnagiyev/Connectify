@@ -20,9 +20,9 @@ import { generate_confirm_code } from './utils/generate-codes';
 import { ConfirmAccountDTO } from './dto/confirm-account-dto';
 import { LoginDTO } from './dto/login-dto';
 import { JwtPayload } from '../jwt/jwt-payload';
-import { LoggerService } from 'src/logger/logger.service';
-import { Gender } from 'src/enums/gender.enum';
-import { Provider } from 'src/enums/provider.enum';
+import { LoggerService } from '../logger/logger.service';
+import { Gender } from '../enums/gender.enum';
+import { Provider } from '../enums/provider.enum';
 import {
   ForgotPasswordDTO,
   SetNewPasswordDTO,
@@ -33,10 +33,10 @@ import {
   googleSignInMessage,
 } from './utils/messages/forgot-password-message';
 import { deleteAccountMessage } from './utils/messages/delete-account-message';
-import { SupabaseService } from 'src/supabase/supabase.service';
-import { IUser } from 'src/interfaces/user.interface';
-import { IAccount } from 'src/interfaces/account.interface';
-import { ITokenBlackList } from 'src/interfaces/token-black-list.interface';
+import { SupabaseService } from '../supabase/supabase.service';
+import { IUser } from '../interfaces/user.interface';
+import { IAccount } from '../interfaces/account.interface';
+import { ITokenBlackList } from '../interfaces/token-black-list.interface';
 import * as geoip from 'geoip-lite';
 import * as countries from 'i18n-iso-countries';
 

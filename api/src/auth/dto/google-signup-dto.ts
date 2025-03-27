@@ -1,5 +1,5 @@
 import { IsEnum, IsNotEmpty, IsString, MaxLength, MinLength } from "class-validator";
-import { Gender } from "src/enums/gender.enum";
+import { Gender } from "../../enums/gender.enum";
 
 export class GoogleSignupDTO {
     
