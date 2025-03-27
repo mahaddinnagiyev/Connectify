@@ -1,8 +1,8 @@
 import { ExecutionContext, Injectable } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { UnauthorizedException } from '@nestjs/common';
-import { SupabaseService } from 'src/supabase/supabase.service';
-import { ITokenBlackList } from 'src/interfaces/token-black-list.interface';
+import { SupabaseService } from '../supabase/supabase.service';
+import { ITokenBlackList } from '../interfaces/token-black-list.interface';
 
 @Injectable()
 export class JwtAuthGuard extends AuthGuard('jwt') {

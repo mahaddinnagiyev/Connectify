@@ -5,14 +5,14 @@ import {
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
-import { LoggerService } from 'src/logger/logger.service';
+import { LoggerService } from '../logger/logger.service';
 import { EditUserInfoDTO } from './dto/user-info-dto';
-import { SupabaseService } from 'src/supabase/supabase.service';
-import { IUser } from 'src/interfaces/user.interface';
-import { IAccount } from 'src/interfaces/account.interface';
-import { IPrivacySettings } from 'src/interfaces/privacy-settings.interface';
-import { IBlockList } from 'src/interfaces/blocklist.interface';
-import { IFriendship } from 'src/interfaces/friendship.interface';
+import { SupabaseService } from '../supabase/supabase.service';
+import { IUser } from '../interfaces/user.interface';
+import { IAccount } from '../interfaces/account.interface';
+import { IPrivacySettings } from '../interfaces/privacy-settings.interface';
+import { IBlockList } from '../interfaces/blocklist.interface';
+import { IFriendship } from '../interfaces/friendship.interface';
 
 @Injectable()
 export class UserService {

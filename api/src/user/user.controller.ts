@@ -9,11 +9,11 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { UserService } from './user.service';
-import { JwtAuthGuard } from 'src/jwt/jwt-auth-guard';
+import { JwtAuthGuard } from '../jwt/jwt-auth-guard';
 import { Throttle } from '@nestjs/throttler';
 import { Request } from 'express';
 import { EditUserInfoDTO } from './dto/user-info-dto';
-import { IUser } from 'src/interfaces/user.interface';
+import { IUser } from '../interfaces/user.interface';
 
 @Controller('user')
 export class UserController {

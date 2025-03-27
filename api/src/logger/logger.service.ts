@@ -1,8 +1,8 @@
 import { MailerService } from '@nestjs-modules/mailer';
 import { Injectable } from '@nestjs/common';
-import { errorMessage } from 'src/auth/utils/messages/error/error-message';
-import { LogLevels } from 'src/enums/log-levels.enum';
-import { SupabaseService } from 'src/supabase/supabase.service';
+import { errorMessage } from '../auth/utils/messages/error/error-message';
+import { LogLevels } from '../enums/log-levels.enum';
+import { SupabaseService } from '../supabase/supabase.service';
 
 @Injectable()
 export class LoggerService {
