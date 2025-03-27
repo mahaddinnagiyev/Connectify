@@ -7,17 +7,17 @@ import {
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import * as dotenv from 'dotenv';
-import { MessageType } from 'src/enums/message-type.enum';
+import { MessageType } from '../../enums/message-type.enum';
 import { MessengerService } from '../messenger.service';
 import { JwtService } from '@nestjs/jwt';
-import { SupabaseService } from 'src/supabase/supabase.service';
+import { SupabaseService } from '../../supabase/supabase.service';
 import { BadRequestException, UnauthorizedException } from '@nestjs/common';
-import { JwtPayload } from 'src/jwt/jwt-payload';
-import { IUser } from 'src/interfaces/user.interface';
-import { MessageStatus } from 'src/enums/message-status.enum';
-import { WebpushService } from 'src/webpush/webpush.service';
-import { LoggerService } from 'src/logger/logger.service';
-import { IAccount } from 'src/interfaces/account.interface';
+import { JwtPayload } from '../../jwt/jwt-payload';
+import { IUser } from '../../interfaces/user.interface';
+import { MessageStatus } from '../../enums/message-status.enum';
+import { WebpushService } from '../../webpush/webpush.service';
+import { LoggerService } from '../../logger/logger.service';
+import { IAccount } from '../../interfaces/account.interface';
 
 dotenv.config();
 

@@ -15,9 +15,9 @@ import {
 } from '@nestjs/common';
 import { MessengerService } from './messenger.service';
 import { Request } from 'express';
-import { MessageType } from 'src/enums/message-type.enum';
-import { JwtAuthGuard } from 'src/jwt/jwt-auth-guard';
-import { IUser } from 'src/interfaces/user.interface';
+import { MessageType } from '../enums/message-type.enum';
+import { JwtAuthGuard } from '../jwt/jwt-auth-guard';
+import { IUser } from '../interfaces/user.interface';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ChatGateway } from './gateway/messenger-gateway';
 import {
@@ -25,8 +25,8 @@ import {
   MulterFileConfig,
   MulterImageConfig,
   MulterVideoConfig,
-} from 'src/supabase/utils/multer-config';
-import { UserService } from 'src/user/user.service';
+} from '../supabase/utils/multer-config';
+import { UserService } from '../user/user.service';
 
 @Controller('messenger')
 export class MessengerController {

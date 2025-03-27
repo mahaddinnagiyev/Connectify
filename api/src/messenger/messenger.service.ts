@@ -1,16 +1,18 @@
 import {
   BadRequestException,
   ForbiddenException,
+  HttpException,
   Injectable,
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
-import { MessageStatus } from 'src/enums/message-status.enum';
-import { MessageType } from 'src/enums/message-type.enum';
-import { IMessage } from 'src/interfaces/message.interface';
-import { LoggerService } from 'src/logger/logger.service';
-import { SupabaseService } from 'src/supabase/supabase.service';
+import { MessageStatus } from '../enums/message-status.enum';
+import { MessageType } from '../enums/message-type.enum';
+import { IMessage } from '../interfaces/message.interface';
+import { LoggerService } from '../logger/logger.service';
+import { SupabaseService } from '../supabase/supabase.service';
 import { v4 as uuid } from 'uuid';
+import { IChatRoom } from 'src/interfaces/chat-room.interface';
 
 @Injectable()
 export class MessengerService {
@@ -19,7 +21,7 @@ export class MessengerService {
     private readonly logger: LoggerService,
   ) {}
 
-  async getChatRoomById(roomId: string) {
+  async getChatRoomById(roomId: string): Promise<IChatRoom | HttpException> {
     try {
       const { data: chatRoom, error } = await this.supabase
         .getClient()
@@ -612,19 +614,6 @@ export class MessengerService {
         .upload(`audios/${fileName}`, file.buffer, {
           contentType: file.mimetype,
         });
-
-      if (error) {
-        this.logger.error(
-          error.message,
-          'messenger',
-          'There is an error in uploading audio',
-          error.stack,
-        );
-        return new BadRequestException({
-          success: false,
-          error: error.message,
-        });
-      }
 
       const publicUrl = this.supabase
         .getClient()

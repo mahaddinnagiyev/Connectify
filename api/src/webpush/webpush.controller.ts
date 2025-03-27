@@ -1,8 +1,8 @@
 import { Body, Controller, Post, Req, UseGuards } from '@nestjs/common';
 import { WebpushService } from './webpush.service';
-import { JwtAuthGuard } from 'src/jwt/jwt-auth-guard';
+import { JwtAuthGuard } from '../jwt/jwt-auth-guard';
 import { Request } from 'express';
-import { IUser } from 'src/interfaces/user.interface';
+import { IUser } from '../interfaces/user.interface';
 
 @Controller('api/webpush')
 export class WebpushController {
