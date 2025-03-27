@@ -1,0 +1,15 @@
+node_modules/
+dist/
+build/
+test/
+coverage/
+.git/
+.gitignore
+.prettierrc
+.eslintrc
+.env
+.env.*
+Dockerfile*
+docker-compose.yml
+docker-compose.override.yml
+README.md

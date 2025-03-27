@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  backend:
+    build: 
+      context: './api'
+      dockerfile: Dockerfile.test
+    ports:
+      - "3636:3636"
+    environment:
+      - NODE_ENV=testing
+      - SUPABASE_DATABASE_URL=${SUPABASE_DATABASE_URL}
+      - SUPABASE_API_KEY=${SUPABASE_API_KEY}
+      - EMAIL_HOST=${EMAIL_HOST}
+      - EMAIL_USER=${EMAIL_USER}
+      - EMAIL_SECOND_USER=${EMAIL_SECOND_USER}
+      - EMAIL_PASS=${EMAIL_PASS}
+      - MAILGUN_API_KEY=${MAILGUN_API_KEY}
+      - MAILGUN_DOMAIN=${MAILGUN_DOMAIN}
+      - SESSION_SECRET_KEY=${SESSION_SECRET_KEY}
+      - JWT_ACCESS_SECRET_KEY=${JWT_ACCESS_SECRET_KEY}
+      - JWT_REFRESH_SECRET_KEY=${JWT_REFRESH_SECRET_KEY}
+      - CLIENT_URL=${CLIENT_URL}
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
+      - GOOGLE_CALLBACK_URL=${GOOGLE_CALLBACK_URL}
+      - GOOGLE_CLIENT_REDIRECT_URL=${GOOGLE_CLIENT_REDIRECT_URL}
+      - VAPID_EMAIL=${VAPID_EMAIL}
+      - VAPID_PUBLIC_KEY=${VAPID_PUBLIC_KEY}
+      - VAPID_PRIVATE_KEY=${VAPID_PRIVATE_KEY}
+    env_file:
+      - ./api/.env
+    restart: always

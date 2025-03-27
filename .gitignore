@@ -1,7 +1,7 @@
 # Global ignores
 .env
-Dockerfile
-docker-compose.yml
+Dockerfile.*
+docker-compose.override.yml
 *.log
 .DS_Store
 .idea/
