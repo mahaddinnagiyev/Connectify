@@ -2,12 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { UserService } from './user.service';
 import { LoggerService } from '../logger/logger.service';
 import { SupabaseService } from '../supabase/supabase.service';
-import {
-  InternalServerErrorException,
-  NotFoundException,
-  BadRequestException,
-  HttpException,
-} from '@nestjs/common';
+import { InternalServerErrorException, HttpException } from '@nestjs/common';
 import { IAccount } from '../interfaces/account.interface';
 import { IPrivacySettings } from '../interfaces/privacy-settings.interface';
 
@@ -303,7 +298,7 @@ describe('UserService', () => {
         privacy_settings: {} as IPrivacySettings,
       });
       const result = await service.edit_user_informations(userDTO, req_user);
-      expect(result).toBeInstanceOf(HttpException);;
+      expect(result).toBeInstanceOf(HttpException);
     });
 
     it('should return InternalServerErrorException on error', async () => {
@@ -493,7 +488,7 @@ describe('UserService', () => {
     it('should return BadRequestException if blocking self', async () => {
       const req_user = { id: '1', username: 'user1' };
       const result = await service.block_user(req_user.id, req_user);
-      expect(result).toBeInstanceOf(HttpException);;
+      expect(result).toBeInstanceOf(HttpException);
     });
 
     it('should return BadRequestException if already blocked', async () => {
@@ -524,7 +519,7 @@ describe('UserService', () => {
         ),
       });
       const result = await service.block_user(targetUser.id, req_user);
-      expect(result).toBeInstanceOf(HttpException);;
+      expect(result).toBeInstanceOf(HttpException);
     });
 
     it('should return InternalServerErrorException on error', async () => {
@@ -596,7 +591,7 @@ describe('UserService', () => {
         ),
       });
       const result = await service.unblock_user(targetUser.id, req_user);
-      expect(result).toBeInstanceOf(HttpException);;
+      expect(result).toBeInstanceOf(HttpException);
     });
 
     it('should return InternalServerErrorException on error', async () => {
