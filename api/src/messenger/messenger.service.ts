@@ -1,7 +1,6 @@
 import {
   BadRequestException,
   ForbiddenException,
-  HttpException,
   Injectable,
   InternalServerErrorException,
   NotFoundException,
@@ -12,7 +11,6 @@ import { IMessage } from '../interfaces/message.interface';
 import { LoggerService } from '../logger/logger.service';
 import { SupabaseService } from '../supabase/supabase.service';
 import { v4 as uuid } from 'uuid';
-import { IChatRoom } from 'src/interfaces/chat-room.interface';
 
 @Injectable()
 export class MessengerService {
@@ -21,7 +19,7 @@ export class MessengerService {
     private readonly logger: LoggerService,
   ) {}
 
-  async getChatRoomById(roomId: string): Promise<IChatRoom | HttpException> {
+  async getChatRoomById(roomId: string) {
     try {
       const { data: chatRoom, error } = await this.supabase
         .getClient()
