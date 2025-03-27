@@ -1,8 +1,10 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
-import * as session from 'express-session';
+import Redis from 'ioredis';
 import * as dotenv from 'dotenv';
+import * as session from 'express-session';
+import { RedisStore } from 'connect-redis';
 
 dotenv.config();
 
@@ -24,15 +26,23 @@ async function bootstrap() {
     allowedHeaders: ['Content-Type', 'Authorization'],
   });
 
+  const redis = new Redis({
+    host: process.env.REDIS_URL,
+    port: 6379,
+    password: process.env.REDIS_PASSWORD,
+    tls: {},
+  });
+
   app.use(
     session({
-      name: 'nestjs_sid',
+      name: 'n_sid',
+      store: new RedisStore({ client: redis }),
       secret: process.env.SESSION_SECRET_KEY,
       resave: false,
       saveUninitialized: false,
       cookie: {
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
+        secure: process.env.NODE_ENV === 'https-production',
         maxAge: 30 * 60 * 1000,
       },
     }),
