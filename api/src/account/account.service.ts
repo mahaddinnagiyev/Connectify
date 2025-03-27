@@ -5,14 +5,14 @@ import {
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
-import { LoggerService } from 'src/logger/logger.service';
+import { LoggerService } from '../logger/logger.service';
 import { EditSocialLinkDTO, SocialLinkDTO } from './dto/social-link-dto';
 import { v4 as uuid } from 'uuid';
 import { EditAccountDTO } from './dto/account-info-dto';
-import { SupabaseService } from 'src/supabase/supabase.service';
+import { SupabaseService } from '../supabase/supabase.service';
 import { UpdatePrivacySettingsDTO } from './dto/privacy-settings-dto';
-import { IAccount } from 'src/interfaces/account.interface';
-import { IUser } from 'src/interfaces/user.interface';
+import { IAccount } from '../interfaces/account.interface';
+import { IUser } from '../interfaces/user.interface';
 
 @Injectable()
 export class AccountService {

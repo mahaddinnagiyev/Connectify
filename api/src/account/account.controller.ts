@@ -9,16 +9,17 @@ import {
   UseGuards,
   UseInterceptors,
   UploadedFile,
+  Param,
 } from '@nestjs/common';
 import { AccountService } from './account.service';
-import { JwtAuthGuard } from 'src/jwt/jwt-auth-guard';
+import { JwtAuthGuard } from '../jwt/jwt-auth-guard';
 import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
 import { EditSocialLinkDTO, SocialLinkDTO } from './dto/social-link-dto';
 import { Request } from 'express';
 import { EditAccountDTO } from './dto/account-info-dto';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { UpdatePrivacySettingsDTO } from './dto/privacy-settings-dto';
-import { IUser } from 'src/interfaces/user.interface';
+import { IUser } from '../interfaces/user.interface';
 
 @Controller('account')
 export class AccountController {
@@ -40,11 +41,8 @@ export class AccountController {
     default: { limit: 240, ttl: 60 * 1000, blockDuration: 60 * 1000 },
   })
   @Get('/social-link/:id')
-  async get_social_by_id(@Req() req: Request) {
-    return await this.accountService.get_social_by_id(
-      String(req.params.id),
-      req.user as IUser,
-    );
+  async get_social_by_id(@Param('id') id: string, @Req() req: Request) {
+    return await this.accountService.get_social_by_id(id, req.user as IUser);
   }
 
   // Add New Social Link
@@ -70,12 +68,13 @@ export class AccountController {
   })
   @Patch('/social-link/:id')
   async edit_social_link(
+    @Param('id') id: string,
     @Body() socialLinkDTO: EditSocialLinkDTO,
     @Req() req: Request,
   ) {
     return await this.accountService.edit_social_link(
       socialLinkDTO,
-      String(req.params.id),
+      id,
       req.user as IUser,
     );
   }
@@ -86,11 +85,8 @@ export class AccountController {
     default: { limit: 240, ttl: 60 * 1000, blockDuration: 60 * 1000 },
   })
   @Delete('/social-link/:id')
-  async delete_social_link(@Req() req: Request) {
-    return await this.accountService.delete_social_link(
-      String(req.params.id),
-      req.user as IUser,
-    );
+  async delete_social_link(@Param('id') id: string, @Req() req: Request) {
+    return await this.accountService.delete_social_link(id, req.user as IUser);
   }
 
   // Update Profile Photo

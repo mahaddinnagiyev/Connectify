@@ -1,5 +1,5 @@
 import { IsEnum, IsOptional } from 'class-validator';
-import { PrivacySettings } from 'src/enums/privacy-settings.enum';
+import { PrivacySettings } from '../../enums/privacy-settings.enum';
 
 export class UpdatePrivacySettingsDTO {
   @IsOptional()
