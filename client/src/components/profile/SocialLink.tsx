@@ -26,6 +26,7 @@ import {
   PrivacySettings,
   PrivacySettingsDTO,
 } from "../../services/account/dto/privacy-settings-dto";
+import CheckModal from "../modals/spinner/CheckModal";
 
 interface SocialLinkProps {
   socialLinks: { id: string; name: string; link: string }[];
@@ -51,6 +52,8 @@ const SocialLink: React.FC<SocialLinkProps> = ({
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [openConfirmDialog, setOpenConfirmDialog] = useState(false);
   const [linkToDelete, setLinkToDelete] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
 
   const getUrl = (params: string): boolean => {
     return window.location.href.includes(params);
@@ -72,43 +75,36 @@ const SocialLink: React.FC<SocialLinkProps> = ({
     setOpenModal(true);
   };
 
-  const handleSubmit = async (formData: { name: string; link: string }) => {
-    let response;
-    if (editMode && currentLink) {
-      response = await edit_social_link(currentLink.id, formData);
-    } else {
-      response = await add_social_link(formData);
-    }
-
-    if (response.success) {
-      localStorage.setItem(
-        "successMessage",
-        editMode
-          ? "Social link updated successfully!"
-          : "Social link added successfully!"
-      );
-      window.location.reload();
-    } else {
-      if (Array.isArray(response.message)) {
-        setErrorMessage(response.message[0]);
-      } else {
-        setErrorMessage(
-          response.response?.error ??
-            response.message ??
-            response.error ??
-            "Invalid social link"
-        );
-      }
+  const isValidUrl = (url: string) => {
+    try {
+      new URL(url);
+      return true;
+    } catch {
+      return false;
     }
   };
 
-  const handleDelete = async () => {
-    if (linkToDelete) {
-      const response = await delete_social_link(linkToDelete);
+  const handleSubmit = async (formData: { name: string; link: string }) => {
+    try {
+      setIsProcessing(true);
+
+      if (!isValidUrl(formData.link)) {
+        return setErrorMessage("Please enter valid URL");
+      }
+
+      let response;
+      if (editMode && currentLink) {
+        response = await edit_social_link(currentLink.id, formData);
+      } else {
+        response = await add_social_link(formData);
+      }
+
       if (response.success) {
         localStorage.setItem(
           "successMessage",
-          "Social link deleted successfully!"
+          editMode
+            ? "Social link updated successfully!"
+            : "Social link added successfully!"
         );
         window.location.reload();
       } else {
@@ -123,6 +119,49 @@ const SocialLink: React.FC<SocialLinkProps> = ({
           );
         }
       }
+    } catch (error) {
+      if (error) {
+        setErrorMessage(
+          editMode
+            ? "Failed to update social link"
+            : "Failed to add social link"
+        );
+      }
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    try {
+      setIsDeleting(true);
+      if (linkToDelete) {
+        const response = await delete_social_link(linkToDelete);
+        if (response.success) {
+          localStorage.setItem(
+            "successMessage",
+            "Social link deleted successfully!"
+          );
+          window.location.reload();
+        } else {
+          if (Array.isArray(response.message)) {
+            setErrorMessage(response.message[0]);
+          } else {
+            setErrorMessage(
+              response.response?.error ??
+                response.message ??
+                response.error ??
+                "Invalid social link"
+            );
+          }
+        }
+      }
+    } catch (error) {
+      if (error) {
+        setErrorMessage("Failed to delete social link");
+      }
+    } finally {
+      setIsDeleting(false);
       setOpenConfirmDialog(false);
     }
   };
@@ -291,6 +330,11 @@ const SocialLink: React.FC<SocialLinkProps> = ({
             </DialogActions>
           </Dialog>
         </>
+      )}
+
+      {isDeleting && <CheckModal message="Deleting..." />}
+      {isProcessing && (
+        <CheckModal message={`${editMode ? "Updating..." : "Creating..."}`} />
       )}
     </>
   );
