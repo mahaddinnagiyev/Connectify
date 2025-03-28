@@ -5,8 +5,11 @@ services:
     build: 
       context: './api'
       dockerfile: Dockerfile
+    ports:
+      - ${PORT}:${PORT}
     environment:
       - NODE_ENV=production
+      - PORT=${PORT}
       - SUPABASE_DATABASE_URL=${SUPABASE_DATABASE_URL}
       - SUPABASE_API_KEY=${SUPABASE_API_KEY}
       - REDIS_URL=${REDIS_URL}

@@ -13,10 +13,6 @@ RUN npm install -g @nestjs/cli && npm install --omit=dev && npm install @types/e
 # Copy app source
 COPY . .
 
-# Trying to kill port
-RUN npx kill-port 52870
-RUN kill-port 52870
-
 # Build app
 RUN npm run build
 
