@@ -176,7 +176,7 @@ const SendMessage: React.FC<SendMessageProps> = ({
     let stream;
     try {
       const permissionStatus = await navigator.permissions.query({
-        name: "microphone",
+        name: "microphone" as PermissionName,
       });
       if (permissionStatus.state === "granted") {
         stream = await navigator.mediaDevices.getUserMedia({ audio: true });

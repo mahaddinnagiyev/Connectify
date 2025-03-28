@@ -21,21 +21,21 @@ const VisuallyHiddenInput = styled("input")({
   width: 1,
 });
 
-const Dropzone = styled(Paper)(({ theme }) => ({
-  padding: theme.spacing(3),
-  textAlign: "center",
-  border: "2px dashed #ccc",
-  backgroundColor: theme.palette.grey[100],
-  cursor: "pointer",
-  transition: "0.3s",
-  "&:hover": {
-    backgroundColor: theme.palette.grey[200],
-  },
-}));
-
 const ProfilePictureModal = ({ open, onClose, onSubmit }: ProfilePictureModalProps) => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [dragOver, setDragOver] = useState(false);
+
+  const Dropzone = styled(Paper)(({ theme }) => ({
+    padding: theme.spacing(3),
+    textAlign: "center",
+    border: "2px dashed #ccc",
+    backgroundColor: dragOver ? theme.palette.grey[200] : theme.palette.grey[100],
+    cursor: "pointer",
+    transition: "0.3s",
+    "&:hover": {
+      backgroundColor: theme.palette.grey[200],
+    },
+  }));
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
