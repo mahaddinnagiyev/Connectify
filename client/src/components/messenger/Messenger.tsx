@@ -24,6 +24,7 @@ const Messenger = () => {
       otherUserPrivacySettings?: PrivacySettingsDTO;
     })[]
   >([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [currentUser, setCurrentUser] = useState<string | null>(null);
   const [messages, setMessages] = useState<MessagesDTO[]>([]);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -255,6 +256,7 @@ const Messenger = () => {
         );
 
         setChats(chatsWithUsers);
+        setIsLoading(false);
       });
     };
     fetchChats();
@@ -340,7 +342,11 @@ const Messenger = () => {
             </div>
             <hr className="font-bold" />
 
-            <UserChats chats={chats} truncateMessage={truncateMessage} />
+            <UserChats
+              chats={chats}
+              truncateMessage={truncateMessage}
+              isLoading={isLoading}
+            />
           </div>
           {/* Chat Room */}
           <div
