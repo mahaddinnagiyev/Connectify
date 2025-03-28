@@ -1,14 +1,13 @@
 version: '3.8'
 
 services:
-  backend:
+  server:
     build: 
       context: './api'
       dockerfile: Dockerfile
     ports:
-      - "${PORT}:${PORT}"
+      - "52870:52870"
     environment:
-      - PORT=${PORT}
       - NODE_ENV=production
       - SUPABASE_DATABASE_URL=${SUPABASE_DATABASE_URL}
       - SUPABASE_API_KEY=${SUPABASE_API_KEY}
