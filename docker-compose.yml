@@ -4,13 +4,16 @@ services:
   backend:
     build: 
       context: './api'
-      dockerfile: Dockerfile.test
+      dockerfile: Dockerfile
     ports:
-      - "3636:3636"
+      - "${PORT}:${PORT}"
     environment:
-      - NODE_ENV=testing
+      - PORT=${PORT}
+      - NODE_ENV=production
       - SUPABASE_DATABASE_URL=${SUPABASE_DATABASE_URL}
       - SUPABASE_API_KEY=${SUPABASE_API_KEY}
+      - REDIS_URL=${REDIS_URL}
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
       - EMAIL_HOST=${EMAIL_HOST}
       - EMAIL_USER=${EMAIL_USER}
       - EMAIL_SECOND_USER=${EMAIL_SECOND_USER}

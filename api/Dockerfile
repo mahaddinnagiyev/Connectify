@@ -8,7 +8,7 @@ WORKDIR /usr/src/app
 COPY package*.json ./
 
 # Install only production dependencies
-RUN npm install --only=production
+RUN npm install -g @nestjs/cli && npm install --omit=dev && npm install @types/express
 
 # Copy app source
 COPY . .
@@ -20,7 +20,7 @@ RUN npm run build
 RUN rm -rf ./src
 
 # Expose port
-EXPOSE 3636
+EXPOSE ${PORT}
 
 # Run app in production mode
 CMD ["npm", "run", "start:prod"]
