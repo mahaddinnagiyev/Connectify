@@ -4,8 +4,6 @@ import {
   Controller,
   Delete,
   Get,
-  HttpCode,
-  HttpStatus,
   Patch,
   Post,
   Query,
@@ -25,7 +23,7 @@ import {
   ForgotPasswordDTO,
   SetNewPasswordDTO,
 } from './dto/forgot-passsword-dto';
-import { Request, Response } from 'express';
+import { Request } from 'express';
 import { IUser } from 'src/interfaces/user.interface';
 
 @Controller('auth')
@@ -70,16 +68,13 @@ export class AuthController {
   }
 
   // Get Token From Session
+  @SkipThrottle()
   @Get('session/token')
-  async getTokenFromSession(
-    @Session() session: Record<string, any>,
-    @Res() res: Response,
-  ) {
+  async getTokenFromSession(@Session() session: Record<string, any>) {
     if (session.access_token) {
-      res.status(HttpStatus.OK).json({ access_token: session.access_token });
-    } else {
-      res.status(HttpStatus.NO_CONTENT).send();
+      return { access_token: session.access_token };
     }
+    return { access_token: 'no_token' };
   }
 
   // Logout

@@ -24,6 +24,7 @@ export const getToken = async (): Promise<string | null> => {
   const response = await getTokenFromSession();
 
   if (response?.access_token) {
+    if (response.access_token === "no_token") return null;
     return response.access_token;
   }
 
