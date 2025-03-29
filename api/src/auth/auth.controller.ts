@@ -70,7 +70,7 @@ export class AuthController {
   // Get Token From Session
   @Get('session/token')
   async getTokenFromSession(@Session() session: Record<string, any>) {
-    return { access_token: session.access_token || null }; // Həmişə JSON qaytar
+    return { access_token: session.access_token };
   }
 
   // Logout

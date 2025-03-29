@@ -11,7 +11,7 @@ export const getTokenFromSession = async (): Promise<{
       credentials: "include",
     }
   );
-  console.log(response.status);
+  
   if (response.status === 204) {
     return null;
   }
