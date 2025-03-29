@@ -70,7 +70,7 @@ export class AuthController {
   }
 
   // Get Token From Session
-  @Get('token')
+  @Get('session/token')
   async getTokenFromSession(
     @Session() session: Record<string, any>,
     @Res() res: Response,
