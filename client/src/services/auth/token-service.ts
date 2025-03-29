@@ -1,4 +1,4 @@
-export const getTokenFromSession = async (): Promise<{ access_token: string } | null> => {
+export const getTokenFromSession = async (): Promise<{ access_token: string | null }> => {
   const response = await fetch(`${process.env.SERVER_USER_URL}/auth/session/token`, {
       method: "GET",
       headers: {
@@ -14,7 +14,7 @@ export const getTokenFromSession = async (): Promise<{ access_token: string } | 
 export const getToken = async (): Promise<string | null> => {
   const response = await getTokenFromSession();
 
-  if (response?.access_token) {
+  if (response.access_token !== null) {
     return response.access_token;
   }
 
