@@ -68,13 +68,9 @@ export class AuthController {
   }
 
   // Get Token From Session
-  @SkipThrottle()
   @Get('session/token')
   async getTokenFromSession(@Session() session: Record<string, any>) {
-    if (session.access_token) {
-      return { access_token: session.access_token };
-    }
-    return null;
+    return { access_token: session.access_token || null }; // Həmişə JSON qaytar
   }
 
   // Logout
