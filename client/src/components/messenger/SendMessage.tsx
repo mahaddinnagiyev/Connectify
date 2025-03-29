@@ -180,6 +180,7 @@ const SendMessage: React.FC<SendMessageProps> = ({
     setShowSelectedModal(false);
     setPrevMessages(allMessages);
     setAllMessages([...prevMessages]);
+    sent_audio.play();
     setSelectedFile(null);
   };
 
