@@ -1,4 +1,5 @@
 import React, { useState, KeyboardEvent, useRef, useEffect } from "react";
+import message_sent_audio from "../../../public/audio/message-sent-audio.mp3";
 import { HighlightOff as HighlightOffIcon } from "@mui/icons-material";
 import CheckModal from "../modals/spinner/CheckModal";
 import ErrorMessage from "../messages/ErrorMessage";
@@ -64,6 +65,8 @@ const SendMessage: React.FC<SendMessageProps> = ({
   const recordingCanceled = useRef(false);
   const emojiPickerRef = useRef<HTMLDivElement>(null);
 
+  const sent_audio = new Audio(message_sent_audio);
+
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
@@ -91,6 +94,7 @@ const SendMessage: React.FC<SendMessageProps> = ({
       setMessageInput("");
       setPrevMessages(allMessages);
       setAllMessages([...prevMessages]);
+      sent_audio.play();
       handleReplyMessage(null);
     }
   };
