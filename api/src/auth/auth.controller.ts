@@ -74,7 +74,7 @@ export class AuthController {
     if (session.access_token) {
       return { access_token: session.access_token };
     }
-    return { access_token: null };
+    return null;
   }
 
   // Logout
