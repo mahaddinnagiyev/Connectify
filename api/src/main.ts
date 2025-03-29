@@ -43,6 +43,7 @@ async function bootstrap() {
       cookie: {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'https-production',
+        sameSite: 'none',
         maxAge: 30 * 60 * 1000,
       },
     }),
