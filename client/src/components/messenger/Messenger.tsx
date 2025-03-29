@@ -4,7 +4,7 @@ import "../../colors.css";
 import "./css/style.css";
 import Chat from "./Chat";
 import SearchModal from "../modals/search/SearchModal";
-import { socket } from "../../services/socket/socket-service";
+import { createSocket } from "../../services/socket/socket-service";
 import { ChatRoomsDTO } from "../../services/socket/dto/ChatRoom-dto";
 import { getToken } from "../../services/auth/token-service";
 import { jwtDecode } from "jwt-decode";
@@ -15,6 +15,7 @@ import { Account } from "../../services/account/dto/account-dto";
 import { PrivacySettingsDTO } from "../../services/account/dto/privacy-settings-dto";
 import ErrorMessage from "../messages/ErrorMessage";
 import UserChats from "./UserChats";
+import { Socket } from "socket.io-client";
 
 const Messenger = () => {
   const [chats, setChats] = useState<
@@ -25,6 +26,7 @@ const Messenger = () => {
     })[]
   >([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [socket, setSocket] = useState<Socket | null>(null);
   const [currentUser, setCurrentUser] = useState<string | null>(null);
   const [messages, setMessages] = useState<MessagesDTO[]>([]);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -85,6 +87,15 @@ const Messenger = () => {
   };
 
   useEffect(() => {
+    const createSocketInstance = async () => {
+      const socketInstance = await createSocket();
+      setSocket(socketInstance ?? null);
+    };
+
+    createSocketInstance();
+  }, []);
+
+  useEffect(() => {
     if ("Notification" in window && !isSubscribed) {
       requestNotificationPermission();
     }
@@ -112,7 +123,7 @@ const Messenger = () => {
         lastJoinedRoomRef.current = currentRoomId;
       }
     }
-  }, [currentRoomId, chats]);
+  }, [currentRoomId, chats, socket]);
 
   useEffect(() => {
     if (currentRoomId) {
@@ -140,7 +151,7 @@ const Messenger = () => {
     return () => {
       socket?.off("unreadCountUpdated", handleUnreadCountUpdated);
     };
-  }, []);
+  }, [socket]);
 
   useEffect(() => {
     const handleLastMessageUpdated = (data: {
@@ -160,7 +171,7 @@ const Messenger = () => {
     return () => {
       socket?.off("lastMessageUpdated", handleLastMessageUpdated);
     };
-  }, []);
+  }, [socket]);
 
   useEffect(() => {
     const handleNewMessage = (newMessage: MessagesDTO) => {
@@ -202,7 +213,7 @@ const Messenger = () => {
     return () => {
       socket?.off("newMessage", handleNewMessage);
     };
-  }, [currentRoomId]);
+  }, [currentRoomId, socket]);
 
   useEffect(() => {
     setMessages([]);
@@ -216,7 +227,7 @@ const Messenger = () => {
     return () => {
       socket?.off("messages");
     };
-  }, [currentRoomId]);
+  }, [currentRoomId, socket]);
 
   useEffect(() => {
     const fetchChats = async () => {
@@ -265,7 +276,7 @@ const Messenger = () => {
       socket?.off("chatRoomsUpdated", fetchChats);
       socket?.off("getChatRooms");
     };
-  }, [socketRef]);
+  }, [socketRef, socket]);
 
   const currentChat = chats.find((chat) => chat.id === currentRoomId);
 

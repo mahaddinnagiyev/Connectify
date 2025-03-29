@@ -42,12 +42,14 @@ import ConfirmModal from "../../components/modals/confirm/ConfirmModal";
 import { UserFriendsDTO } from "../../services/friendship/dto/friendship-dto";
 import ErrorMessage from "../messages/ErrorMessage";
 import SuccessMessage from "../messages/SuccessMessage";
-import { socket } from "../../services/socket/socket-service";
+import { createSocket } from "../../services/socket/socket-service";
 import { useNavigate } from "react-router-dom";
 import CheckModal from "../modals/spinner/CheckModal";
+import { Socket } from "socket.io-client";
 
 const AllUsers: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState("");
+  const [socket, setSocket] = useState<Socket | null>(null);
   const [users, setUsers] = useState<Users[]>([]);
   const [loading, setLoading] = useState(false);
   const [pending, setPending] = useState(false);
@@ -73,6 +75,13 @@ const AllUsers: React.FC = () => {
     fetchAcceptedFriends();
     fetchPendingFriends();
     fetchBlockedUsers();
+
+    const createSocketInstance = async () => {
+      const socketInstance = await createSocket();
+      setSocket(socketInstance ?? null);
+    };
+
+    createSocketInstance();
   }, []);
 
   const fetchBlockedUsers = async () => {

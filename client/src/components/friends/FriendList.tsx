@@ -36,11 +36,13 @@ import {
 import ConfirmModal from "../modals/confirm/ConfirmModal";
 import ErrorMessage from "../messages/ErrorMessage";
 import SuccessMessage from "../messages/SuccessMessage";
-import { socket } from "../../services/socket/socket-service";
+import { createSocket } from "../../services/socket/socket-service";
 import CheckModal from "../modals/spinner/CheckModal";
+import { Socket } from "socket.io-client";
 
 const FriendList = () => {
   const [friends, setFriends] = useState<UserFriendsDTO[]>([]);
+  const [socket, setSocket] = useState<Socket | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
   const [pending, setPending] = useState(false);
@@ -73,6 +75,14 @@ const FriendList = () => {
     fetchFriends();
     fetchBlockedUsers();
   }, []);
+
+  useEffect(() => {
+    const createSocketInstance = async () => {
+      const socketInstance = await createSocket();
+      setSocket(socketInstance ?? null);
+    };
+    createSocketInstance();
+  });
 
   const fetchBlockedUsers = async () => {
     try {

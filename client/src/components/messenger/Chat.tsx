@@ -12,7 +12,7 @@ import {
   MessageType,
 } from "../../services/socket/dto/messages-dto";
 import { Users } from "../../services/user/dto/user-dto";
-import { socket } from "../../services/socket/socket-service";
+import { createSocket } from "../../services/socket/socket-service";
 import { Account } from "../../services/account/dto/account-dto";
 import { PrivacySettingsDTO } from "../../services/account/dto/privacy-settings-dto";
 import ErrorMessage from "../messages/ErrorMessage";
@@ -28,6 +28,7 @@ import ChatVideo from "./utils/media/ChatVideo";
 import ChatFile from "./utils/media/ChatFile";
 import SuccessMessage from "../messages/SuccessMessage";
 import React from "react";
+import { Socket } from "socket.io-client";
 
 interface ChatProps {
   roomId: string;
@@ -58,6 +59,7 @@ const Chat = ({
     message?: MessagesDTO;
   } | null>(null);
   const [allMessages, setAllMessages] = useState<MessagesDTO[]>(messages);
+  const [socket, setSocket] = useState<Socket | null>(null);
   const [replyMessage, setReplyMessage] = useState<MessagesDTO | null>(null);
 
   const [hasMoreMessages, setHasMoreMessages] = useState(true);
@@ -74,6 +76,12 @@ const Chat = ({
   const [initialLoad, setInitialLoad] = useState(true);
 
   useEffect(() => {
+    const createSocketInstance = async () => {
+      const socketInstance = await createSocket();
+      setSocket(socketInstance ?? null);
+    };
+
+    createSocketInstance();
     const scrollToBottom = document.getElementById("scrollToBottom");
     scrollToBottom?.click();
   }, []);
@@ -117,7 +125,7 @@ const Chat = ({
     return () => {
       socket?.off("messageUnsent", handleMessageUnsent);
     };
-  }, []);
+  }, [socket]);
 
   useEffect(() => {
     if (messagesContainerRef.current && prevScrollHeight.current > 0) {
@@ -138,7 +146,7 @@ const Chat = ({
         socket?.emit("getMessages", { roomId, limit: newLimit });
       }
     },
-    [isLoading, hasMoreMessages, roomId, messagesContainerRef]
+    [isLoading, hasMoreMessages, roomId, messagesContainerRef, socket]
   );
 
   const handleScroll = useCallback(() => {
@@ -200,7 +208,7 @@ const Chat = ({
       socket?.emit("unsendMessage", { roomId, messageId });
       setContextMenu(null);
     },
-    [roomId]
+    [roomId, socket]
   );
 
   const isValidUrl = useCallback((url: string): boolean => {

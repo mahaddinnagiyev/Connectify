@@ -40,9 +40,10 @@ import {
 import { UserFriendsDTO } from "../../services/friendship/dto/friendship-dto";
 import { FriendshipStatus } from "../../services/friendship/enum/friendship-status.enum";
 import { useNavigate } from "react-router-dom";
-import { socket } from "../../services/socket/socket-service";
+import { createSocket } from "../../services/socket/socket-service";
 import { PrivacySettingsDTO } from "../../services/account/dto/privacy-settings-dto";
 import CheckModal from "../modals/spinner/CheckModal";
+import { Socket } from "socket.io-client";
 
 interface UserProfile {
   user: User;
@@ -68,6 +69,7 @@ const ProfileInfo: React.FC<ProfileInfoProps> = ({
     useState(false);
   const [isProfilePictureModalOpen, setIsProfilePictureModalOpen] =
     useState(false);
+  const [socket, setSocket] = useState<Socket | null>(null);
 
   const [accepted, setAccepted] = useState(false);
   const [pending, setPending] = useState(false);
@@ -88,6 +90,12 @@ const ProfileInfo: React.FC<ProfileInfoProps> = ({
   };
 
   useEffect(() => {
+    const createSocketInstance = async () => {
+      const socketInstance = await createSocket();
+      setSocket(socketInstance ?? null);
+    };
+
+    createSocketInstance();
     fetchBlockedUsers();
   }, []);
 

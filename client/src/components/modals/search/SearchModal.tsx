@@ -10,8 +10,9 @@ import "./searchModal.css";
 import no_profile_photo from "../../../assets/no-profile-photo.png";
 import { UserFriendsDTO } from "../../../services/friendship/dto/friendship-dto";
 import { getFriends } from "../../../services/friendship/friendship-service";
-import { socket } from "../../../services/socket/socket-service";
+import { createSocket } from "../../../services/socket/socket-service";
 import { useNavigate } from "react-router-dom";
+import { Socket } from "socket.io-client";
 
 export default function SearchModal() {
   const [searchQuery, setSearchQuery] = React.useState("");
@@ -19,8 +20,18 @@ export default function SearchModal() {
   const [userFriendData, setUserFriendData] = React.useState<UserFriendsDTO[]>(
     []
   );
+  const [socket, setSocket] = React.useState<Socket | null>(null);
 
   const navigate = useNavigate();
+
+  React.useEffect(() => {
+    const createSocketInstance = async () => {
+      const socketInstance = await createSocket();
+      setSocket(socketInstance ?? null);
+    };
+
+    createSocketInstance();
+  }, []);
 
   const handleGoChat = (userId: string) => {
     socket?.emit("joinRoom", { user2Id: userId });
@@ -87,7 +98,10 @@ export default function SearchModal() {
       >
         <DialogTitle className="dialog-title">Search Friends</DialogTitle>
         <DialogContent>
-          <DialogContentText id="alert-dialog-slide-description" component={"div"}>
+          <DialogContentText
+            id="alert-dialog-slide-description"
+            component={"div"}
+          >
             {/* SearchBar goes here */}
             <div className="friend-search-input">
               <input

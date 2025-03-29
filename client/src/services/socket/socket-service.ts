@@ -1,22 +1,17 @@
-import { io, Socket } from "socket.io-client";
+import { io } from "socket.io-client";
 import { getToken } from "../auth/token-service";
 
-let socket: Socket | null = null;
-
-export async function createSocket() {
+export const createSocket = async () => {
   const token = await getToken();
 
-  if (!token) return (window.location.href = "/auth/login");
+  if (!token) return;
 
-  socket = io(`${process.env.VITE_SERVER_WEBSOCKET_URL}`, {
+  return io(`${process.env.VITE_SERVER_WEBSOCKET_URL}`, {
     transports: ["websocket"],
     auth: { token },
   });
 }
 
-createSocket();
-
-export { socket };
 
 export const uploadImage = async (
   formData: FormData,
