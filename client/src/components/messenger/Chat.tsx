@@ -294,7 +294,7 @@ const Chat = ({
 
       <div
         id="scrollToBottom"
-        className="absolute bottom-24 right-28 border-2 border-[var(--secondary-color)] bg-[var(--secondary-color)] z-[5000] rounded-full px-1.5 py-1 cursor-pointer"
+        className="absolute bottom-24 right-28 border-2 border-[var(--secondary-color)] bg-[var(--secondary-color)] z-[999] rounded-full px-1.5 py-1 cursor-pointer"
         onClick={scrollToBottom}
       >
         <KeyboardDoubleArrowDownIcon
