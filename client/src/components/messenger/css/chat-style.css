@@ -325,7 +325,7 @@
   #scrollToBottom {
     bottom: 120px;
     right: 95px;
-    padding: 8px;
+    padding: 4px;
   }
 }
 
@@ -375,7 +375,7 @@
   #scrollToBottom {
     bottom: 130px;
     right: 75px;
-    padding: 8px;
+    padding: 2px;
   }
 }
 
@@ -385,6 +385,14 @@
   }
   .user-name {
     animation: none;
+  }
+}
+
+@media (max-width: 760px) {
+  #scrollToBottom {
+    bottom: 110px;
+    right: 45px;
+    padding: 2px;
   }
 }
 
