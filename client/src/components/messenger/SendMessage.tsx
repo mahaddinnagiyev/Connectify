@@ -1,6 +1,6 @@
 import React, { useState, KeyboardEvent, useRef, useEffect } from "react";
 import { HighlightOff as HighlightOffIcon } from "@mui/icons-material";
-import CheckModal from "../modals/spinner/CheckModal";
+import UploadProgressModal from "../modals/chat/UploadProgressModal";
 import ErrorMessage from "../messages/ErrorMessage";
 import AttachModal from "../modals/chat/AttachModal";
 import SelectedModal from "../modals/chat/SelectedModal";
@@ -60,7 +60,7 @@ const SendMessage: React.FC<SendMessageProps> = ({
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [showAttachModal, setShowAttachModal] = useState(false);
   const [showSelectedModal, setShowSelectedModal] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const [showProgressModal, setShowProgressModal] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
 
   const recordingCanceled = useRef(false);
@@ -117,74 +117,81 @@ const SendMessage: React.FC<SendMessageProps> = ({
   };
 
   const handleUpload = async () => {
-    if (!selectedFile) return;
+    try {
+      if (!selectedFile) return;
 
-    setIsLoading(true);
-    const formData = new FormData();
-    let response: {
-      success: boolean;
-      message?: string;
-      publicUrl?: string;
-      message_name?: string;
-      message_size?: number;
-      error?: string;
-      response?: { success: boolean; message?: string; error?: string };
-    };
-    const fileType = selectedFile.type;
-
-    if (fileType.startsWith("image/")) {
-      formData.append("message_image", selectedFile);
-      response = await uploadImage(formData, roomId, currentUser);
-    } else if (fileType.startsWith("video/")) {
-      formData.append("message_video", selectedFile);
-      response = await uploadVideo(formData, roomId, currentUser);
-    } else if (
-      fileType.startsWith("file/") ||
-      fileType.startsWith("application/") ||
-      fileType.startsWith("text/") ||
-      fileType.startsWith("image/") ||
-      fileType.startsWith("video/")
-    ) {
-      formData.append("message_file", selectedFile);
-      response = await uploadFile(formData, roomId, currentUser);
-    } else {
-      setIsLoading(false);
-      setErrorMessage("System doesn't support this type of file");
-      return;
-    }
-
-    if (!response.success) {
-      setIsLoading(false);
       setShowSelectedModal(false);
-      setErrorMessage(
-        response.response?.message ??
-          response.response?.error ??
-          response.message ??
-          response.error ??
-          "Failed To Upload"
-      );
-      return;
+      setShowProgressModal(true);
+
+      const formData = new FormData();
+      let response: {
+        success: boolean;
+        message?: string;
+        publicUrl?: string;
+        message_name?: string;
+        message_size?: number;
+        error?: string;
+        response?: { success: boolean; message?: string; error?: string };
+      };
+      const fileType = selectedFile.type;
+
+      if (fileType.startsWith("image/")) {
+        formData.append("message_image", selectedFile);
+        response = await uploadImage(formData, roomId, currentUser);
+      } else if (fileType.startsWith("video/")) {
+        formData.append("message_video", selectedFile);
+        response = await uploadVideo(formData, roomId, currentUser);
+      } else if (
+        fileType.startsWith("file/") ||
+        fileType.startsWith("application/") ||
+        fileType.startsWith("text/") ||
+        fileType.startsWith("image/") ||
+        fileType.startsWith("video/")
+      ) {
+        formData.append("message_file", selectedFile);
+        response = await uploadFile(formData, roomId, currentUser);
+      } else {
+        setShowProgressModal(false);
+        setErrorMessage("System doesn't support this type of file");
+        return;
+      }
+
+      if (!response.success) {
+        setShowSelectedModal(false);
+        setErrorMessage(
+          response.response?.message ??
+            response.response?.error ??
+            response.message ??
+            response.error ??
+            "Failed To Upload"
+        );
+        return;
+      }
+
+      socket?.emit("sendMessage", {
+        roomId: roomId,
+        content: response.publicUrl,
+        message_type: fileType.startsWith("image/")
+          ? MessageType.IMAGE
+          : fileType.startsWith("video/")
+          ? MessageType.VIDEO
+          : MessageType.FILE,
+        message_name: response.message_name,
+        message_size: Number(response.message_size),
+      });
+
+      setShowProgressModal(false);
+      setShowSelectedModal(false);
+      setPrevMessages(allMessages);
+      setAllMessages([...prevMessages]);
+      sent_audio.play();
+      setSelectedFile(null);
+      scrollToBottom();
+    } catch (error) {
+      setShowProgressModal(false);
+      setShowSelectedModal(false);
+      setErrorMessage((error as Error).message ?? "Failed To Upload");
     }
-
-    socket?.emit("sendMessage", {
-      roomId: roomId,
-      content: response.publicUrl,
-      message_type: fileType.startsWith("image/")
-        ? MessageType.IMAGE
-        : fileType.startsWith("video/")
-        ? MessageType.VIDEO
-        : MessageType.FILE,
-      message_name: response.message_name,
-      message_size: Number(response.message_size),
-    });
-
-    setIsLoading(false);
-    setShowSelectedModal(false);
-    setPrevMessages(allMessages);
-    setAllMessages([...prevMessages]);
-    sent_audio.play();
-    scrollToBottom();
-    setSelectedFile(null);
   };
 
   const startRecording = async () => {
@@ -288,7 +295,7 @@ const SendMessage: React.FC<SendMessageProps> = ({
   const handleAudioUpload = async (audioFile: File) => {
     if (!audioFile) return;
 
-    setIsLoading(true);
+    setShowProgressModal(true);
     const formData = new FormData();
     formData.append("message_audio", audioFile);
 
@@ -312,17 +319,15 @@ const SendMessage: React.FC<SendMessageProps> = ({
         message_name: audioFile.name,
         message_size: audioFile.size,
       });
-
-      setIsLoading(false);
     } catch (error) {
-      setIsLoading(false);
       setErrorMessage((error as Error).message || "Audio upload failed.");
+    } finally {
+      setShowProgressModal(false);
     }
   };
 
   return (
     <div className="send-message-wrapper">
-      {isLoading && <CheckModal message="Uploading..." />}
       {errorMessage && (
         <ErrorMessage
           message={errorMessage}
@@ -398,6 +403,8 @@ const SendMessage: React.FC<SendMessageProps> = ({
           onSelectImage={handleFileSelect}
         />
       )}
+
+      <UploadProgressModal open={showProgressModal} />
 
       {showSelectedModal && selectedFile && (
         <SelectedModal
