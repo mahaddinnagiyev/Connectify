@@ -589,6 +589,7 @@ const Chat = ({
           truncateMessage={truncateMessage}
           setAllMessages={setAllMessages}
           allMessages={allMessages}
+          scrollToBottom={scrollToBottom}
         />
       </section>
     </>

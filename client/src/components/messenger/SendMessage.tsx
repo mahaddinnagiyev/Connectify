@@ -29,6 +29,7 @@ interface SendMessageProps {
   setAllMessages: (messages: MessagesDTO[]) => void;
   truncateMessage: (message: string, maxLength: number) => string;
   handleReplyMessage: (message: MessagesDTO | null) => void;
+  scrollToBottom: () => void;
 }
 
 const SendMessage: React.FC<SendMessageProps> = ({
@@ -43,6 +44,7 @@ const SendMessage: React.FC<SendMessageProps> = ({
   allMessages,
   setAllMessages,
   replyMessage,
+  scrollToBottom,
 }) => {
   const [messageInput, setMessageInput] = useState("");
   const [prevMessages, setPrevMessages] = useState<MessagesDTO[]>([]);
@@ -93,6 +95,7 @@ const SendMessage: React.FC<SendMessageProps> = ({
       setMessageInput("");
       setPrevMessages(allMessages);
       setAllMessages([...prevMessages]);
+      scrollToBottom();
       sent_audio.play();
       handleReplyMessage(null);
     }
@@ -180,6 +183,7 @@ const SendMessage: React.FC<SendMessageProps> = ({
     setPrevMessages(allMessages);
     setAllMessages([...prevMessages]);
     sent_audio.play();
+    scrollToBottom();
     setSelectedFile(null);
   };
 
