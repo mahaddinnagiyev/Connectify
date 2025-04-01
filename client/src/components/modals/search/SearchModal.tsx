@@ -115,7 +115,7 @@ export default function SearchModal() {
 
             {/* User Friends goes here */}
             <div className="message-users flex flex-col gap-3 mb-2 mt-6">
-              {filterFriends(userFriendData).length > 0 &&
+              {filterFriends(userFriendData).length > 0 ? (
                 filterFriends(userFriendData).map((friend) => (
                   <React.Fragment key={friend.id}>
                     <Tooltip placement="right" title="Go Chat">
@@ -156,7 +156,10 @@ export default function SearchModal() {
                     </Tooltip>
                     <hr />
                   </React.Fragment>
-                ))}
+                ))
+              ) : (
+                <div className="text-center">No friends found</div>
+              )}
             </div>
           </DialogContentText>
         </DialogContent>
