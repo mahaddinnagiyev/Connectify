@@ -4,26 +4,16 @@ import { useLocation } from "react-router-dom";
 import Footer from "../../components/footer/Footer";
 import Header from "../../components/header/Header";
 import Messenger from "../../components/messenger/Messenger";
-import MainSpinner from "../../components/modals/spinner/MainSpinner";
 import SuccessMessage from "../../components/messages/SuccessMessage";
 import InfoMessage from "../../components/messages/InfoMessage";
 
 const ChatPage = () => {
-  const [isLoading, setIsLoading] = useState(true);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [infoMessage, setInfoMessage] = useState<string | null>(null);
 
   const location = useLocation();
 
   const screenWidth = window.innerWidth;
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 500);
-
-    return () => clearTimeout(timer);
-  }, []);
 
   useEffect(() => {
     const message = localStorage.getItem("successMessage");
@@ -74,15 +64,9 @@ const ChatPage = () => {
         <title>Connectify | Messenger</title>
       </Helmet>
 
-      {isLoading ? (
-        <MainSpinner />
-      ) : (
-        <>
-          {screenWidth < 768 && isRoomPage ? null : <Header />}
-          <Messenger />
-          {screenWidth < 768 && isRoomPage ? null : <Footer />}
-        </>
-      )}
+      {screenWidth < 768 && isRoomPage ? null : <Header />}
+      <Messenger />
+      {screenWidth < 768 && isRoomPage ? null : <Footer />}
     </>
   );
 };
