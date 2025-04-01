@@ -99,7 +99,9 @@ const Messenger = () => {
   useEffect(() => {
     const createSocketInstance = async () => {
       const socketInstance = await createSocket();
-      setSocket(socketInstance ?? null);
+      socketInstance?.on("connect", () => {
+        setSocket(socketInstance);
+      });
     };
 
     createSocketInstance();
@@ -253,6 +255,17 @@ const Messenger = () => {
       const decodedToken: { id: string } = jwtDecode(token);
       const currentUserId = decodedToken.id;
 
+      const cacheKey = `cachedChats_${currentUserId}`;
+      const cachedData = localStorage.getItem(cacheKey);
+
+      if (cachedData) {
+        const { userId, chats: cachedChats } = JSON.parse(cachedData);
+        if (userId === currentUserId) {
+          setChats(cachedChats);
+          setIsLoading(false);
+        }
+      }
+
       if (!socket) return;
 
       socket.emit("getChatRooms");
@@ -276,23 +289,31 @@ const Messenger = () => {
                 };
               }
             } catch (error) {
-              console.error("User fetch error:", error);
+              if (error) {
+                setErrorMessage("Failed to get user");
+              }
             }
             return chat;
           })
+        );
+
+        localStorage.setItem(
+          cacheKey,
+          JSON.stringify({ userId: currentUserId, chats: chatsWithUsers })
         );
 
         setChats(chatsWithUsers);
         setIsLoading(false);
       });
     };
+
     fetchChats();
     socket?.on("chatRoomsUpdated", fetchChats);
     return () => {
       socket?.off("chatRoomsUpdated", fetchChats);
       socket?.off("getChatRooms");
     };
-  }, [socketRef, socket]);
+  }, [socketRef, socket, currentUser]);
 
   const currentChat = chats.find((chat) => chat.id === currentRoomId);
 
