@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import "./css/chat-style.css";
-import { Box, Button } from "@mui/material";
+import { Box, Button, CircularProgress } from "@mui/material";
 import {
   TurnLeft as TurnLeftIcon,
   Reply as ReplyIcon,
@@ -38,6 +38,8 @@ interface ChatProps {
   otherUserPrivacySettings?: PrivacySettingsDTO;
   messages: MessagesDTO[];
   messagesContainerRef: React.RefObject<HTMLDivElement>;
+  hasMoreMessages: boolean;
+  setHasMoreMessages: React.Dispatch<React.SetStateAction<boolean>>;
   scrollToBottom: () => void;
   truncateMessage: (message: string, maxLength: number) => string;
 }
@@ -50,6 +52,8 @@ const Chat = ({
   otherUserPrivacySettings,
   messages,
   messagesContainerRef,
+  hasMoreMessages,
+  setHasMoreMessages,
   scrollToBottom,
   truncateMessage,
 }: ChatProps) => {
@@ -62,7 +66,6 @@ const Chat = ({
   const [socket, setSocket] = useState<Socket | null>(null);
   const [replyMessage, setReplyMessage] = useState<MessagesDTO | null>(null);
 
-  const [hasMoreMessages, setHasMoreMessages] = useState(true);
   const [newLimit, setNewLimit] = useState(30);
   const [isLoading, setIsLoading] = useState(false);
   const prevScrollHeight = useRef<number>(0);
@@ -89,14 +92,6 @@ const Chat = ({
   useEffect(() => {
     setAllMessages(messages);
   }, [messages]);
-
-  useEffect(() => {
-    if (messages.length < newLimit) {
-      setHasMoreMessages(false);
-      return;
-    }
-    setHasMoreMessages(messages.length >= newLimit);
-  }, [messages, newLimit]);
 
   useEffect(() => {
     get_block_list().then((response) => {
@@ -141,40 +136,40 @@ const Chat = ({
     (newLimit: number) => {
       if (!isLoading && hasMoreMessages) {
         setIsLoading(true);
-        prevScrollHeight.current =
-          messagesContainerRef.current?.scrollHeight || 0;
+        messagesContainerRef.current?.scrollTo({
+          top: messagesContainerRef.current.scrollHeight,
+          behavior: "smooth",
+        });
         socket?.emit("getMessages", { roomId, limit: newLimit });
+        socket?.on("messages", (data) => {
+          if (data.messages[0]?.room_id === roomId) {
+            setAllMessages((prevMessages) => [
+              ...data.messages,
+              ...prevMessages,
+            ]);
+          }
+
+          if (data.messages.length < 30) {
+            setHasMoreMessages(false);
+          } else {
+            setHasMoreMessages(true);
+          }
+        });
+
+        return () => {
+          socket?.off("messages");
+        };
       }
     },
-    [isLoading, hasMoreMessages, roomId, messagesContainerRef, socket]
+    [
+      isLoading,
+      hasMoreMessages,
+      roomId,
+      messagesContainerRef,
+      socket,
+      setHasMoreMessages,
+    ]
   );
-
-  const handleScroll = useCallback(() => {
-    const container = messagesContainerRef.current;
-    if (!container) return;
-
-    const { scrollTop } = container;
-
-    if (scrollTop < 100 && !isLoading && hasMoreMessages) {
-      const nextLimit = newLimit + 30;
-      setNewLimit(nextLimit);
-      loadMoreMessages(nextLimit);
-    }
-  }, [
-    isLoading,
-    hasMoreMessages,
-    newLimit,
-    loadMoreMessages,
-    messagesContainerRef,
-  ]);
-
-  useEffect(() => {
-    const container = messagesContainerRef.current;
-    if (!container) return;
-
-    container.addEventListener("scroll", handleScroll);
-    return () => container.removeEventListener("scroll", handleScroll);
-  }, [handleScroll, messagesContainerRef]);
 
   const handleReplyMessage = useCallback((message: MessagesDTO | null) => {
     setReplyMessage(message);
@@ -303,7 +298,14 @@ const Chat = ({
       <div
         id="scrollToBottom"
         className="absolute bottom-24 right-28 border-2 border-[var(--secondary-color)] bg-[var(--secondary-color)] z-[999] rounded-full px-1.5 py-1 cursor-pointer"
-        onClick={scrollToBottom}
+        onClick={() => {
+          if (messagesContainerRef.current) {
+            messagesContainerRef.current.scrollTo({
+              top: messagesContainerRef.current.scrollHeight,
+              behavior: "smooth",
+            });
+          }
+        }}
       >
         <KeyboardDoubleArrowDownIcon
           style={{ color: "black", fontSize: "24px" }}
@@ -326,14 +328,36 @@ const Chat = ({
       <section className="chat">
         <div className="messages-container" ref={messagesContainerRef}>
           {isLoading && (
-            <div className="loading-indicator">
-              <div className="loading-spinner"></div>
+            <div className="w-full flex justify-center">
+              <div className="text-xs text-[var(--primary-color)] bg-[var(--secondary-color)] p-2 rounded-md my-1 flex gap-2 items-center">
+                <CircularProgress
+                  size={17}
+                  style={{ color: "var(--primary-color)" }}
+                />{" "}
+                Loading...
+              </div>
             </div>
           )}
+          <div className="w-full flex justify-center">
+            {hasMoreMessages && !isLoading && (
+              <button
+                className="text-xs text-[var(--primary-color)] hover:underline bg-[var(--secondary-color)] p-2 rounded-md mt-2 my-1"
+                onClick={() => {
+                  const nextLimit = newLimit + 30;
+                  setNewLimit(nextLimit);
+                  loadMoreMessages(nextLimit);
+                }}
+              >
+                See previous messages
+              </button>
+            )}
+          </div>
           {Object.entries(groupedMessages).map(([date, messages]) => (
             <React.Fragment key={date}>
-              <div className="message-date w-full text-center text-sm border-y-2 border-[var(--primary-color)] my-2 py-2">
-                {date}
+              <div className="text-center text-sm my-2">
+                <span className="border-[3px] border-[var(--primary-color)] py-2 px-4 rounded-full">
+                  {date}
+                </span>
               </div>
               {messages.map((message, index) => (
                 <React.Fragment key={`${message.id}-${index}`}>
@@ -434,14 +458,14 @@ const Chat = ({
                         currentUser={currentUser}
                         handleReplyMessage={handleReplyMessage}
                         handleUnsendMessage={handleUnsendMessage}
-                        // onLoadedData={scrollToBottom}
+                        onLoadedData={scrollToBottom}
                       />
                     )}
                     {message.message_type === MessageType.VIDEO && (
                       <ChatVideo
                         message={message}
                         currentUser={currentUser}
-                        // onLoadedData={scrollToBottom}
+                        onLoadedData={scrollToBottom}
                         handleReplyMessage={handleReplyMessage}
                         handleUnsendMessage={handleUnsendMessage}
                       />
@@ -452,7 +476,7 @@ const Chat = ({
                         currentUser={currentUser}
                         handleReplyMessage={handleReplyMessage}
                         handleUnsendMessage={handleUnsendMessage}
-                        // onLoadedData={scrollToBottom}
+                        onLoadedData={scrollToBottom}
                       />
                     )}
 
@@ -460,7 +484,7 @@ const Chat = ({
                       <div className="audio-player-container">
                         <AudioPlayer
                           src={message.content}
-                          // onLoadedData={scrollToBottom}
+                          onLoadedData={scrollToBottom}
                         />
                       </div>
                     )}

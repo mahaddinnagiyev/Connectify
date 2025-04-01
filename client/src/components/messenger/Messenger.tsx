@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useSearchParams } from "react-router-dom";
 import "../../colors.css";
 import "./css/style.css";
@@ -26,6 +26,7 @@ const Messenger = () => {
     })[]
   >([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [hasMoreMessages, setHasMoreMessages] = useState(true);
   const [socket, setSocket] = useState<Socket | null>(null);
   const [currentUser, setCurrentUser] = useState<string | null>(null);
   const [messages, setMessages] = useState<MessagesDTO[]>([]);
@@ -39,6 +40,15 @@ const Messenger = () => {
   const screenWidth = window.innerWidth;
 
   const [isSubscribed, setIsSubscribed] = useState(false);
+
+  const scrollToBottom = useCallback(() => {
+    if (messagesContainerRef.current && !hasMoreMessages) {
+      messagesContainerRef.current.scrollTo({
+        top: messagesContainerRef.current.scrollHeight,
+        behavior: "smooth",
+      });
+    }
+  }, [messagesContainerRef, hasMoreMessages]);
 
   const subscribeToPushNotifications = async () => {
     try {
@@ -123,7 +133,7 @@ const Messenger = () => {
         lastJoinedRoomRef.current = currentRoomId;
       }
     }
-  }, [currentRoomId, chats, socket]);
+  }, [currentRoomId, chats, socket, scrollToBottom]);
 
   useEffect(() => {
     if (currentRoomId) {
@@ -223,6 +233,12 @@ const Messenger = () => {
       if (data.messages[0]?.room_id === currentRoomId) {
         setMessages(data.messages);
       }
+
+      if (data.messages.length < 30) {
+        setHasMoreMessages(false);
+      } else {
+        setHasMoreMessages(true);
+      }
     });
     return () => {
       socket?.off("messages");
@@ -286,13 +302,6 @@ const Messenger = () => {
     return message.length > maxLength
       ? message.substring(0, maxLength) + "..."
       : message;
-  };
-
-  const scrollToBottom = () => {
-    if (messagesContainerRef.current) {
-      messagesContainerRef.current.scrollTop =
-        messagesContainerRef.current.scrollHeight;
-    }
   };
 
   return (
@@ -377,6 +386,8 @@ const Messenger = () => {
                 otherUserPrivacySettings={currentChat.otherUserPrivacySettings}
                 messages={messages}
                 messagesContainerRef={messagesContainerRef}
+                hasMoreMessages={hasMoreMessages}
+                setHasMoreMessages={setHasMoreMessages}
                 scrollToBottom={scrollToBottom}
                 truncateMessage={truncateMessage}
               />
