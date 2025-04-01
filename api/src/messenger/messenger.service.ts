@@ -236,32 +236,35 @@ export class MessengerService {
       const { data: chatRooms } = await this.supabase
         .getClient()
         .from('chat_rooms')
-        .select('*, messages!inner(*)')
+        .select('id, user_ids')
         .contains('user_ids', [userId]);
+
+      if (!chatRooms || chatRooms.length === 0) return [];
 
       const roomsWithDetails = await Promise.all(
         chatRooms.map(async (room) => {
-          const lastMessage = room.messages.sort(
-            (a: any, b: any) =>
-              new Date(b.created_at).getTime() -
-              new Date(a.created_at).getTime(),
-          )[0];
-
-          const { count } = await this.supabase
+          const { data: lastMessageData } = await this.supabase
             .getClient()
             .from('messages')
-            .select('*', { count: 'exact' })
+            .select('*')
+            .eq('room_id', room.id)
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .single();
+
+          const { data: count } = await this.supabase
+            .getClient()
+            .from('messages')
+            .select('*', { count: 'exact', head: true })
             .eq('room_id', room.id)
             .neq('sender_id', userId)
-            .neq('status', MessageStatus.READ);
-
-          const { messages, ...chatWithoutMessages } = room;
+            .eq('status', 'UNREAD');
 
           return {
-            ...chatWithoutMessages,
-            unreadCount: count,
-            lastMessageDate: lastMessage?.created_at || null,
-            lastMessage: lastMessage || null,
+            ...room,
+            lastMessageDate: lastMessageData?.created_at || null,
+            lastMessage: lastMessageData || null,
+            unreadCount: count || 0,
           };
         }),
       );
