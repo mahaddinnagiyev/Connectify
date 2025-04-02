@@ -501,7 +501,7 @@ export class AuthService {
           from: process.env.EMAIL_USER,
           to: email,
           subject: 'Password Reset - Account could not be found',
-          text: emailNotFoundMessage(email),
+          html: emailNotFoundMessage(email),
         });
 
         return {
@@ -515,7 +515,7 @@ export class AuthService {
           from: process.env.EMAIL_USER,
           to: email,
           subject: 'Password Reset - Account provided by Google',
-          text: googleSignInMessage(email),
+          html: googleSignInMessage(email),
         });
 
         return {
