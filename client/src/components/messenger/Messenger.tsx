@@ -346,6 +346,11 @@ const Messenger = () => {
             screenWidth < 768 && window.location.href.includes("room")
               ? "0px"
               : "0 auto",
+
+          height:
+            screenWidth < 768 && window.location.href.includes("room")
+              ? "100vh"
+              : "",
         }}
       >
         <div
