@@ -26,7 +26,10 @@ const ForgotPassword = () => {
     try {
       const response = await forgot_password(email);
       if (response.success) {
-        setSuccessMessage(response.message ?? "Check your inbox to reset your password");
+        localStorage.setItem(
+          "successMessage",
+          response.message ?? "Check your inbox to reset your password"
+        );
         navigate("/auth/login");
       } else {
         setErrorMessage(
