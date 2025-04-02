@@ -211,50 +211,10 @@ body {
 
 @media (max-width: 648px) {
   .auth-buttons a {
-    width: 500px;
+    width: 100%;
   }
 
   .google-btn {
-    max-width: 500px;
-  }
-}
-
-@media (max-width: 480px) {
-  .auth-buttons {
-    width: 340px;
-  }
-
-  .google-btn {
-    width: 340px;
-  }
-}
-
-@media (max-width: 391px) {
-  .auth-buttons {
-    width: 310px;
-  }
-
-  .google-btn {
-    width: 310px;
-  }
-}
-
-@media (max-width: 360px) {
-  .auth-buttons {
-    width: 290px;
-  }
-
-  .google-btn {
-    width: 290px;
-  }
-}
-
-@media (max-width: 321px) {
-  .auth-buttons {
-    width: 260px;
-  }
-
-  .google-btn {
-    width: 260px;
+    width: 100%;
   }
 }

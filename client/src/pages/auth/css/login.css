@@ -146,6 +146,22 @@ body {
 }
 
 /* Media Queries */
+@media (max-width: 656px) {
+  .auth-buttons {
+    gap: 10px;
+  }
+}
+
+@media (max-width: 648px) {
+  .auth-buttons a {
+    width: 100%;
+  }
+
+  .google-btn {
+    width: 100%;
+  }
+}
+
 @media (max-width: 600px) {
   .login-form {
     padding: 20px;
