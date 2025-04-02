@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
+import { keyframes } from "@emotion/react";
 import { Modal, Box, IconButton, Button } from "@mui/material";
 import {
   Close as CloseIcon,
@@ -22,6 +23,17 @@ interface ChatImageProps {
   handleUnsendMessage?: (messageId: string | undefined) => void;
 }
 
+const fadeIn = keyframes`
+  from {
+    opacity: 0;
+    transform: scale(0.80);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+`;
+
 const ChatImage = ({
   message,
   currentUser,
@@ -38,6 +50,24 @@ const ChatImage = ({
     mouseY: number;
     message?: MessagesDTO;
   } | null>(null);
+
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        handleCloseContextMenu();
+      }
+    };
+
+    if (contextMenu) {
+      document.addEventListener("click", handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener("click", handleClickOutside);
+    };
+  }, [contextMenu]);
 
   if (message.message_type !== MessageType.IMAGE) return null;
 
@@ -79,8 +109,9 @@ const ChatImage = ({
       setSuccessMessage("Image downloaded successfully");
     } catch {
       setErrorMessage("Download failed. Please try again later.");
+    } finally {
+      handleCloseContextMenu();
     }
-    handleCloseContextMenu();
   };
 
   return (
@@ -121,7 +152,8 @@ const ChatImage = ({
               ? contextMenu.mouseX - menuWidth
               : contextMenu.mouseX;
 
-          const menuHeight = 135;
+          const menuHeight =
+            contextMenu.message?.sender_id === currentUser ? 135 : 90;
           const computedTop =
             contextMenu.mouseY + menuHeight > window.innerHeight
               ? contextMenu.mouseY - menuHeight
@@ -129,6 +161,7 @@ const ChatImage = ({
 
           return (
             <Box
+              ref={menuRef}
               sx={{
                 position: "fixed",
                 top: computedTop,
@@ -138,8 +171,14 @@ const ChatImage = ({
                 borderRadius: "4px",
                 width: "200px",
                 zIndex: 1300,
+                animation: `${fadeIn} 0.4s ease forwards`,
+                opacity: 0,
+                transformOrigin: `${
+                  contextMenu.mouseX + menuWidth > window.innerWidth
+                    ? "right"
+                    : "left"
+                }`,
               }}
-              onMouseLeave={handleCloseContextMenu}
             >
               <Button
                 onClick={handleDownload}

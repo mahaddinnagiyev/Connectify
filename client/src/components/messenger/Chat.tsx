@@ -1,5 +1,6 @@
-import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import "./css/chat-style.css";
+import { useState, useEffect, useRef, useMemo, useCallback } from "react";
+import { keyframes } from "@emotion/react";
 import { Box, Button, CircularProgress } from "@mui/material";
 import {
   TurnLeft as TurnLeftIcon,
@@ -44,6 +45,17 @@ interface ChatProps {
   truncateMessage: (message: string, maxLength: number) => string;
 }
 
+const fadeIn = keyframes`
+  from {
+    opacity: 0;
+    transform: scale(0.80);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+`;
+
 const Chat = ({
   roomId,
   currentUser,
@@ -69,13 +81,13 @@ const Chat = ({
   const [newLimit, setNewLimit] = useState(30);
   const [isLoading, setIsLoading] = useState(false);
   const prevScrollHeight = useRef<number>(0);
+  const menuRef = useRef<HTMLDivElement>(null);
 
   const [errorMessage, setErrorMessage] = useState<string | null>("");
   const [successMessage, setSuccessMessage] = useState<string | null>("");
 
   const [isBlocked, setIsBlocked] = useState(false);
   const [isBlocker, setIsBlocker] = useState(false);
-
   const [initialLoad, setInitialLoad] = useState(true);
 
   useEffect(() => {
@@ -88,6 +100,22 @@ const Chat = ({
     const scrollToBottom = document.getElementById("scrollToBottom");
     scrollToBottom?.click();
   }, []);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        handleCloseContextMenu();
+      }
+    };
+
+    if (contextMenu) {
+      document.addEventListener("click", handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener("click", handleClickOutside);
+    };
+  }, [contextMenu]);
 
   useEffect(() => {
     setAllMessages(messages);
@@ -534,7 +562,8 @@ const Chat = ({
                 ? contextMenu.mouseX - menuWidth
                 : contextMenu.mouseX;
 
-            const menuHeight = 135;
+            const menuHeight =
+              contextMenu.message?.sender_id === currentUser ? 135 : 90;
             const computedTop =
               contextMenu.mouseY + menuHeight > window.innerHeight
                 ? contextMenu.mouseY - menuHeight
@@ -542,6 +571,7 @@ const Chat = ({
 
             return (
               <Box
+                ref={menuRef}
                 sx={{
                   position: "fixed",
                   top: computedTop,
@@ -551,8 +581,14 @@ const Chat = ({
                   borderRadius: "4px",
                   width: `${menuWidth}px`,
                   zIndex: 1300,
+                  animation: `${fadeIn} 0.4s ease forwards`,
+                  opacity: 0,
+                  transformOrigin: `${
+                    contextMenu.mouseX + menuWidth > window.innerWidth
+                      ? "right"
+                      : "left"
+                  }`,
                 }}
-                onMouseLeave={handleCloseContextMenu}
               >
                 <Button
                   onClick={() => handleReplyMessage(contextMenu.message!)}

@@ -1,4 +1,6 @@
+import { useCallback, useEffect, useState, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { keyframes } from "@emotion/react";
 import no_profile_photo from "../../assets/no-profile-photo.png";
 import {
   MessagesDTO,
@@ -17,7 +19,6 @@ import { ChatRoomsDTO } from "../../services/socket/dto/ChatRoom-dto";
 import { Users } from "../../services/user/dto/user-dto";
 import { Account } from "../../services/account/dto/account-dto";
 import { PrivacySettingsDTO } from "../../services/account/dto/privacy-settings-dto";
-import { useCallback, useEffect, useState } from "react";
 import { Button } from "@mui/material";
 import MediaModal from "../modals/chat/MediaModals";
 import { getMessagesForRoom } from "../../services/socket/socket-service";
@@ -31,6 +32,17 @@ interface UserChatsProps {
   isLoading: boolean;
   truncateMessage: (message: string, maxLength: number) => string;
 }
+
+const fadeIn = keyframes`
+  from {
+    opacity: 0;
+    transform: scale(0.80);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+`;
 
 const UserChats = ({ chats, isLoading, truncateMessage }: UserChatsProps) => {
   const [contextMenu, setContextMenu] = useState<{
@@ -46,7 +58,25 @@ const UserChats = ({ chats, isLoading, truncateMessage }: UserChatsProps) => {
   const [messages, setMessages] = useState<MessagesDTO[]>([]);
   const [isMediaModalOpen, setIsMediaModalOpen] = useState(false);
 
+  const menuRef = useRef<HTMLDivElement>(null);
+
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        handleCloseContextMenu();
+      }
+    };
+
+    if (contextMenu) {
+      document.addEventListener("click", handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener("click", handleClickOutside);
+    };
+  }, [contextMenu]);
 
   useEffect(() => {
     if (contextMenu) {
@@ -231,6 +261,7 @@ const UserChats = ({ chats, isLoading, truncateMessage }: UserChatsProps) => {
 
           return (
             <Box
+              ref={menuRef}
               sx={{
                 position: "fixed",
                 top: computedTop,
@@ -240,8 +271,14 @@ const UserChats = ({ chats, isLoading, truncateMessage }: UserChatsProps) => {
                 borderRadius: "4px",
                 width: `${menuWidth}px`,
                 zIndex: 1300,
+                animation: `${fadeIn} 0.4s ease forwards`,
+                opacity: 0,
+                transformOrigin: `${
+                  contextMenu.mouseX + menuWidth > window.innerWidth
+                    ? "right"
+                    : "left"
+                }`,
               }}
-              onMouseLeave={handleCloseContextMenu}
             >
               <Button
                 sx={{
@@ -257,9 +294,10 @@ const UserChats = ({ chats, isLoading, truncateMessage }: UserChatsProps) => {
                     color: "#00ff00",
                   },
                 }}
-                onClick={() =>
-                  navigate(`/user/@${contextMenu.chat?.otherUser?.username}`)
-                }
+                onClick={() => {
+                  handleCloseContextMenu();
+                  navigate(`/user/@${contextMenu.chat?.otherUser?.username}`);
+                }}
               >
                 <AccountBoxIcon /> Profile
               </Button>

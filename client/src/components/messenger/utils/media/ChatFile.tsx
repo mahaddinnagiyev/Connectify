@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
+import { keyframes } from "@emotion/react";
 import { Box, Button, Tooltip } from "@mui/material";
 import DownloadIcon from "@mui/icons-material/Download";
 import {
@@ -27,6 +28,17 @@ interface ChatFileProps {
   handleReplyMessage: (message: MessagesDTO | null) => void;
 }
 
+const fadeIn = keyframes`
+  from {
+    opacity: 0;
+    transform: scale(0.80);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+`;
+
 const ChatFile = ({
   message,
   currentUser,
@@ -41,6 +53,24 @@ const ChatFile = ({
     mouseY: number;
     message?: MessagesDTO;
   } | null>(null);
+
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        handleCloseContextMenu();
+      }
+    };
+
+    if (contextMenu) {
+      document.addEventListener("click", handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener("click", handleClickOutside);
+    };
+  }, [contextMenu]);
 
   if (message.message_type !== MessageType.FILE) return null;
 
@@ -178,7 +208,8 @@ const ChatFile = ({
               ? contextMenu.mouseX - menuWidth
               : contextMenu.mouseX;
 
-          const menuHeight = 135;
+          const menuHeight =
+            contextMenu.message?.sender_id === currentUser ? 135 : 90;
           const computedTop =
             contextMenu.mouseY + menuHeight > window.innerHeight
               ? contextMenu.mouseY - menuHeight
@@ -186,6 +217,7 @@ const ChatFile = ({
 
           return (
             <Box
+              ref={menuRef}
               sx={{
                 position: "fixed",
                 top: computedTop,
@@ -195,8 +227,14 @@ const ChatFile = ({
                 borderRadius: "4px",
                 width: "200px",
                 zIndex: 1300,
+                animation: `${fadeIn} 0.4s ease forwards`,
+                opacity: 0,
+                transformOrigin: `${
+                  contextMenu.mouseX + menuWidth > window.innerWidth
+                    ? "right"
+                    : "left"
+                }`,
               }}
-              onMouseLeave={handleCloseContextMenu}
             >
               <Button
                 onClick={handleDownload}
