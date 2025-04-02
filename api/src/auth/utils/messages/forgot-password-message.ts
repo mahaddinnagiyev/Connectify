@@ -10,7 +10,7 @@ export const forgotPasswordMessage = (reset_token: string) => {
                  style="display: inline-block; font-size: 18px; font-weight: bold; color: #ffffff; background-color: #00ff00; padding: 12px 24px; text-decoration: none; border-radius: 4px;">Reset My Password</a>
             </div>
             <p>If the button above does not work, please copy and paste the following URL into your browser:</p>
-            <a href="https://connectify-io.netlify.app/auth/reset-password?token=${reset_token}" style="word-wrap: break-word; color: #00ff00;">$https://connectify-io.netlify.app/auth/reset-password?token=${reset_token}</a>
+            <a href="https://connectify-io.netlify.app/auth/reset-password?token=${reset_token}" style="word-wrap: break-word; color: #00ff00;">https://connectify-io.netlify.app/auth/reset-password?token=${reset_token}</a>
             <p style="color: #777; font-size: 14px;">This link will expire in <strong>1 hours</strong>. If you did not request this, you can safely ignore this email.</p>
             <p>If you have any questions or need help, feel free to contact our support team at <a href="mailto:support@yourapp.com" style="color: #00ff00; text-decoration: none;">support@connectify.com</a>.</p>
             <p>Thank you,</p>
