@@ -15,6 +15,8 @@ import { getUserById } from "../../services/user/user-service";
 import { User } from "../../services/user/dto/user-dto";
 import { Account } from "../../services/account/dto/account-dto";
 import { PrivacySettingsDTO } from "../../services/account/dto/privacy-settings-dto";
+import { getToken } from "../../services/auth/token-service";
+import { jwtDecode } from "jwt-decode";
 
 interface UserProfile {
   user: User;
@@ -60,6 +62,7 @@ const ProfilePage = () => {
     return savedTab ? parseInt(savedTab, 10) : 0;
   });
   const [isVertical, setIsVertical] = React.useState(window.innerWidth >= 886);
+  const [userID, setUserID] = React.useState<string | null>(null);
   const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
   const [successMessage, setSuccessMessage] = React.useState<string | null>(
     null
@@ -98,12 +101,36 @@ const ProfilePage = () => {
   }, []);
 
   React.useEffect(() => {
+    const fetchTokenData = async () => {
+      const token = await getToken();
+      if (!token) return;
+
+      const decodedToken: { id: string } = jwtDecode(token);
+      setUserID(decodedToken.id);
+    };
+
+    fetchTokenData();
+  }, []);
+
+  React.useEffect(() => {
     const fetchData = async () => {
       try {
         setIsDataLoaded(true);
+
+        const cacheKey = `cachedProfile_${userID}`;
+        const cachedData = localStorage.getItem(cacheKey);
+
+        if (cachedData) {
+          const { userId, profile: cachedProfile } = JSON.parse(cachedData);
+          if (userId === userID) {
+            setUserData(cachedProfile);
+            setIsDataLoaded(false);
+          }
+        }
+
         const response = await getUserById();
         if (response.success) {
-          setUserData({
+          const profileData = {
             user: response.user ?? {
               id: null,
               first_name: null,
@@ -121,7 +148,16 @@ const ProfilePage = () => {
               last_login: null,
             },
             privacy_settings: response.privacy_settings ?? null,
-          });
+          };
+          setUserData(profileData);
+
+          localStorage.setItem(
+            cacheKey,
+            JSON.stringify({
+              userId: userID,
+              profile: profileData,
+            })
+          );
         } else {
           setErrorMessage(
             response.response?.message ??
@@ -141,7 +177,7 @@ const ProfilePage = () => {
     };
 
     fetchData();
-  }, []);
+  }, [userID]);
 
   return (
     <>
