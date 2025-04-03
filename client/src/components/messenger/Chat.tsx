@@ -535,6 +535,9 @@ const Chat = ({
                         </p>
                       </>
                     )}
+                    {message.message_type === MessageType.DEFAULT && (
+                      <p className="text-xs p-1">{message.content}</p>
+                    )}
                     {message.message_type !== MessageType.DEFAULT && (
                       <span className="message-time">
                         {new Date(message.created_at + "Z").toLocaleTimeString(
