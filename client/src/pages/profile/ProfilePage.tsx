@@ -109,13 +109,10 @@ const ProfilePage = () => {
       setUserID(decodedToken.id);
     };
 
-    fetchTokenData();
-  }, []);
-
-  React.useEffect(() => {
     const fetchData = async () => {
       try {
         setIsDataLoaded(true);
+        fetchTokenData();
 
         const cacheKey = `cachedProfile_${userID}`;
         const cachedData = localStorage.getItem(cacheKey);
@@ -158,6 +155,10 @@ const ProfilePage = () => {
               profile: profileData,
             })
           );
+
+          if (localStorage.getItem("cachedProfile_null")) {
+            localStorage.removeItem("cachedProfile_null");
+          }
         } else {
           setErrorMessage(
             response.response?.message ??
