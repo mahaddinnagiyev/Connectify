@@ -1,5 +1,8 @@
 import React, { useState, KeyboardEvent, useRef, useEffect } from "react";
-import { HighlightOff as HighlightOffIcon } from "@mui/icons-material";
+import {
+  HighlightOff as HighlightOffIcon,
+  KeyboardDoubleArrowDown as KeyboardDoubleArrowDownIcon,
+} from "@mui/icons-material";
 import ProgressModal from "../modals/chat/ProgressModal";
 import ErrorMessage from "../messages/ErrorMessage";
 import AttachModal from "../modals/chat/AttachModal";
@@ -30,6 +33,7 @@ interface SendMessageProps {
   truncateMessage: (message: string, maxLength: number) => string;
   handleReplyMessage: (message: MessagesDTO | null) => void;
   scrollToBottom: () => void;
+  messagesContainerRef: React.RefObject<HTMLDivElement>;
 }
 
 const SendMessage: React.FC<SendMessageProps> = ({
@@ -45,6 +49,7 @@ const SendMessage: React.FC<SendMessageProps> = ({
   setAllMessages,
   replyMessage,
   scrollToBottom,
+  messagesContainerRef,
 }) => {
   const [messageInput, setMessageInput] = useState("");
   const [prevMessages, setPrevMessages] = useState<MessagesDTO[]>([]);
@@ -54,8 +59,10 @@ const SendMessage: React.FC<SendMessageProps> = ({
     null
   );
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const [showScrollToBottom, setShowScrollToBottom] = useState(false);
 
   const [recordingTime, setRecordingTime] = useState<number>(0);
+  const [replyHeight, setReplyHeight] = useState(0);
 
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [showAttachModal, setShowAttachModal] = useState(false);
@@ -65,6 +72,7 @@ const SendMessage: React.FC<SendMessageProps> = ({
 
   const recordingCanceled = useRef(false);
   const emojiPickerRef = useRef<HTMLDivElement>(null);
+  const replyRef = useRef<HTMLDivElement>(null);
 
   const sent_audio = new Audio("/audio/message-sent-audio.mp3");
 
@@ -83,6 +91,33 @@ const SendMessage: React.FC<SendMessageProps> = ({
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
+
+  useEffect(() => {
+    if (replyRef.current) {
+      setReplyHeight(replyRef.current.clientHeight);
+    }
+  }, [replyMessage]);
+
+  const scrollButtonBottom = replyMessage ? `calc(90px + ${replyHeight}px)` : "80px";
+
+  useEffect(() => {
+    const container = messagesContainerRef.current;
+    if (!container) return;
+
+    const handleScroll = () => {
+      const threshold = 250;
+      const distanceFromBottom =
+        container.scrollHeight - container.scrollTop - container.clientHeight;
+      if (distanceFromBottom > threshold) {
+        setShowScrollToBottom(true);
+      } else {
+        setShowScrollToBottom(false);
+      }
+    };
+
+    container.addEventListener("scroll", handleScroll);
+    return () => container.removeEventListener("scroll", handleScroll);
+  }, [messagesContainerRef]);
 
   const handleSendMessage = () => {
     if (messageInput.trim()) {
@@ -335,8 +370,28 @@ const SendMessage: React.FC<SendMessageProps> = ({
         />
       )}
 
+      {showScrollToBottom && (
+        <div
+          id="scrollToBottom"
+          style={{ bottom: replyMessage ? scrollButtonBottom : "" }}
+          className="absolute bottom-24 right-28 border-2 border-[var(--secondary-color)] bg-[var(--secondary-color)] z-[999] rounded-full px-1.5 py-1 cursor-pointer"
+          onClick={() => {
+            if (messagesContainerRef.current) {
+              messagesContainerRef.current.scrollTo({
+                top: messagesContainerRef.current.scrollHeight,
+                behavior: "smooth",
+              });
+            }
+          }}
+        >
+          <KeyboardDoubleArrowDownIcon
+            style={{ color: "black", fontSize: "24px" }}
+          />
+        </div>
+      )}
+
       {replyMessage && (
-        <div className="reply-message-container">
+        <div ref={replyRef} className="reply-message-container">
           <div className="reply-message">
             <div className="reply-message-header">
               <span className="reply-icon">↩</span>

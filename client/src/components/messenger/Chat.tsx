@@ -6,7 +6,6 @@ import {
   TurnLeft as TurnLeftIcon,
   Reply as ReplyIcon,
   ContentCopy as ContentCopyIcon,
-  KeyboardDoubleArrowDown as KeyboardDoubleArrowDownIcon,
 } from "@mui/icons-material";
 import {
   MessagesDTO,
@@ -323,23 +322,6 @@ const Chat = ({
         />
       )}
 
-      <div
-        id="scrollToBottom"
-        className="absolute bottom-24 right-28 border-2 border-[var(--secondary-color)] bg-[var(--secondary-color)] z-[999] rounded-full px-1.5 py-1 cursor-pointer"
-        onClick={() => {
-          if (messagesContainerRef.current) {
-            messagesContainerRef.current.scrollTo({
-              top: messagesContainerRef.current.scrollHeight,
-              behavior: "smooth",
-            });
-          }
-        }}
-      >
-        <KeyboardDoubleArrowDownIcon
-          style={{ color: "black", fontSize: "24px" }}
-        />
-      </div>
-
       {/* Header */}
       <div className="right-header pb-2 pr-4 flex items-center justify-between max-h-[57px]">
         <ChatHeader
@@ -653,6 +635,7 @@ const Chat = ({
           setAllMessages={setAllMessages}
           allMessages={allMessages}
           scrollToBottom={scrollToBottom}
+          messagesContainerRef={messagesContainerRef}
         />
       </section>
     </>
