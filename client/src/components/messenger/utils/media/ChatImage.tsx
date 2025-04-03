@@ -13,6 +13,7 @@ import {
 } from "../../../../services/socket/dto/messages-dto";
 import ErrorMessage from "../../../messages/ErrorMessage";
 import SuccessMessage from "../../../messages/SuccessMessage";
+import ProgressModal from "../../../modals/chat/ProgressModal";
 
 interface ChatImageProps {
   message: MessagesDTO;
@@ -44,6 +45,7 @@ const ChatImage = ({
 }: ChatImageProps) => {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [isDownloading, setIsDownloading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const [contextMenu, setContextMenu] = useState<{
     mouseX: number;
@@ -86,9 +88,11 @@ const ChatImage = ({
 
   const handleDownload = async () => {
     try {
+      setIsDownloading(true);
       const response = await fetch(message.content);
 
-      if (!response.ok) throw new Error("Failed to download image");
+      if (!response.ok)
+        return setErrorMessage("Download failed. Please try again later.");
 
       const blob = await response.blob();
 
@@ -105,11 +109,15 @@ const ChatImage = ({
 
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
+      
+      const audio = new Audio("/audio/download-media-audio.mp3");
+      audio.play();
 
       setSuccessMessage("Image downloaded successfully");
     } catch {
       setErrorMessage("Download failed. Please try again later.");
     } finally {
+      setIsDownloading(false);
       handleCloseContextMenu();
     }
   };
@@ -277,6 +285,8 @@ const ChatImage = ({
           </Box>
         </Box>
       </Modal>
+
+      <ProgressModal open={isDownloading} text="Preparing to download image" />
     </>
   );
 };

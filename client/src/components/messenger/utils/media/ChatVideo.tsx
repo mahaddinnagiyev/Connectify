@@ -14,6 +14,7 @@ import {
 } from "../../../../services/socket/dto/messages-dto";
 import ErrorMessage from "../../../messages/ErrorMessage";
 import SuccessMessage from "../../../messages/SuccessMessage";
+import ProgressModal from "../../../modals/chat/ProgressModal";
 
 interface ChatVideoProps {
   message: MessagesDTO;
@@ -45,6 +46,7 @@ const ChatVideo = ({
 }: ChatVideoProps) => {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [isDownloading, setIsDownloading] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [contextMenu, setContextMenu] = useState<{
     mouseX: number;
@@ -87,8 +89,11 @@ const ChatVideo = ({
 
   const handleDownload = async () => {
     try {
+      setIsDownloading(true);
       const response = await fetch(message.content);
-      if (!response.ok) throw new Error("Failed to download video");
+      if (!response.ok) {
+        return setErrorMessage("Download failed. Please try again later.");
+      }
 
       const blob = await response.blob();
 
@@ -105,11 +110,16 @@ const ChatVideo = ({
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
 
+      const audio = new Audio("/audio/download-media-audio.mp3");
+      audio.play();
+
       setSuccessMessage("Video downloaded successfully");
     } catch {
       setErrorMessage("Download failed. Please try again later.");
+    } finally {
+      setIsDownloading(false);
+      handleCloseContextMenu();
     }
-    handleCloseContextMenu();
   };
 
   return (
@@ -280,6 +290,8 @@ const ChatVideo = ({
           />
         </Box>
       </Modal>
+
+      <ProgressModal open={isDownloading} text="Preparing to download video" />
     </>
   );
 };

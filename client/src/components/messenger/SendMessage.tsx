@@ -1,6 +1,6 @@
 import React, { useState, KeyboardEvent, useRef, useEffect } from "react";
 import { HighlightOff as HighlightOffIcon } from "@mui/icons-material";
-import UploadProgressModal from "../modals/chat/UploadProgressModal";
+import ProgressModal from "../modals/chat/ProgressModal";
 import ErrorMessage from "../messages/ErrorMessage";
 import AttachModal from "../modals/chat/AttachModal";
 import SelectedModal from "../modals/chat/SelectedModal";
@@ -404,7 +404,7 @@ const SendMessage: React.FC<SendMessageProps> = ({
         />
       )}
 
-      <UploadProgressModal open={showProgressModal} />
+      <ProgressModal open={showProgressModal} text="Uploading..." />
 
       {showSelectedModal && selectedFile && (
         <SelectedModal

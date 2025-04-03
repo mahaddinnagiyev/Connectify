@@ -1,11 +1,15 @@
 import React from "react";
 import { CircularProgress, Paper, Slide } from "@mui/material";
 
-interface UploadProgressModalProps {
+interface ProgressModalProps {
   open: boolean;
+  text: string;
 }
 
-const UploadProgressModal: React.FC<UploadProgressModalProps> = ({ open }) => {
+const ProgressModal: React.FC<ProgressModalProps> = ({
+  open,
+  text,
+}) => {
   return (
     <Slide direction="left" in={open} mountOnEnter unmountOnExit>
       <Paper
@@ -20,11 +24,11 @@ const UploadProgressModal: React.FC<UploadProgressModalProps> = ({ open }) => {
           gap: 8,
         }}
       >
-        <CircularProgress size={24} style={{ color: "var(--primary-color)" }}/>
-        <span>Uploading...</span>
+        <CircularProgress size={24} style={{ color: "var(--primary-color)" }} />
+        <span>{text}</span>
       </Paper>
     </Slide>
   );
 };
 
-export default UploadProgressModal;
+export default ProgressModal;
