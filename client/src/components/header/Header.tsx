@@ -24,11 +24,13 @@ import ErrorMessage from "../messages/ErrorMessage";
 import CheckModal from "../modals/spinner/CheckModal";
 import { getUserById } from "../../services/user/user-service";
 import { getFriendRequests } from "../../services/friendship/friendship-service";
+import { User } from "../../services/user/dto/user-dto";
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [profilePicture, setProfilePicture] = useState<string | null>(null);
   const [receivedRequestsCount, setReceivedRequestsCount] = useState(0);
   const menuRef = useRef<HTMLDivElement | null>(null);
@@ -55,32 +57,47 @@ const Header = () => {
   }, []);
 
   const handleLogout = async () => {
-    setIsLoading(true);
-    const response = await logout();
+    try {
+      setIsLoading(true);
+      const response = await logout();
 
-    if (response.success) {
-      localStorage.removeItem("token");
+      if (response.success) {
+        localStorage.removeItem("activeSettingsTab");
+        localStorage.removeItem("activeTab");
+        localStorage.removeItem(`cachedChats_${currentUser?.id}`);
+        localStorage.removeItem("videoVolume");
+        localStorage.removeItem(`cachedProfile_${currentUser?.id}`);
 
-      window.location.href = "/auth/login";
-    } else {
-      setIsLoading(false);
-      if (Array.isArray(response.message)) {
-        setErrorMessage(response.message[0]);
+        if (localStorage.getItem("cachedProfile_null")) {
+          localStorage.removeItem("cachedProfile_null");
+        }
+
+        window.location.href = "/auth/login";
       } else {
-        setErrorMessage(
-          response.response?.error ??
-            response.message ??
-            response.error ??
-            "Logout failed"
-        );
+        if (Array.isArray(response.message)) {
+          setErrorMessage(response.message[0]);
+        } else {
+          setErrorMessage(
+            response.response?.error ??
+              response.message ??
+              response.error ??
+              "Logout failed"
+          );
+        }
       }
+    } catch (error) {
+      if (error) {
+        setErrorMessage("Something went wrong. Please try again.");
+      }
+    } finally {
+      setIsLoading(false);
     }
-    setIsLoading(false);
   };
 
   useEffect(() => {
     getUserById().then((response) => {
       if (response.success) {
+        setCurrentUser(response.user);
         setProfilePicture(response.account.profile_picture);
       }
     });
