@@ -232,7 +232,10 @@ const ChatVideo = ({
               </Button>
               {isInModal === false && (
                 <Button
-                  onClick={() => handleReplyMessage!(contextMenu.message!)}
+                  onClick={() => {
+                    handleReplyMessage!(contextMenu.message!);
+                    handleCloseContextMenu();
+                  }}
                   style={{
                     color: "var(--primary-color)",
                     fontWeight: 600,

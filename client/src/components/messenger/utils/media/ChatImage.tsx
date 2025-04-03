@@ -109,7 +109,7 @@ const ChatImage = ({
 
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
-      
+
       const audio = new Audio("/audio/download-media-audio.mp3");
       audio.play();
 
@@ -202,7 +202,10 @@ const ChatImage = ({
               </Button>
               {isInModal == false && (
                 <Button
-                  onClick={() => handleReplyMessage!(contextMenu.message!)}
+                  onClick={() => {
+                    handleReplyMessage!(contextMenu.message!);
+                    handleCloseContextMenu();
+                  }}
                   style={{
                     color: "var(--primary-color)",
                     fontWeight: 600,

@@ -112,7 +112,7 @@ const ChatFile = ({
 
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
-      
+
       const audio = new Audio("/audio/download-media-audio.mp3");
       audio.play();
 
@@ -200,7 +200,10 @@ const ChatFile = ({
                 placement="top"
                 title={`Download "${message.message_name ?? "Imported File"}"`}
               >
-                <button className="text-[var(--primary-color)]" onClick={handleDownload}>
+                <button
+                  className="text-[var(--primary-color)]"
+                  onClick={handleDownload}
+                >
                   <DownloadIcon fontSize="medium" />
                 </button>
               </Tooltip>
@@ -258,7 +261,10 @@ const ChatFile = ({
                 <DownloadIcon /> Download File
               </Button>
               <Button
-                onClick={() => handleReplyMessage(contextMenu.message!)}
+                onClick={() => {
+                  handleReplyMessage(contextMenu.message!);
+                  handleCloseContextMenu();
+                }}
                 style={{
                   color: "var(--primary-color)",
                   fontWeight: 600,
