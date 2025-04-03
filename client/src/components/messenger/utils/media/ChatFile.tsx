@@ -200,7 +200,7 @@ const ChatFile = ({
                 placement="top"
                 title={`Download "${message.message_name ?? "Imported File"}"`}
               >
-                <button className="text-[var(--primary-color)]">
+                <button className="text-[var(--primary-color)]" onClick={handleDownload}>
                   <DownloadIcon fontSize="medium" />
                 </button>
               </Tooltip>
