@@ -67,15 +67,13 @@ const Login = () => {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    setIsLoading(true);
-    setTimeout(async () => {
+    try {
+      setIsLoading(true);
       const response = await login(formData);
 
       if (response.success) {
         setSuccessMessage("Login successfull!");
-        setTimeout(() => {
-          navigate(from, { replace: true });
-        }, 1500);
+        navigate(from, { replace: true });
       } else {
         setIsLoading(false);
         if (Array.isArray(response.message)) {
@@ -89,7 +87,13 @@ const Login = () => {
           );
         }
       }
-    }, 1000);
+    } catch (error) {
+      if (error) {
+        setErrorMessage("Something went wrong. Please try again.");
+      }
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   useEffect(() => {

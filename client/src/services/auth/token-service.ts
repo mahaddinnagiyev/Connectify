@@ -12,12 +12,12 @@ export const getTokenFromSession = async (): Promise<{
     }
   );
 
-  if (!response.ok) { // ❗4xx/5xx xətalarını idarə et
+  if (!response.ok) {
     throw new Error(`HTTP error! status: ${response.status}`);
   }
 
   try {
-    return await response.json(); // JSON parse xətalarını idarə et
+    return await response.json();
   } catch (error) {
     console.error("JSON parsing error:", error);
     return null;
