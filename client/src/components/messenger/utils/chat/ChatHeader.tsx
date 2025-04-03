@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
+import { keyframes, css } from "@emotion/react";
 import { useNavigate } from "react-router-dom";
-import { Tooltip } from "@mui/material";
+import { Box, Tooltip } from "@mui/material";
 import no_profile_photo from "../../../../assets/no-profile-photo.png";
 import { Account } from "../../../../services/account/dto/account-dto";
 import { PrivacySettingsDTO } from "../../../../services/account/dto/privacy-settings-dto";
@@ -27,6 +28,22 @@ interface ChatHeaderProps {
   roomId: string;
   socket: Socket | null;
 }
+
+const fadeIn = keyframes`
+  from {
+    opacity: 0;
+    transform: scale(0.80);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}`;
+
+const menuAnimation = css`
+  animation: ${fadeIn} 0.3s ease-in-out forwards;
+  transform-origin: top right;
+`;
 
 const ChatHeader = ({
   otherUserAccount,
@@ -139,7 +156,11 @@ const ChatHeader = ({
             <MoreVertIcon />
           </button>
           {visibleChatOptions && (
-            <div ref={chatOptionsRef} className="action-buttons-2">
+            <Box
+              ref={chatOptionsRef}
+              className="action-buttons-2"
+              sx={menuAnimation}
+            >
               <button
                 className="user-profile-btn"
                 onClick={() =>
@@ -154,7 +175,7 @@ const ChatHeader = ({
               >
                 <PermMediaIcon className="profile-icon" /> Medias
               </button>
-            </div>
+            </Box>
           )}
         </div>
       </div>
