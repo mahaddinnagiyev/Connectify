@@ -1,8 +1,11 @@
+import * as dotenv from 'dotenv';
 import { MailerService } from '@nestjs-modules/mailer';
 import { Injectable } from '@nestjs/common';
 import { errorMessage } from '../auth/utils/messages/error/error-message';
 import { LogLevels } from '../enums/log-levels.enum';
 import { SupabaseService } from '../supabase/supabase.service';
+
+dotenv.config();
 
 @Injectable()
 export class LoggerService {
@@ -33,12 +36,14 @@ export class LoggerService {
     details?: string,
     stack?: string,
   ) {
-    await this.mailService.sendMail({
-      from: process.env.EMAIL_USER,
-      to: process.env.EMAIL_SECOND_USER,
-      subject: 'There is an error(emerg) in the application - Connectify',
-      html: errorMessage(message, module, details, stack),
-    });
+    if (process.env.NODE_ENV === 'https-development') {
+      await this.mailService.sendMail({
+        from: process.env.EMAIL_USER,
+        to: process.env.EMAIL_SECOND_USER,
+        subject: 'There is an error(emerg) in the application - Connectify',
+        html: errorMessage(message, module, details, stack),
+      });
+    }
     return this.log(LogLevels.emerg, message, module, details, stack);
   }
 
@@ -66,12 +71,14 @@ export class LoggerService {
     details?: string,
     stack?: string,
   ) {
-    await this.mailService.sendMail({
-      from: process.env.EMAIL_USER,
-      to: process.env.EMAIL_SECOND_USER,
-      subject: 'There is an error in the application - Connectify',
-      html: errorMessage(message, module, details, stack),
-    });
+    if (process.env.NODE_ENV === 'https-development') {
+      await this.mailService.sendMail({
+        from: process.env.EMAIL_USER,
+        to: process.env.EMAIL_SECOND_USER,
+        subject: 'There is an error in the application - Connectify',
+        html: errorMessage(message, module, details, stack),
+      });
+    }
     return this.log(LogLevels.error, message, module, details, stack);
   }
 
