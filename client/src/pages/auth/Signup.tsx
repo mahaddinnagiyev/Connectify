@@ -1,10 +1,10 @@
 import { useState } from "react";
 import "./css/signup.css";
 import { Helmet } from "react-helmet-async";
-import ConfirmAccount from "../../components/forms/ConfirmAccount";
+import ConfirmAccount from "../../components/forms/auth/ConfirmAccount";
 import { signup } from "../../services/auth/auth-service";
 import { Gender, SignupDTO } from "../../services/auth/dto/singup-dto";
-import SignupForm from "../../components/forms/SignupForm";
+import SignupForm from "../../components/forms/auth/SignupForm";
 import CheckModal from "../../components/modals/spinner/CheckModal";
 import SuccessMessage from "../../components/messages/SuccessMessage";
 import ErrorMessage from "../../components/messages/ErrorMessage";

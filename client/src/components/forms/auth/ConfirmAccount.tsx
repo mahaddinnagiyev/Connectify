@@ -1,7 +1,7 @@
 import React, { useState } from "react";
-import { confirm_account } from "../../services/auth/auth-service";
-import SuccessMessage from "../messages/SuccessMessage";
-import ErrorMessage from "../messages/ErrorMessage";
+import { confirm_account } from "../../../services/auth/auth-service";
+import SuccessMessage from "../../messages/SuccessMessage";
+import ErrorMessage from "../../messages/ErrorMessage";
 
 const ConfirmAccount = () => {
   const [formData, setFormData] = useState({ code: 0 });

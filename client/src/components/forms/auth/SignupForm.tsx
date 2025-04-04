@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
 import { Link } from "react-router-dom";
-import google_logo from "../../assets/google.png";
+import google_logo from "../../../assets/google.png";
 
 interface SignupFormProps {
   formData: {
