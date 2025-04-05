@@ -23,7 +23,7 @@ interface ChatImageProps {
   onLoadedData?: () => void;
   handleReplyMessage?: (message: MessagesDTO | null) => void;
   handleUnsendMessage?: (messageId: string | undefined) => void;
-  handleOpenDetailModal: (messageId: string) => void;
+  handleOpenDetailModal?: (messageId: string) => void;
 }
 
 const fadeIn = keyframes`
@@ -223,7 +223,7 @@ const ChatImage = ({
               <Button
                 onClick={() => {
                   handleCloseContextMenu();
-                  handleOpenDetailModal(contextMenu.message!.id)
+                  handleOpenDetailModal!(contextMenu.message!.id)
                 }}
                 style={{
                   color: "var(--primary-color)",

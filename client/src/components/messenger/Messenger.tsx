@@ -42,13 +42,13 @@ const Messenger = () => {
   const [isSubscribed, setIsSubscribed] = useState(false);
 
   const scrollToBottom = useCallback(() => {
-    if (messagesContainerRef.current && !hasMoreMessages) {
+    if (messagesContainerRef.current) {
       messagesContainerRef.current.scrollTo({
         top: messagesContainerRef.current.scrollHeight,
         behavior: "smooth",
       });
     }
-  }, [messagesContainerRef, hasMoreMessages]);
+  }, [messagesContainerRef]);
 
   const subscribeToPushNotifications = async () => {
     try {
@@ -220,12 +220,12 @@ const Messenger = () => {
         setMessages((prevMessages) => [...prevMessages, newMessage]);
       }
     };
-
+    scrollToBottom();
     socket?.on("newMessage", handleNewMessage);
     return () => {
       socket?.off("newMessage", handleNewMessage);
     };
-  }, [currentRoomId, socket]);
+  }, [currentRoomId, socket, scrollToBottom]);
 
   useEffect(() => {
     setMessages([]);
@@ -415,6 +415,7 @@ const Messenger = () => {
                 otherUserAccount={currentChat.otherUserAccount}
                 otherUserPrivacySettings={currentChat.otherUserPrivacySettings}
                 messages={messages}
+                setMessages={setMessages}
                 messagesContainerRef={messagesContainerRef}
                 hasMoreMessages={hasMoreMessages}
                 setHasMoreMessages={setHasMoreMessages}

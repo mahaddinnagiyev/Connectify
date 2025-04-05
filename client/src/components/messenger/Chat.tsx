@@ -40,6 +40,7 @@ interface ChatProps {
   otherUserAccount?: Account;
   otherUserPrivacySettings?: PrivacySettingsDTO;
   messages: MessagesDTO[];
+  setMessages: React.Dispatch<React.SetStateAction<MessagesDTO[]>>;
   messagesContainerRef: React.RefObject<HTMLDivElement>;
   hasMoreMessages: boolean;
   setHasMoreMessages: React.Dispatch<React.SetStateAction<boolean>>;
@@ -66,6 +67,7 @@ const Chat = ({
   otherUserPrivacySettings,
   currentChatRoomName,
   messages,
+  setMessages,
   messagesContainerRef,
   hasMoreMessages,
   setHasMoreMessages,
@@ -77,7 +79,6 @@ const Chat = ({
     mouseY: number;
     message?: MessagesDTO;
   } | null>(null);
-  const [allMessages, setAllMessages] = useState<MessagesDTO[]>(messages);
   const [socket, setSocket] = useState<Socket | null>(null);
   const [replyMessage, setReplyMessage] = useState<MessagesDTO | null>(null);
 
@@ -134,8 +135,8 @@ const Chat = ({
   }, [contextMenu]);
 
   useEffect(() => {
-    setAllMessages(messages);
-  }, [messages]);
+    setMessages(messages);
+  }, [messages, setMessages]);
 
   useEffect(() => {
     get_block_list().then((response) => {
@@ -155,7 +156,7 @@ const Chat = ({
 
   useEffect(() => {
     const handleMessageUnsent = (data: { messageId: string }) => {
-      setAllMessages((prevMessages) =>
+      setMessages((prevMessages) =>
         prevMessages.filter((msg) => msg.id !== data.messageId)
       );
     };
@@ -164,7 +165,7 @@ const Chat = ({
     return () => {
       socket?.off("messageUnsent", handleMessageUnsent);
     };
-  }, [socket]);
+  }, [socket, setMessages]);
 
   useEffect(() => {
     if (messagesContainerRef.current && prevScrollHeight.current > 0) {
@@ -174,7 +175,7 @@ const Chat = ({
       prevScrollHeight.current = 0;
     }
     setIsLoading(false);
-  }, [allMessages, messagesContainerRef]);
+  }, [messages, messagesContainerRef]);
 
   const loadMoreMessages = useCallback(
     (newLimit: number) => {
@@ -187,10 +188,7 @@ const Chat = ({
         socket?.emit("getMessages", { roomId, limit: newLimit });
         socket?.on("messages", (data) => {
           if (data.messages[0]?.room_id === roomId) {
-            setAllMessages((prevMessages) => [
-              ...data.messages,
-              ...prevMessages,
-            ]);
+            setMessages((prevMessages) => [...data.messages, ...prevMessages]);
           }
 
           if (data.messages.length < 30) {
@@ -212,6 +210,7 @@ const Chat = ({
       messagesContainerRef,
       socket,
       setHasMoreMessages,
+      setMessages,
     ]
   );
 
@@ -276,7 +275,7 @@ const Chat = ({
       container.scrollTop = newScrollHeight - prevScrollHeight.current;
       prevScrollHeight.current = 0;
     } else {
-      if (initialLoad && allMessages.length > 0) {
+      if (initialLoad && messages.length > 0) {
         container.scrollTop = container.scrollHeight;
         setInitialLoad(false);
       } else {
@@ -287,7 +286,7 @@ const Chat = ({
         }
       }
     }
-  }, [allMessages, initialLoad, messagesContainerRef]);
+  }, [messages, initialLoad, messagesContainerRef]);
 
   const groupedMessages = useMemo(() => {
     const grouped: { [key: string]: MessagesDTO[] } = {};
@@ -311,7 +310,7 @@ const Chat = ({
       });
     };
 
-    for (const message of allMessages) {
+    for (const message of messages) {
       const formattedDate = formatDate(
         new Date(message.created_at + "Z").toString()
       );
@@ -321,7 +320,7 @@ const Chat = ({
       grouped[formattedDate].push(message);
     }
     return grouped;
-  }, [allMessages]);
+  }, [messages]);
 
   return (
     <>
@@ -345,7 +344,7 @@ const Chat = ({
           otherUserAccount={otherUserAccount!}
           otherUserPrivacySettings={otherUserPrivacySettings!}
           otherUser={otherUser!}
-          messages={allMessages}
+          messages={messages}
           socket={socket!}
           roomId={roomId}
           currentChatRoomName={currentChatRoomName}
@@ -668,8 +667,8 @@ const Chat = ({
           handleReplyMessage={handleReplyMessage}
           replyMessage={replyMessage}
           truncateMessage={truncateMessage}
-          setAllMessages={setAllMessages}
-          allMessages={allMessages}
+          setMessages={setMessages}
+          messages={messages}
           scrollToBottom={scrollToBottom}
           messagesContainerRef={messagesContainerRef}
         />

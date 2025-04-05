@@ -28,8 +28,8 @@ interface SendMessageProps {
   socket: Socket | null;
   otherUserUsername?: string;
   replyMessage?: MessagesDTO | null;
-  allMessages: MessagesDTO[];
-  setAllMessages: (messages: MessagesDTO[]) => void;
+  messages: MessagesDTO[];
+  setMessages: (messages: MessagesDTO[]) => void;
   truncateMessage: (message: string, maxLength: number) => string;
   handleReplyMessage: (message: MessagesDTO | null) => void;
   scrollToBottom: () => void;
@@ -45,8 +45,7 @@ const SendMessage: React.FC<SendMessageProps> = ({
   truncateMessage,
   otherUserUsername,
   handleReplyMessage,
-  allMessages,
-  setAllMessages,
+  messages,
   replyMessage,
   scrollToBottom,
   messagesContainerRef,
@@ -98,7 +97,9 @@ const SendMessage: React.FC<SendMessageProps> = ({
     }
   }, [replyMessage]);
 
-  const scrollButtonBottom = replyMessage ? `calc(90px + ${replyHeight}px)` : "80px";
+  const scrollButtonBottom = replyMessage
+    ? `calc(90px + ${replyHeight}px)`
+    : "80px";
 
   useEffect(() => {
     const container = messagesContainerRef.current;
@@ -120,19 +121,25 @@ const SendMessage: React.FC<SendMessageProps> = ({
   }, [messagesContainerRef]);
 
   const handleSendMessage = () => {
-    if (messageInput.trim()) {
-      socket?.emit("sendMessage", {
-        roomId: roomId,
-        content: messageInput,
-        message_type: "text",
-        parent_message_id: replyMessage?.id,
-      });
+    try {
+      if (messageInput.trim()) {
+        socket?.emit("sendMessage", {
+          roomId: roomId,
+          content: messageInput,
+          message_type: "text",
+          parent_message_id: replyMessage?.id,
+        });
+
+        setPrevMessages(messages);
+        scrollToBottom();
+        sent_audio.play();
+        handleReplyMessage(null);
+      }
+    } catch (error) {
+      if (prevMessages.length < 0) setErrorMessage("Failed to send message.");
+      setErrorMessage((error as Error).message || "Failed to send message.");
+    } finally {
       setMessageInput("");
-      setPrevMessages(allMessages);
-      setAllMessages([...prevMessages]);
-      scrollToBottom();
-      sent_audio.play();
-      handleReplyMessage(null);
     }
   };
 
@@ -217,15 +224,15 @@ const SendMessage: React.FC<SendMessageProps> = ({
 
       setShowProgressModal(false);
       setShowSelectedModal(false);
-      setPrevMessages(allMessages);
-      setAllMessages([...prevMessages]);
-      sent_audio.play();
-      setSelectedFile(null);
+      setPrevMessages(messages);
       scrollToBottom();
+      sent_audio.play();
     } catch (error) {
       setShowProgressModal(false);
       setShowSelectedModal(false);
       setErrorMessage((error as Error).message ?? "Failed To Upload");
+    } finally {
+      setSelectedFile(null);
     }
   };
 
