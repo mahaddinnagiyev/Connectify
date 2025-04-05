@@ -27,6 +27,7 @@ import {
   MulterVideoConfig,
 } from '../supabase/utils/multer-config';
 import { UserService } from '../user/user.service';
+import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
 
 @Controller('messenger')
 export class MessengerController {
@@ -63,6 +64,16 @@ export class MessengerController {
       body.content,
       body.message_type,
     );
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @UseGuards(ThrottlerGuard)
+  @Throttle({
+    default: { limit: 60, ttl: 60 * 1000, blockDuration: 60 * 1000 },
+  })
+  @Get('message/:messageId')
+  async getMessageById(@Param('messageId') messageId: string) {
+    return await this.messengerService.getMessageById(messageId);
   }
 
   // Upload Image

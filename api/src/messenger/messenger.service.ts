@@ -19,6 +19,44 @@ export class MessengerService {
     private readonly logger: LoggerService,
   ) {}
 
+  async getMessageById(id: string) {
+    try {
+      const { data: message } = (await this.supabase
+        .getClient()
+        .from('messages')
+        .select('*')
+        .eq('id', id)
+        .single()) as { data: IMessage };
+
+      if (!message) {
+        await this.logger.warn(
+          'Message not found',
+          'messenger',
+          `Message Not Found\nMessage ID: ${id}`,
+        );
+        return new NotFoundException({
+          success: false,
+          error: 'Message not found',
+        });
+      }
+
+      return {
+        success: true,
+        message: message,
+      };
+    } catch (error) {
+      await this.logger.error(
+        error.message,
+        'messenger',
+        'There was an error in getting message by id',
+        error.stack,
+      );
+      return new InternalServerErrorException(
+        `Error getting message by id: ${error.message}`,
+      );
+    }
+  }
+
   async getChatRoomById(roomId: string) {
     try {
       const { data: chatRoom, error } = await this.supabase
