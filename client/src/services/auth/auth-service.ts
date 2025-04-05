@@ -173,13 +173,12 @@ export const confirm_delete_account = async (
   error?: string;
   response: { success: boolean; message?: string; error?: string };
 }> => {
-  const response = await fetch(`${SERVER_USER_URL}/auth/delete/confirm`, {
+  const response = await fetch(`${SERVER_USER_URL}/auth/delete/confirm?token=${token}`, {
     method: "DELETE",
     headers: {
       "Content-Type": "application/json; charset=utf-8",
     },
     credentials: "include",
-    body: JSON.stringify({ token }),
   });
   const data = await response.json();
   return data;

@@ -1,6 +1,6 @@
 import * as React from "react";
 import { Helmet } from "react-helmet-async";
-import "./style.css";
+import "./css/style.css";
 import Header from "../../components/header/Header";
 import Tabs from "@mui/material/Tabs";
 import Tab from "@mui/material/Tab";
@@ -13,6 +13,8 @@ import { User } from "../../services/user/dto/user-dto";
 import { Account } from "../../services/account/dto/account-dto";
 import AccountSettings from "../../components/settings/AccountSettings";
 import { PrivacySettingsDTO } from "../../services/account/dto/privacy-settings-dto";
+import { getToken } from "../../services/auth/token-service";
+import { jwtDecode } from "jwt-decode";
 
 interface UserProfile {
   user: User;
@@ -63,6 +65,7 @@ const SettingsPage = () => {
     null
   );
   const [userData, setUserData] = React.useState<UserProfile | null>(null);
+  const [userID, setUserID] = React.useState<string | null>(null);
 
   React.useEffect(() => {
     const handleResize = () => {
@@ -95,9 +98,30 @@ const SettingsPage = () => {
   }, []);
 
   React.useEffect(() => {
+    const fetchTokenData = async () => {
+      const token = await getToken();
+      if (!token) return;
+
+      const decodedToken: { id: string } = jwtDecode(token);
+      setUserID(decodedToken.id);
+    };
+
+    fetchTokenData();
+
+    const cacheKey = `cached_account_settings_${userID}`;
+    const cachedData = localStorage.getItem(cacheKey);
+
+    if (cachedData) {
+      const { userId, settings: cachedAccountSettings } =
+        JSON.parse(cachedData);
+      if (userId === userID) {
+        setUserData(cachedAccountSettings);
+      }
+    }
+
     getUserById().then((response) => {
       if (response.success) {
-        setUserData({
+        const account_settings_data = {
           user: response.user ?? {
             id: null,
             first_name: null,
@@ -117,7 +141,21 @@ const SettingsPage = () => {
             social_links: [],
           },
           privacy_settings: response.privacy_settings ?? null,
-        });
+        };
+
+        setUserData(account_settings_data);
+
+        localStorage.setItem(
+          cacheKey,
+          JSON.stringify({
+            userId: userID,
+            settings: account_settings_data,
+          })
+        );
+
+        if (localStorage.getItem("cached_account_settings_null")) {
+          localStorage.removeItem("cached_account_settings_null");
+        }
       } else {
         setErrorMessage(
           response.response?.message ??
@@ -128,7 +166,7 @@ const SettingsPage = () => {
         );
       }
     });
-  }, []);
+  }, [userID]);
 
   return (
     <>

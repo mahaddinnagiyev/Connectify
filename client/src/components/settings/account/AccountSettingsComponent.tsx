@@ -44,6 +44,15 @@ const AccountSettingsComponent = ({ userData }: AccountSettingsProps) => {
 
       if (response.success) {
         setSuccessMessage(response.message ?? "Face ID removed successfully.");
+
+        const cacheKey = `cached_account_settings_${userData?.user.id}`;
+        const cachedData = localStorage.getItem(cacheKey);
+        const parsedData = cachedData ? JSON.parse(cachedData) : null;
+        if (parsedData && parsedData.settings && parsedData.settings.user) {
+          parsedData.settings.user.face_descriptor = null;
+          localStorage.setItem(cacheKey, JSON.stringify(parsedData));
+        }
+
         setTimeout(() => {
           window.location.reload();
         }, 1500);
@@ -81,7 +90,7 @@ const AccountSettingsComponent = ({ userData }: AccountSettingsProps) => {
       )}
 
       {/* Əgər üz descriptor qeyd olunmayıbsa xəbərdarlıq */}
-      {!userData?.user.face_descriptor && (
+      {userData && !userData?.user.face_descriptor && (
         <Box
           sx={{
             display: "flex",
@@ -146,22 +155,41 @@ const AccountSettingsComponent = ({ userData }: AccountSettingsProps) => {
             gap: 1,
           }}
         >
-          <Typography>Face ID</Typography>
-          {userData?.user.face_descriptor ? (
-            <button
-              type="button"
-              onClick={openRemoveFaceIDModal}
-              className="remove-account-btn"
-            >
-              Remove Face ID
-            </button>
+          <Typography>
+            Face ID:{" "}
+            {userData && userData?.user.face_descriptor && (
+              <span className="text-[var(--primary-color)] font-bold">
+                Enabled
+              </span>
+            )}
+          </Typography>
+          {userData ? (
+            <>
+              {userData && userData?.user.face_descriptor ? (
+                <button
+                  type="button"
+                  onClick={openRemoveFaceIDModal}
+                  className="remove-account-btn"
+                >
+                  Remove Face ID
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={openFaceModal}
+                  className="face-id-btn"
+                >
+                  Add Face ID
+                </button>
+              )}
+            </>
           ) : (
             <button
               type="button"
-              onClick={openFaceModal}
-              className="face-id-btn"
+              className="face-id-btn cursor-not-allowed"
+              disabled
             >
-              Add Face ID
+              Face ID
             </button>
           )}
         </Box>

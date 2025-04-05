@@ -15,6 +15,7 @@ export interface FaceIDModalProps {
   onSuccess: (msg: string) => void;
   mode: "register" | "login";
   username_or_email_face_id?: string;
+  userID?: string;
 }
 
 const FaceIDModal = ({
@@ -22,10 +23,12 @@ const FaceIDModal = ({
   onSuccess,
   mode,
   username_or_email_face_id,
+  userID,
 }: FaceIDModalProps) => {
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isProcessing, setIsProcessing] = useState(false);
   const [isCapturing, setIsCapturing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -156,6 +159,7 @@ const FaceIDModal = ({
   const captureFace = async () => {
     setIsCapturing(true);
     try {
+      setIsProcessing(true);
       const detection = await faceapi
         .detectSingleFace(
           videoRef.current as HTMLVideoElement,
@@ -176,6 +180,15 @@ const FaceIDModal = ({
           onSuccess("Face ID registered successfully.");
           handleClose();
           success_audio.play();
+
+          const cacheKey = `cached_account_settings_${userID}`;
+          const cachedData = localStorage.getItem(cacheKey);
+          const parsedData = cachedData ? JSON.parse(cachedData) : null;
+          if (parsedData && parsedData.settings && parsedData.settings.user) {
+            parsedData.settings.user.face_descriptor = descriptor;
+            localStorage.setItem(cacheKey, JSON.stringify(parsedData));
+          }
+
           setTimeout(() => {
             window.location.reload();
           }, 1000);
@@ -219,6 +232,7 @@ const FaceIDModal = ({
       }
     } finally {
       setIsCapturing(false);
+      setIsProcessing(false);
     }
   };
 
@@ -365,6 +379,12 @@ const FaceIDModal = ({
                   ? "Login with Face ID"
                   : "Add Face ID"}
               </Button>
+            )}
+
+            {isProcessing && (
+              <div className="text-[var(--primary-color)] absolute bottom-2 left-1/2 transform -translate-x-1/2 font-bold">
+                Processing. Please wait...
+              </div>
             )}
           </div>
         </div>
