@@ -20,6 +20,7 @@ export interface User {
   username: string;
   gender: Gender;
   created_at: Date;
+  face_descriptor?: number[];
 }
 
 export interface EditUser {

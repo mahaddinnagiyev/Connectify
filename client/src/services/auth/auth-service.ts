@@ -184,3 +184,69 @@ export const confirm_delete_account = async (
   const data = await response.json();
   return data;
 };
+
+// Login With Face ID
+export const login_with_face_id = async (body: {
+  username_or_email_face_id: string;
+  face_descriptor: number[];
+}): Promise<{
+  success: boolean;
+  message?: string;
+  error?: string;
+  response: { success: boolean; message?: string; error?: string };
+}> => {
+  const response = await fetch(`${SERVER_USER_URL}/auth/login/faceid`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json; charset=utf-8",
+    },
+    credentials: "include",
+    body: JSON.stringify(body),
+  });
+
+  const data = await response.json();
+  return data;
+};
+
+// Register Face ID
+export const register_user_face_id = async (
+  face_descriptor: number[]
+): Promise<{
+  success: boolean;
+  message?: string;
+  error?: string;
+  response: { success: boolean; message?: string; error?: string };
+}> => {
+  const response = await fetch(`${SERVER_USER_URL}/auth/register/faceid`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json; charset=utf-8",
+      Authorization: `Bearer ${await getToken()}`,
+    },
+    credentials: "include",
+    body: JSON.stringify({ face_descriptor }),
+  });
+
+  const data = await response.json();
+  return data;
+};
+
+// Remove Face ID
+export const remove_user_face_id = async (): Promise<{
+  success: boolean;
+  message?: string;
+  error?: string;
+  response: { success: boolean; message?: string; error?: string };
+}> => {
+  const response = await fetch(`${SERVER_USER_URL}/auth/remove/faceid`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json; charset=utf-8",
+      Authorization: `Bearer ${await getToken()}`,
+    },
+    credentials: "include",
+  });
+
+  const data = await response.json();
+  return data;
+};

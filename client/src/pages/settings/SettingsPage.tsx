@@ -105,6 +105,8 @@ const SettingsPage = () => {
             email: null,
             username: null,
             gender: null,
+            face_descriptor: null,
+            created_at: null,
           },
           account: response.account ?? {
             id: null,
