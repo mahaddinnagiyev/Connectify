@@ -15,7 +15,7 @@ import {
 import { AuthService } from './auth.service';
 import { SignupDTO } from './dto/signup-dto';
 import { ConfirmAccountDTO } from './dto/confirm-account-dto';
-import { LoginDTO } from './dto/login-dto';
+import { LoginDTO, LoginWithFaceIDDTO } from './dto/login-dto';
 import { JwtAuthGuard } from '../jwt/jwt-auth-guard';
 import { SkipThrottle, Throttle, ThrottlerGuard } from '@nestjs/throttler';
 import { AuthGuard } from '@nestjs/passport';
@@ -25,6 +25,7 @@ import {
 } from './dto/forgot-passsword-dto';
 import { Request } from 'express';
 import { IUser } from 'src/interfaces/user.interface';
+import { RegisterUserFaceIdDTO } from './dto/RegisterUserFaceId-dto';
 
 @Controller('auth')
 export class AuthController {
@@ -180,5 +181,48 @@ export class AuthController {
         `${process.env.GOOGLE_CLIENT_REDIRECT_URL}/auth/login/?error=true`,
       );
     }
+  }
+
+  // Login With Face ID
+  @UseGuards(ThrottlerGuard)
+  @Throttle({
+    default: { limit: 40, ttl: 60 * 1000, blockDuration: 60 * 1000 },
+  })
+  @Post('login/faceid')
+  async loginFaceID(
+    @Body() loginFaceIdDTO: LoginWithFaceIDDTO,
+    @Session() session: Record<string, any>,
+  ) {
+    return this.authService.loginUserFaceID(loginFaceIdDTO, session);
+  }
+
+  // Register Face ID
+  @UseGuards(JwtAuthGuard)
+  @UseGuards(ThrottlerGuard)
+  @Throttle({
+    default: { limit: 40, ttl: 60 * 1000, blockDuration: 60 * 1000 },
+  })
+  @Patch('register/faceid')
+  async registerUserFaceID(
+    @Req() req: Request,
+    @Body() registerUserFaceIdDTO: RegisterUserFaceIdDTO,
+  ) {
+    const { face_descriptor } = registerUserFaceIdDTO;
+
+    return this.authService.registerUserFaceID(
+      req.user as IUser,
+      face_descriptor,
+    );
+  }
+
+  // Remove Face ID
+  @UseGuards(JwtAuthGuard)
+  @UseGuards(ThrottlerGuard)
+  @Throttle({
+    default: { limit: 40, ttl: 60 * 1000, blockDuration: 60 * 1000 },
+  })
+  @Patch('remove/faceid')
+  async removeUserFaceID(@Req() req: Request) {
+    return this.authService.removeUserFaceID(req.user as IUser);
   }
 }

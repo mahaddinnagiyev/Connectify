@@ -22,6 +22,7 @@ export interface IUser {
   provider?: Provider;
   reset_token?: string;
   reset_token_expiration?: Date;
+  face_descriptor?: number[];
   created_at?: Date;
   updated_at?: Date;
 }

@@ -6,6 +6,7 @@ import {
   Injectable,
   InternalServerErrorException,
   NotFoundException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { Request } from 'express';
 import * as bcrypt from 'bcrypt';
@@ -18,7 +19,7 @@ import { sendMail } from './utils/email/sendMail';
 import { signup_confirm_message } from './utils/messages/signup-confirm';
 import { generate_confirm_code } from './utils/generate-codes';
 import { ConfirmAccountDTO } from './dto/confirm-account-dto';
-import { LoginDTO } from './dto/login-dto';
+import { LoginDTO, LoginWithFaceIDDTO } from './dto/login-dto';
 import { JwtPayload } from '../jwt/jwt-payload';
 import { LoggerService } from '../logger/logger.service';
 import { Gender } from '../enums/gender.enum';
@@ -906,5 +907,225 @@ export class AuthService {
       return `${split_email.split('.')[0]}_${uuid().slice(0, 5)}`;
     }
     return `${email.split('@')[0]}_${uuid().slice(0, 5)}`;
+  }
+
+  // Login with Face ID
+  async loginUserFaceID(
+    loginDto: LoginWithFaceIDDTO,
+    session: Record<string, any>,
+  ) {
+    try {
+      const { username_or_email_face_id, face_descriptor } = loginDto;
+
+      const { data: isUserExist } = (await this.supabase
+        .getClient()
+        .from('users')
+        .select('id, email, username, face_descriptor')
+        .or(
+          `email.eq.${username_or_email_face_id}, username.eq.${username_or_email_face_id}`,
+        )
+        .single()) as { data: IUser };
+
+      if (!isUserExist) {
+        await this.logger.warn(
+          'Login failed - Due to invalid credentials',
+          'auth',
+          `Login attempt with form: ${username_or_email_face_id}`,
+        );
+        return new NotFoundException({
+          success: false,
+          error: 'Invalid Credentials',
+        });
+      }
+
+      if (!isUserExist.face_descriptor) {
+        await this.logger.warn(
+          'Login failed - Due to no registered face id',
+          'auth',
+          `Login attempt with form: ${username_or_email_face_id}`,
+        );
+        return new BadRequestException({
+          success: false,
+          error: 'No registered Face ID for this user',
+        });
+      }
+
+      if (isUserExist.is_banned) {
+        await this.logger.warn(
+          'Login failed - Due to user banned',
+          'auth',
+          `User: ${isUserExist.first_name} ${isUserExist.last_name} | @${isUserExist.username} did not login due to ban`,
+        );
+        return new ForbiddenException({
+          success: false,
+          message: 'Your account has been banned',
+        });
+      }
+
+      const storedDescriptor: number[] = Array.isArray(
+        isUserExist.face_descriptor,
+      )
+        ? isUserExist.face_descriptor
+        : JSON.parse(isUserExist.face_descriptor);
+
+      const distance = this.calculateEuclideanDistance(
+        face_descriptor,
+        storedDescriptor,
+      );
+      const threshold = 0.6;
+
+      if (distance > threshold) {
+        return new UnauthorizedException({
+          success: false,
+          error: 'Face ID does not match',
+        });
+      }
+
+      const payload: JwtPayload = {
+        id: isUserExist.id,
+        username: isUserExist.username,
+        is_banned: isUserExist.is_banned,
+      };
+
+      const access_token = jwt.sign(
+        payload,
+        process.env.JWT_ACCESS_SECRET_KEY,
+        {
+          expiresIn: '5d',
+        },
+      );
+
+      await this.logger.info(
+        `Login successfully:\nFull name: ${isUserExist.first_name} ${isUserExist.last_name},\nusername: ${isUserExist.username},\nemail: ${isUserExist.email}`,
+        'auth',
+      );
+
+      session.access_token = access_token;
+      session.cookie.maxAge = 5 * 24 * 60 * 60 * 1000;
+
+      await session.save();
+
+      return {
+        success: true,
+        message: 'Face ID login successful',
+      };
+    } catch (error) {
+      await this.logger.error(
+        error,
+        'auth',
+        `There is an error in Face ID login\nLogin attempt with form: ${JSON.stringify(loginDto)}`,
+        error.stack,
+      );
+      return new InternalServerErrorException(
+        'Face ID login failed - Due to Internal Server Error',
+      );
+    }
+  }
+
+  // Add Face ID
+  async registerUserFaceID(req_user: IUser, faceDescriptor: number[]) {
+    try {
+      const { data: user } = (await this.supabase
+        .getClient()
+        .from('users')
+        .select('id, email, username, face_descriptor')
+        .eq('id', req_user.id)
+        .single()) as { data: IUser };
+
+      if (user.face_descriptor) {
+        await this.logger.warn(
+          `User: ${req_user.username} already registered face id`,
+          'auth',
+        );
+        return new BadRequestException({
+          success: false,
+          error: 'This user already registered face id',
+        });
+      }
+
+      await this.supabase
+        .getClient()
+        .from('users')
+        .update({ face_descriptor: faceDescriptor })
+        .eq('id', req_user.id);
+
+      await this.logger.info(
+        `User: ${req_user.username} registered face id successfully`,
+        'auth',
+      );
+
+      return {
+        success: true,
+        message: 'Face ID registered successfully',
+      };
+    } catch (error) {
+      await this.logger.error(
+        error,
+        'auth',
+        `There is an error in Face ID registration\nRegistration attempt with form: ${JSON.stringify(req_user)}`,
+        error.stack,
+      );
+      return new InternalServerErrorException(
+        'Face ID registration failed - Due to Internal Server Error',
+      );
+    }
+  }
+
+  // Remove Face ID
+  async removeUserFaceID(req_user: IUser) {
+    try {
+      const { data: user } = (await this.supabase
+        .getClient()
+        .from('users')
+        .select('id, face_descriptor')
+        .eq('id', req_user.id)
+        .single()) as { data: IUser };
+
+      if (!user.face_descriptor) {
+        await this.logger.info(
+          `User: ${req_user.username} does not registered face id`,
+          `auth`,
+        );
+        return new BadRequestException({
+          success: false,
+          error: 'This user does not registered face id',
+        });
+      }
+
+      await this.supabase
+        .getClient()
+        .from('users')
+        .update({ face_descriptor: null })
+        .eq('id', req_user.id);
+
+      await this.logger.info(
+        `User: ${req_user.username} removed face id`,
+        `auth`,
+      );
+
+      return {
+        success: true,
+        message: 'Face ID removed successfully',
+      };
+    } catch (error) {
+      await this.logger.error(
+        error,
+        'auth',
+        'There is an error in face id removal process',
+        error.stack,
+      );
+      return new InternalServerErrorException(
+        'Face ID removal failed - Due to Internal Server Error',
+      );
+    }
+  }
+
+  private calculateEuclideanDistance(vec1: number[], vec2: number[]): number {
+    if (vec1.length !== vec2.length) {
+      throw new Error('Vectors must have the same length');
+    }
+    return Math.sqrt(
+      vec1.reduce((sum, val, i) => sum + Math.pow(val - vec2[i], 2), 0),
+    );
   }
 }

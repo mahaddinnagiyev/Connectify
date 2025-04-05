@@ -78,7 +78,7 @@ export class UserService {
         .getClient()
         .from('users')
         .select(
-          'id, first_name, last_name, username, email, gender, created_at',
+          'id, first_name, last_name, username, email, gender, face_descriptor, created_at',
         )
         .eq('id', id)
         .single()) as { data: IUser };
