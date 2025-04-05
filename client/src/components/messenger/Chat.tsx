@@ -33,6 +33,7 @@ import { Socket } from "socket.io-client";
 import MessageDetail from "../modals/chat/MessageDetail";
 
 interface ChatProps {
+  currentChatRoomName?: string;
   roomId: string;
   currentUser: string;
   otherUser?: Users;
@@ -63,6 +64,7 @@ const Chat = ({
   otherUser,
   otherUserAccount,
   otherUserPrivacySettings,
+  currentChatRoomName,
   messages,
   messagesContainerRef,
   hasMoreMessages,
@@ -346,6 +348,7 @@ const Chat = ({
           messages={allMessages}
           socket={socket!}
           roomId={roomId}
+          currentChatRoomName={currentChatRoomName}
         />
       </div>
       <hr className="font-bold" />

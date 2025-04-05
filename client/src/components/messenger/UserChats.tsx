@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState, useRef } from "react";
+import React, { useCallback, useEffect, useState, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { keyframes } from "@emotion/react";
 import no_profile_photo from "../../assets/no-profile-photo.png";
@@ -13,6 +13,7 @@ import {
   ImageTwoTone as ImageTwoToneIcon,
   KeyboardVoiceTwoTone as KeyboardVoiceTwoToneIcon,
   AccountBox as AccountBoxIcon,
+  Badge as BadgeIcon,
 } from "@mui/icons-material";
 import { Box, CircularProgress } from "@mui/material";
 import { ChatRoomsDTO } from "../../services/socket/dto/ChatRoom-dto";
@@ -22,6 +23,9 @@ import { PrivacySettingsDTO } from "../../services/account/dto/privacy-settings-
 import { Button } from "@mui/material";
 import MediaModal from "../modals/chat/MediaModals";
 import { getMessagesForRoom } from "../../services/socket/socket-service";
+import { Socket } from "socket.io-client";
+import ChangeRoomNameModal from "../modals/chat/ChangeRoomNameModal";
+import ProgressModal from "../modals/chat/ProgressModal";
 
 interface UserChatsProps {
   chats: (ChatRoomsDTO & {
@@ -30,7 +34,18 @@ interface UserChatsProps {
     otherUserPrivacySettings?: PrivacySettingsDTO;
   })[];
   isLoading: boolean;
+  socket: Socket | null;
   truncateMessage: (message: string, maxLength: number) => string;
+  currentUserId: string;
+  setChats: React.Dispatch<
+    React.SetStateAction<
+      (ChatRoomsDTO & {
+        otherUser?: Users;
+        otherUserAccount?: Account;
+        otherUserPrivacySettings?: PrivacySettingsDTO;
+      })[]
+    >
+  >;
 }
 
 const fadeIn = keyframes`
@@ -44,7 +59,14 @@ const fadeIn = keyframes`
   }
 `;
 
-const UserChats = ({ chats, isLoading, truncateMessage }: UserChatsProps) => {
+const UserChats = ({
+  chats,
+  isLoading,
+  socket,
+  truncateMessage,
+  setChats,
+  currentUserId,
+}: UserChatsProps) => {
   const [contextMenu, setContextMenu] = useState<{
     mouseX: number;
     mouseY: number;
@@ -57,6 +79,10 @@ const UserChats = ({ chats, isLoading, truncateMessage }: UserChatsProps) => {
 
   const [messages, setMessages] = useState<MessagesDTO[]>([]);
   const [isMediaModalOpen, setIsMediaModalOpen] = useState(false);
+  const [isNameModalOpen, setIsNameModalOpen] = useState(false);
+  const [roomId, setRoomId] = useState("");
+  const [roomName, setRoomName] = useState("");
+  const [isChangingRoomName, setIsChangingRoomName] = useState(false);
 
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -90,6 +116,42 @@ const UserChats = ({ chats, isLoading, truncateMessage }: UserChatsProps) => {
     }
   });
 
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleRoomNameChanged = (updatedRoom: ChatRoomsDTO) => {
+      setChats((prevChats) =>
+        prevChats.map((chat) =>
+          chat.id === updatedRoom.id
+            ? { ...chat, name: updatedRoom.name }
+            : chat
+        )
+      );
+      setIsChangingRoomName(false);
+
+      const cacheKey = `cachedChats_${currentUserId}`;
+      const cachedData = localStorage.getItem(cacheKey);
+      if (cachedData) {
+        const parsedData = JSON.parse(cachedData);
+        const updatedChats = parsedData.chats.map((chat: ChatRoomsDTO) =>
+          chat.id === updatedRoom.id
+            ? { ...chat, name: updatedRoom.name }
+            : chat
+        );
+        localStorage.setItem(
+          cacheKey,
+          JSON.stringify({ ...parsedData, chats: updatedChats })
+        );
+      }
+    };
+
+    socket.on("roomNameChanged", handleRoomNameChanged);
+
+    return () => {
+      socket.off("roomNameChanged", handleRoomNameChanged);
+    };
+  }, [socket, currentUserId, setChats]);
+
   const handleContextMenu = useCallback(
     (
       event: React.MouseEvent,
@@ -117,6 +179,23 @@ const UserChats = ({ chats, isLoading, truncateMessage }: UserChatsProps) => {
     e.stopPropagation();
     handleCloseContextMenu();
     setIsMediaModalOpen(true);
+  };
+
+  const openRoomNameModal = (
+    e: React.MouseEvent,
+    roomId: string,
+    name?: string
+  ) => {
+    e.stopPropagation();
+    setRoomId(roomId);
+    setRoomName(name ?? "");
+    handleCloseContextMenu();
+    setIsNameModalOpen(true);
+  };
+
+  const handleRoomNameChange = (roomId: string, newName: string) => {
+    setIsChangingRoomName(true);
+    socket?.emit("changeRoomName", { roomId, name: newName });
   };
 
   return (
@@ -152,9 +231,9 @@ const UserChats = ({ chats, isLoading, truncateMessage }: UserChatsProps) => {
                       />
                       <div className="flex flex-col gap-1">
                         <p className="text-sm">
-                          {chat.otherUser?.first_name}{" "}
-                          {chat.otherUser?.last_name} | @
-                          {chat.otherUser?.username}
+                          {chat.name
+                            ? chat.name
+                            : `${chat.otherUser?.first_name} ${chat.otherUser?.last_name} | @${chat.otherUser?.username}`}
                         </p>
                         <p className="text-xs">
                           {chat?.lastMessage?.message_type ===
@@ -194,16 +273,15 @@ const UserChats = ({ chats, isLoading, truncateMessage }: UserChatsProps) => {
                                   Video
                                 </>
                               )}
-
-                              {![
-                                MessageType.IMAGE,
-                                MessageType.AUDIO,
-                                MessageType.FILE,
-                                MessageType.VIDEO,
-                              ].includes(
-                                chat?.lastMessage?.message_type ??
-                                  MessageType.DEFAULT
-                              ) && <span>Media</span>}
+                              {chat?.lastMessage?.message_type ===
+                                MessageType.DEFAULT && (
+                                <>
+                                  {truncateMessage(
+                                    chat.lastMessage.content,
+                                    45
+                                  )}
+                                </>
+                              )}
                             </span>
                           )}
                         </p>
@@ -278,6 +356,7 @@ const UserChats = ({ chats, isLoading, truncateMessage }: UserChatsProps) => {
                     ? "right"
                     : "left"
                 }`,
+                pl: "8px",
               }}
             >
               <Button
@@ -288,6 +367,7 @@ const UserChats = ({ chats, isLoading, truncateMessage }: UserChatsProps) => {
                   textTransform: "none",
                   width: "100%",
                   display: "flex",
+                  justifyContent: "flex-start",
                   gap: "8px",
                   transition: "color 0.3s ease",
                   "&:hover": {
@@ -299,7 +379,7 @@ const UserChats = ({ chats, isLoading, truncateMessage }: UserChatsProps) => {
                   navigate(`/user/@${contextMenu.chat?.otherUser?.username}`);
                 }}
               >
-                <AccountBoxIcon /> Profile
+                <AccountBoxIcon /> User Profile
               </Button>
               <Button
                 sx={{
@@ -309,6 +389,7 @@ const UserChats = ({ chats, isLoading, truncateMessage }: UserChatsProps) => {
                   textTransform: "none",
                   width: "100%",
                   display: "flex",
+                  justifyContent: "flex-start",
                   gap: "8px",
                   transition: "color 0.3s ease",
                   "&:hover": {
@@ -317,7 +398,32 @@ const UserChats = ({ chats, isLoading, truncateMessage }: UserChatsProps) => {
                 }}
                 onClick={showMediaModal}
               >
-                <PermMediaIcon /> Media
+                <PermMediaIcon /> See Media
+              </Button>
+              <Button
+                sx={{
+                  color: "black",
+                  fontWeight: 600,
+                  padding: "10px",
+                  textTransform: "none",
+                  width: "100%",
+                  display: "flex",
+                  justifyContent: "flex-start",
+                  gap: "8px",
+                  transition: "color 0.3s ease",
+                  "&:hover": {
+                    color: "#00ff00",
+                  },
+                }}
+                onClick={(e: React.MouseEvent) =>
+                  openRoomNameModal(
+                    e,
+                    contextMenu!.chat!.id!,
+                    contextMenu!.chat?.name
+                  )
+                }
+              >
+                <BadgeIcon /> Room Name
               </Button>
             </Box>
           );
@@ -327,6 +433,18 @@ const UserChats = ({ chats, isLoading, truncateMessage }: UserChatsProps) => {
         <MediaModal
           messages={messages}
           setIsMediaModalOpen={setIsMediaModalOpen}
+        />
+      )}
+
+      <ProgressModal open={isChangingRoomName} text="Changing room name" />
+
+      {isNameModalOpen && (
+        <ChangeRoomNameModal
+          open={isNameModalOpen}
+          roomId={roomId}
+          currentName={roomName}
+          onClose={() => setIsNameModalOpen(false)}
+          onRoomNameChange={handleRoomNameChange}
         />
       )}
     </>

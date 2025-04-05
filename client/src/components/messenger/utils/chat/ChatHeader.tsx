@@ -21,6 +21,7 @@ import { Socket } from "socket.io-client";
 import ErrorMessage from "../../../messages/ErrorMessage";
 
 interface ChatHeaderProps {
+  currentChatRoomName?: string;
   otherUserAccount: Account;
   otherUserPrivacySettings: PrivacySettingsDTO;
   otherUser: User;
@@ -46,6 +47,7 @@ const menuAnimation = css`
 `;
 
 const ChatHeader = ({
+  currentChatRoomName,
   otherUserAccount,
   otherUserPrivacySettings,
   otherUser,
@@ -135,8 +137,9 @@ const ChatHeader = ({
               href={`/user/@${otherUser?.username}`}
               className="user-name mb-1 hover:underline text-sm"
             >
-              {otherUser?.first_name} {otherUser?.last_name} | @
-              {otherUser?.username}
+              {currentChatRoomName ??
+                `${otherUser?.first_name} ${otherUser?.last_name} | @
+              ${otherUser?.username}`}
             </a>
           </div>
           <div className="last-seen-container">

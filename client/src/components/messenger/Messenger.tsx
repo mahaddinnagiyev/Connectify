@@ -391,7 +391,10 @@ const Messenger = () => {
             <UserChats
               chats={chats}
               truncateMessage={truncateMessage}
+              socket={socket}
+              currentUserId={currentUser!}
               isLoading={isLoading}
+              setChats={setChats}
             />
           </div>
           {/* Chat Room */}
@@ -407,6 +410,7 @@ const Messenger = () => {
                 key={currentRoomId}
                 currentUser={currentUser ?? ""}
                 roomId={currentRoomId}
+                currentChatRoomName={currentChat.name}
                 otherUser={currentChat.otherUser}
                 otherUserAccount={currentChat.otherUserAccount}
                 otherUserPrivacySettings={currentChat.otherUserPrivacySettings}
