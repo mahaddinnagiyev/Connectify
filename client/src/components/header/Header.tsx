@@ -67,6 +67,7 @@ const Header = () => {
         localStorage.removeItem(`cachedChats_${currentUser?.id}`);
         localStorage.removeItem("videoVolume");
         localStorage.removeItem(`cachedProfile_${currentUser?.id}`);
+        localStorage.removeItem(`cached_account_settings_${currentUser?.id}`);
 
         if (localStorage.getItem("cachedProfile_null")) {
           localStorage.removeItem("cachedProfile_null");
