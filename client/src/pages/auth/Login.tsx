@@ -1,37 +1,56 @@
 import "./css/login.css";
 import google_logo from "../../assets/google.png";
-import { Visibility, VisibilityOff } from "@mui/icons-material";
-
 import { Helmet } from "react-helmet-async";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { login } from "../../services/auth/auth-service";
 import ErrorMessage from "../../components/messages/ErrorMessage";
 import SuccessMessage from "../../components/messages/SuccessMessage";
 import CheckModal from "../../components/modals/spinner/CheckModal";
+import LoginForm from "../../components/forms/auth/LoginForm";
+import FaceIDForm from "../../components/forms/auth/FaceIDForm";
+import { Box, Switch, Tooltip, Typography, Slide } from "@mui/material";
+import {
+  Password as PasswordIcon,
+  ContactEmergency as ContactEmergencyIcon,
+} from "@mui/icons-material";
+import { TransitionGroup } from "react-transition-group";
+
+enum LoginMethod {
+  PASSWORD = "password",
+  FACE = "face",
+}
 
 const Login = () => {
-  const [formData, setFormdata] = useState({
-    username_or_email: "",
-    password: "",
-  });
+  const [loginMethod, setLoginMethod] = useState<LoginMethod>(
+    LoginMethod.PASSWORD
+  );
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
 
   const navigate = useNavigate();
-  const location = useLocation();
 
   const getUrl = (params: string) => {
     const url = window.location.href;
-
-    if (url.split("/").includes(params)) {
-      return true;
-    }
-
-    return false;
+    return url.split("/").includes(params);
   };
+
+  const handleSwitchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setLoginMethod(
+      event.target.checked ? LoginMethod.FACE : LoginMethod.PASSWORD
+    );
+    localStorage.setItem(
+      "loginMethod",
+      event.target.checked ? "face" : "password"
+    );
+  };
+
+  useEffect(() => {
+    const loginMethod = localStorage.getItem("loginMethod");
+    if (loginMethod) {
+      setLoginMethod(loginMethod as LoginMethod);
+    }
+  }, []);
 
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -52,48 +71,6 @@ const Login = () => {
 
   const handleGoogleLogin = () => {
     window.location.replace(`${process.env.GOOGLE_CLIENT_REDIRECT_URL}`);
-  };
-
-  const togglePasswordVisibility = () => {
-    setShowPassword((prev) => !prev);
-  };
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormdata({ ...formData, [e.target.name]: e.target.value });
-  };
-
-  const from = location.state?.from?.pathname || "/messenger";
-
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-
-    try {
-      setIsLoading(true);
-      const response = await login(formData);
-
-      if (response.success) {
-        setSuccessMessage("Login successfull!");
-        navigate(from, { replace: true });
-      } else {
-        setIsLoading(false);
-        if (Array.isArray(response.message)) {
-          setErrorMessage(response.message[0]);
-        } else {
-          setErrorMessage(
-            response.response?.error ??
-              response.message ??
-              response.error ??
-              "Invalid username or password"
-          );
-        }
-      }
-    } catch (error) {
-      if (error) {
-        setErrorMessage("Something went wrong. Please try again.");
-      }
-    } finally {
-      setIsLoading(false);
-    }
   };
 
   useEffect(() => {
@@ -164,62 +141,116 @@ const Login = () => {
             </p>
           </div>
 
-          <form onSubmit={handleSubmit} method="POST" className="login-form">
-            <div className="login-form-group">
-              <label htmlFor="username_or_email">Username or Email</label>
-              <input
-                autoComplete="off"
-                type="text"
-                id="username_or_email"
-                name="username_or_email"
-                placeholder="Enter your username or email"
-                required
-                onChange={handleChange}
-              />
-            </div>
-
-            <div className="login-form-group relative">
-              <label htmlFor="password">Password</label>
-              <input
-                autoComplete="off"
-                type={showPassword ? "text" : "password"}
-                id="password"
-                name="password"
-                placeholder="Enter your password"
-                required
-                onChange={handleChange}
-              />
-              <span
-                onClick={togglePasswordVisibility}
-                className="absolute right-3 top-10 cursor-pointer"
-              >
-                {showPassword ? <VisibilityOff /> : <Visibility />}
-              </span>
-              <p className="text-start pt-2 text-xs">
-                Forgot password?{" "}
-                <Link
-                  to="/auth/forgot-password"
-                  className="font-serif underline hover:text-[#00ff00] transition duration-300"
+          <div className="separator">
+            <Box
+              display="flex"
+              alignItems="center"
+              justifyContent="center"
+              gap={2}
+              padding={2}
+            >
+              <Tooltip title="Login with password" placement="top">
+                <Typography
+                  variant="body1"
+                  sx={{
+                    fontWeight:
+                      loginMethod === LoginMethod.PASSWORD ? "bold" : "normal",
+                    color:
+                      loginMethod === LoginMethod.PASSWORD
+                        ? "#00ff00"
+                        : "inherit",
+                    transition: "all 0.3s ease",
+                  }}
+                  className="switch-text"
                 >
-                  Click here
-                </Link>
-              </p>
-            </div>
+                  <PasswordIcon />
+                </Typography>
+              </Tooltip>
+              <Switch
+                checked={loginMethod === LoginMethod.FACE}
+                onChange={handleSwitchChange}
+                sx={{
+                  width: 65,
+                  "& .MuiSwitch-switchBase": {
+                    transitionDuration: "300ms",
+                    "&.Mui-checked": {
+                      transform: "translateX(28px)",
+                      color: "#fff",
+                      "& + .MuiSwitch-track": {
+                        backgroundColor: "rgba(0, 255, 0, 0.3)",
+                        opacity: 1,
+                        border: 0,
+                      },
+                    },
+                    "&.Mui-focusVisible .MuiSwitch-thumb": {
+                      color: "#00ff00",
+                    },
+                  },
+                  "& .MuiSwitch-thumb": {
+                    backgroundColor:
+                      loginMethod === LoginMethod.FACE ? "#00ff00" : "#f3f3f3",
+                    boxShadow: "0 2px 4px 0 rgb(0 35 11 / 20%)",
+                    transition: "all 0.3s cubic-bezier(.4,.4,.2,1)",
+                  },
+                  "& .MuiSwitch-track": {
+                    backgroundColor: "rgba(0, 255, 0, 0.1)",
+                    opacity: 1,
+                    transition: "all 0.3s cubic-bezier(.4,.4,.2,1)",
+                  },
+                }}
+              />
+              <Tooltip title="Login with face ID" placement="top">
+                <Typography
+                  variant="body1"
+                  sx={{
+                    fontWeight:
+                      loginMethod === LoginMethod.FACE ? "bold" : "normal",
+                    color:
+                      loginMethod === LoginMethod.FACE ? "#00ff00" : "inherit",
+                    transition: "all 0.3s ease",
+                  }}
+                  className="switch-text"
+                >
+                  <ContactEmergencyIcon />
+                </Typography>
+              </Tooltip>
+            </Box>
+          </div>
 
-            <div className="login-form-group">
-              <button type="submit">Log in</button>
-            </div>
-
-            <p className="text-center">
-              Don't have an account?{" "}
-              <Link
-                to="/auth/signup"
-                className="font-serif underline hover:text-[#00ff00] transition duration-300"
+          {/* TransitionGroup ilə formaların mount/unmount animasiyasını təmin edirik */}
+          <TransitionGroup>
+            {loginMethod === LoginMethod.PASSWORD ? (
+              <Slide
+                key="password"
+                direction="left"
+                in
+                mountOnEnter
+                unmountOnExit
+                timeout={300}
               >
-                Sign up
-              </Link>
-            </p>
-          </form>
+                <div>
+                  <LoginForm
+                    setErrorMessage={setErrorMessage}
+                    setSuccessMessage={setSuccessMessage}
+                    setIsLoading={setIsLoading}
+                  />
+                </div>
+              </Slide>
+            ) : (
+              <Slide
+                key="face"
+                direction="right"
+                in
+                mountOnEnter
+                unmountOnExit
+                timeout={300}
+              >
+                <div>
+                  <FaceIDForm />
+                </div>
+              </Slide>
+            )}
+          </TransitionGroup>
         </section>
       </main>
     </>

@@ -1,14 +1,45 @@
+.face-id-btn {
+  width: 160px;
+  color: white;
+  border: 2px solid var(--primary-color);
+  color: var(--primary-color);
+  border-radius: 7px;
+  padding: 8px 8px;
+  transition: all 0.4s ease-in-out;
+  font-weight: 700;
+}
+
+.face-id-btn:hover {
+  background-color: var(--primary-color);
+  color: white;
+}
+
+.face-id-info-btn {
+  width: 160px;
+  color: #2196F3;
+  border: 2px solid #2196F3;
+  border-radius: 7px;
+  padding: 8px 8px;
+  transition: all 0.4s ease-in-out;
+  font-weight: 700;
+}
+
+.face-id-info-btn:hover {
+  background-color: #2196F3;
+  color: white;
+}
+
 .remove-account-btn {
-    width: 160px;
-    color: red;
-    border: 2px solid red;
-    border-radius: 7px;
-    padding: 8px 8px;
-    transition: all 0.4s ease-in-out;
-    font-weight: 700;
+  width: 160px;
+  color: red;
+  border: 2px solid red;
+  border-radius: 7px;
+  padding: 8px 8px;
+  transition: all 0.4s ease-in-out;
+  font-weight: 700;
 }
 
 .remove-account-btn:hover {
-    background-color: red;
-    color: white;
+  background-color: red;
+  color: white;
 }

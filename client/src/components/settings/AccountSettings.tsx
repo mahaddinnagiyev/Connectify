@@ -36,7 +36,7 @@ const AccountSettings: React.FC<AccountSettingsProps> = ({ userData }) => {
           onClose={() => setSuccessMessage(null)}
         />
       )}
-      <AccountSettingsComponent />
+      <AccountSettingsComponent userData={userData} />
       <PrivacySettingsComponent userData={userData} />
     </Box>
   );
