@@ -46,7 +46,10 @@ async function bootstrap() {
         secure: process.env.NODE_ENV === 'https-production',
         sameSite: process.env.NODE_ENV === 'https-production' ? 'none' : 'lax',
         maxAge: 30 * 60 * 1000,
-        domain: ".koyeb.app"
+        domain:
+          process.env.NODE_ENV === 'https-production'
+            ? '.koyeb.app'
+            : undefined,
       },
     }),
   );
