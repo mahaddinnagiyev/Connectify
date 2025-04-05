@@ -11,6 +11,7 @@ const FAQPage = () => {
   const APP_SETTINGS = "/images/site-settings.png";
   const MICROPHONE_SETTINGS = "/images/microphone.png";
   const NOTIFICATION_SETTINGS = "/images/notification.png";
+  const CAMERA_SETTINGS = "/images/camera.png";
 
   const faqs = [
     {
@@ -70,6 +71,37 @@ const FAQPage = () => {
 
           <p>4. Refresh the page.</p>
           <p>5. You will get new message notification.</p>
+        </div>
+      ),
+    },
+    {
+      question:
+        "How can I activate my camera to register Face ID / Login with Face ID?",
+      answer: (
+        <div className="space-y-4">
+          <p>1. Open settings from the navigation sidebar:</p>
+          <img
+            src={SETTINGS_ICON}
+            alt="Settings navigation"
+            className="w-full max-w-[200px] border-2 border-[#00ff0055] rounded-lg shadow-sm p-1"
+          />
+
+          <p>2. Navigate to Site Settings section:</p>
+          <img
+            src={APP_SETTINGS}
+            alt="App settings screen"
+            className="w-full max-w-[300px] border-2 border-[#00ff0055] rounded-lg shadow-sm"
+          />
+
+          <p>3. Find Camera settings and set to 'Allow':</p>
+          <img
+            src={CAMERA_SETTINGS}
+            alt="Notification settings"
+            className="w-full max-w-[300px] border-2 border-[#00ff0055] rounded-lg shadow-sm"
+          />
+
+          <p>4. Refresh the page.</p>
+          <p>5. You can register your Face ID or Login with Face ID.</p>
         </div>
       ),
     },
