@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   ForbiddenException,
+  HttpException,
   Injectable,
   InternalServerErrorException,
   NotFoundException,
@@ -274,7 +275,7 @@ export class MessengerService {
       const { data: chatRooms } = await this.supabase
         .getClient()
         .from('chat_rooms')
-        .select('id, user_ids')
+        .select('id, user_ids, name')
         .contains('user_ids', [userId]);
 
       if (!chatRooms || chatRooms.length === 0) return [];
@@ -479,6 +480,40 @@ export class MessengerService {
       );
       throw new InternalServerErrorException(
         `Error unsending message: ${error.message}`,
+      );
+    }
+  }
+
+  async changeRoomName(roomId: string, name: string | null) {
+    try {
+      const room = await this.getChatRoomById(roomId);
+
+      if (room instanceof HttpException) {
+        return room;
+      }
+
+      const { data: chatRoom } = await this.supabase
+        .getClient()
+        .from('chat_rooms')
+        .update({ name })
+        .eq('id', roomId)
+        .select('*')
+        .single();
+
+      this.logger.debug(
+        `${room.name} changed to ${chatRoom.name}`,
+        'messenger',
+      );
+      return chatRoom;
+    } catch (error) {
+      await this.logger.error(
+        error.message,
+        'messenger',
+        'There was an error in changing room name',
+        error.stack,
+      );
+      return new InternalServerErrorException(
+        'Failed To Change Room Name - Due To Internal Server Error',
       );
     }
   }

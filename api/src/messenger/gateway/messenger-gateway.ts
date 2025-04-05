@@ -538,4 +538,48 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       });
     }
   }
+
+  @SubscribeMessage('changeRoomName')
+  async changeRoomName(
+    client: Socket,
+    payload: { roomId: string; name: string },
+  ) {
+    try {
+      const result = await this.messengerService.changeRoomName(
+        payload.roomId,
+        payload.name,
+      );
+
+      const room = await this.messengerService.getChatRoomById(payload.roomId);
+      room.user_ids.forEach((userId: string) => {
+        this.server.to(`user:${userId}`).emit('chatRoomsUpdated');
+      });
+
+      const savedMessage = await this.messengerService.sendMessage(
+        payload.roomId,
+        client.data.user.id,
+        `${client.data.user.username} changed room name to ${payload.name}`,
+        MessageType.DEFAULT,
+      );
+      const messageToEmit = { ...savedMessage, roomId: savedMessage.room_id };
+
+      this.server.to(payload.roomId).emit('newMessage', messageToEmit);
+      this.server.to(payload.roomId).emit('roomNameChanged', {
+        ...result,
+        name: payload.name,
+        updated_at: new Date().toISOString(),
+      });
+    } catch (error) {
+      this.logger.error(
+        error.message,
+        'messenger-gateway',
+        'There was an error in changing room name',
+        error.stack,
+      );
+      client.emit('error', {
+        success: false,
+        message: error.message || 'Error changing room name',
+      });
+    }
+  }
 }
