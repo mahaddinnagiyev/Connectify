@@ -130,12 +130,12 @@ const MessageDetail = ({ messageId, onClose }: MessageDetailProps) => {
     >
       <div className="bg-white rounded-xl max-w-2xl w-full shadow-2xl relative">
         {isLoading && (
-          <div className="fixed inset-0 w-full h-full flex items-center justify-center">
+          <div className="fixed inset-0 w-full h-full flex items-center justify-center flex-col gap-2">
             <CircularProgress
               size={30}
               style={{ color: "var(--primary-color)" }}
             />
-            <span className="ml-2">Loading message details</span>
+            <span>Loading message details</span>
           </div>
         )}
 
