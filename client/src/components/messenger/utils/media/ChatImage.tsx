@@ -6,6 +6,7 @@ import {
   Download as DownloadIcon,
   TurnLeft as TurnLeftIcon,
   Reply as ReplyIcon,
+  InfoOutlined as InfoIcon,
 } from "@mui/icons-material";
 import {
   MessagesDTO,
@@ -22,6 +23,7 @@ interface ChatImageProps {
   onLoadedData?: () => void;
   handleReplyMessage?: (message: MessagesDTO | null) => void;
   handleUnsendMessage?: (messageId: string | undefined) => void;
+  handleOpenDetailModal: (messageId: string) => void;
 }
 
 const fadeIn = keyframes`
@@ -42,6 +44,7 @@ const ChatImage = ({
   isInModal = false,
   handleReplyMessage,
   handleUnsendMessage,
+  handleOpenDetailModal,
 }: ChatImageProps) => {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
@@ -217,6 +220,23 @@ const ChatImage = ({
                   <ReplyIcon /> Reply
                 </Button>
               )}
+              <Button
+                onClick={() => {
+                  handleCloseContextMenu();
+                  handleOpenDetailModal(contextMenu.message!.id)
+                }}
+                style={{
+                  color: "var(--primary-color)",
+                  fontWeight: 600,
+                  padding: "10px",
+                  textTransform: "none",
+                  width: "100%",
+                  display: "flex",
+                  gap: "3px",
+                }}
+              >
+                <InfoIcon /> Details
+              </Button>
               {currentUser === message.sender_id && (
                 <Button
                   onClick={() => handleUnsendMessage!(contextMenu.message?.id)}

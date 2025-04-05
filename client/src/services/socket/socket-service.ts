@@ -1,5 +1,6 @@
 import { io } from "socket.io-client";
 import { getToken } from "../auth/token-service";
+import { MessagesDTO } from "./dto/messages-dto";
 
 export const createSocket = async () => {
   const token = await getToken();
@@ -10,8 +11,7 @@ export const createSocket = async () => {
     transports: ["websocket"],
     auth: { token },
   });
-}
-
+};
 
 export const uploadImage = async (
   formData: FormData,
@@ -100,6 +100,30 @@ export const uploadAudio = async (
 export const getMessagesForRoom = async (roomId: string) => {
   const response = await fetch(
     `${process.env.SERVER_USER_URL}/messenger/chat-rooms/${roomId}/messages`,
+    {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json; charset=utf-8",
+        Authorization: `Bearer ${await getToken()}`,
+      },
+      credentials: "include",
+    }
+  );
+
+  const data = await response.json();
+  return data;
+};
+
+export const getMessageById = async (
+  messageId: string
+): Promise<{
+  success: boolean;
+  message: MessagesDTO;
+  error?: string;
+  response: { success: boolean; error?: string; message?: string };
+}> => {
+  const response = await fetch(
+    `${process.env.SERVER_USER_URL}/messenger/message/${messageId}`,
     {
       method: "GET",
       headers: {

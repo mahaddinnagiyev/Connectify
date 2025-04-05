@@ -53,8 +53,8 @@ const ProgressSliderOverlay = styled(Box)(({ theme }) => ({
 
 interface VideoPlayerProps {
   message: MessagesDTO;
-  handleDownload: () => void;
-  onClose: () => void;
+  handleDownload?: () => void;
+  onClose?: () => void;
 }
 
 const VideoPlayer = ({
@@ -356,7 +356,7 @@ const VideoPlayer = ({
             )}
             <MenuItem
               onClick={() => {
-                handleDownload();
+                handleDownload!();
                 handleMenuClose();
               }}
             >

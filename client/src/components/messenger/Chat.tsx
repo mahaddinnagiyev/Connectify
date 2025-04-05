@@ -6,6 +6,7 @@ import {
   TurnLeft as TurnLeftIcon,
   Reply as ReplyIcon,
   ContentCopy as ContentCopyIcon,
+  InfoOutlined as InfoIcon,
 } from "@mui/icons-material";
 import {
   MessagesDTO,
@@ -29,6 +30,7 @@ import ChatFile from "./utils/media/ChatFile";
 import SuccessMessage from "../messages/SuccessMessage";
 import React from "react";
 import { Socket } from "socket.io-client";
+import MessageDetail from "../modals/chat/MessageDetail";
 
 interface ChatProps {
   roomId: string;
@@ -88,6 +90,19 @@ const Chat = ({
   const [isBlocked, setIsBlocked] = useState(false);
   const [isBlocker, setIsBlocker] = useState(false);
   const [initialLoad, setInitialLoad] = useState(true);
+
+  const [selectedMessageId, setSelectedMessageId] = useState<string | null>(
+    null
+  );
+
+  const handleOpenDetailModal = (messageId: string) => {
+    handleCloseContextMenu();
+    setSelectedMessageId(messageId);
+  };
+
+  const handleCloseDetailModal = () => {
+    setSelectedMessageId(null);
+  };
 
   useEffect(() => {
     const createSocketInstance = async () => {
@@ -469,6 +484,7 @@ const Chat = ({
                         handleReplyMessage={handleReplyMessage}
                         handleUnsendMessage={handleUnsendMessage}
                         onLoadedData={scrollToBottom}
+                        handleOpenDetailModal={handleOpenDetailModal}
                       />
                     )}
                     {message.message_type === MessageType.VIDEO && (
@@ -478,6 +494,7 @@ const Chat = ({
                         onLoadedData={scrollToBottom}
                         handleReplyMessage={handleReplyMessage}
                         handleUnsendMessage={handleUnsendMessage}
+                        handleOpenDetailModal={handleOpenDetailModal}
                       />
                     )}
                     {message.message_type === MessageType.FILE && (
@@ -487,6 +504,7 @@ const Chat = ({
                         handleReplyMessage={handleReplyMessage}
                         handleUnsendMessage={handleUnsendMessage}
                         onLoadedData={scrollToBottom}
+                        handleOpenDetailModal={handleOpenDetailModal}
                       />
                     )}
 
@@ -603,6 +621,21 @@ const Chat = ({
                     <ContentCopyIcon fontSize="small" /> Copy Message
                   </Button>
                 )}
+                <Button
+                  onClick={() => handleOpenDetailModal(contextMenu.message!.id)}
+                  style={{
+                    color: "var(--primary-color)",
+                    fontWeight: 600,
+                    padding: "10px",
+                    textTransform: "none",
+                    width: "100%",
+                    display: "flex",
+                    gap: "3px",
+                  }}
+                >
+                  <InfoIcon /> Details
+                </Button>
+
                 {contextMenu.message?.sender_id === currentUser && (
                   <Button
                     onClick={() => handleUnsendMessage(contextMenu.message?.id)}
@@ -638,6 +671,13 @@ const Chat = ({
           messagesContainerRef={messagesContainerRef}
         />
       </section>
+
+      {selectedMessageId && (
+        <MessageDetail
+          messageId={selectedMessageId}
+          onClose={handleCloseDetailModal}
+        />
+      )}
     </>
   );
 };

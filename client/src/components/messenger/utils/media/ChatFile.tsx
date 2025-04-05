@@ -12,6 +12,7 @@ import {
   Slideshow as SlideshowIcon,
   GridOn as GridOnIcon,
   InsertDriveFile as InsertDriveFileIcon,
+  InfoOutlined as InfoIcon,
 } from "@mui/icons-material";
 import {
   MessagesDTO,
@@ -27,6 +28,7 @@ interface ChatFileProps {
   onLoadedData?: () => void;
   handleUnsendMessage: (messageId: string | undefined) => void;
   handleReplyMessage: (message: MessagesDTO | null) => void;
+  handleOpenDetailModal: (messageId: string) => void;
 }
 
 const fadeIn = keyframes`
@@ -46,6 +48,7 @@ const ChatFile = ({
   onLoadedData,
   handleUnsendMessage,
   handleReplyMessage,
+  handleOpenDetailModal,
 }: ChatFileProps) => {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
@@ -274,6 +277,23 @@ const ChatFile = ({
                 }}
               >
                 <ReplyIcon /> Reply
+              </Button>
+              <Button
+                onClick={() => {
+                  handleCloseContextMenu();
+                  handleOpenDetailModal(contextMenu.message!.id);
+                }}
+                style={{
+                  color: "var(--primary-color)",
+                  fontWeight: 600,
+                  padding: "10px",
+                  textTransform: "none",
+                  width: "100%",
+                  display: "flex",
+                  gap: "3px",
+                }}
+              >
+                <InfoIcon /> Details
               </Button>
               {currentUser === message.sender_id && (
                 <Button

@@ -6,7 +6,7 @@ const AudioPlayer = ({
   onLoadedData,
 }: {
   src: string;
-  onLoadedData: () => void;
+  onLoadedData?: () => void;
 }) => {
   const audioRef = useRef<HTMLAudioElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -46,7 +46,7 @@ const AudioPlayer = ({
     const checkDuration = () => {
       if (audioRef.current && isFinite(audioRef.current.duration)) {
         setDuration(audioRef.current.duration);
-        onLoadedData();
+        onLoadedData!();
       } else {
         setTimeout(checkDuration, 1000);
       }

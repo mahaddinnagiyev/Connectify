@@ -6,6 +6,7 @@ import {
   Download as DownloadIcon,
   TurnLeft as TurnLeftIcon,
   Reply as ReplyIcon,
+  InfoOutlined as InfoIcon,
 } from "@mui/icons-material";
 import VideoPlayer from "./VideoPlayer";
 import {
@@ -23,6 +24,7 @@ interface ChatVideoProps {
   onLoadedData?: () => void;
   handleReplyMessage?: (message: MessagesDTO | null) => void;
   handleUnsendMessage?: (messageId: string | undefined) => void;
+  handleOpenDetailModal: (messageId: string) => void;
 }
 
 const fadeIn = keyframes`
@@ -43,6 +45,7 @@ const ChatVideo = ({
   onLoadedData,
   handleReplyMessage,
   handleUnsendMessage,
+  handleOpenDetailModal,
 }: ChatVideoProps) => {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
@@ -247,6 +250,23 @@ const ChatVideo = ({
                   <ReplyIcon /> Reply
                 </Button>
               )}
+              <Button
+                onClick={() => {
+                  handleCloseContextMenu();
+                  handleOpenDetailModal(contextMenu.message!.id);
+                }}
+                style={{
+                  color: "var(--primary-color)",
+                  fontWeight: 600,
+                  padding: "10px",
+                  textTransform: "none",
+                  width: "100%",
+                  display: "flex",
+                  gap: "3px",
+                }}
+              >
+                <InfoIcon /> Details
+              </Button>
               {currentUser === message.sender_id && (
                 <Button
                   onClick={() => handleUnsendMessage!(contextMenu.message?.id)}
