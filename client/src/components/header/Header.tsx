@@ -16,6 +16,7 @@ import {
   AccountBox as AccountBoxIcon,
   Logout as LogoutIcon,
   Settings as SettingsIcon,
+  AssignmentInd as AssignmentIndIcon,
 } from "@mui/icons-material";
 
 import { Badge, Tooltip } from "@mui/material";
@@ -178,13 +179,7 @@ const Header = () => {
           {isMenuOpen && (
             <div className="profile-actions-burger flex flex-col gap-2">
               <a href="/user/my-profile">
-                <img
-                  src={profilePicture ?? no_profile_photo}
-                  alt=""
-                  style={{ width: "25px", height: "25px", borderRadius: "50%" }}
-                  className="border-2 border-[var(--primary-color)]"
-                />{" "}
-                View Profile
+                <AssignmentIndIcon /> View Profile
               </a>
               <a href="/settings">
                 <SettingsIcon /> Settings
@@ -204,9 +199,11 @@ const Header = () => {
 
         {/* Burger menu */}
         <div className="burger-menu" onClick={toggleMenu}>
-          <div></div>
-          <div></div>
-          <div></div>
+          <img
+            src={profilePicture ?? no_profile_photo}
+            alt=""
+            className="w-12 h-12 rounded-full cursor-pointer profile-img border-[1px] border-[var(--primary-color)]"
+          />
         </div>
 
         {/* Profile (hidden for mobile unless burger menu is open) */}

@@ -94,6 +94,10 @@
   color: #fff;
 }
 
+.burger-menu {
+  display: none;
+}
+
 /* Tablet and mobile devices responsive styling */
 @media (max-width: 835px) {
   .header {
