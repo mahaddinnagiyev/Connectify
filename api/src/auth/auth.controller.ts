@@ -145,8 +145,11 @@ export class AuthController {
     default: { limit: 40, ttl: 60 * 1000, blockDuration: 60 * 1000 },
   })
   @Delete('delete/confirm')
-  async confirm_delete_account(@Query('token') token: string) {
-    return this.authService.confirm_delete_account(token);
+  async confirm_delete_account(
+    @Query('token') token: string,
+    @Session() session: Record<string, any>,
+  ) {
+    return this.authService.confirm_delete_account(token, session);
   }
 
   // Google Login

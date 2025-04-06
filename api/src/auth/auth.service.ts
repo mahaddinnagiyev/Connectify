@@ -718,50 +718,71 @@ export class AuthService {
   // Confirm Delete Account
   async confirm_delete_account(
     token: string,
+    session: Record<string, any>,
   ): Promise<{ success: boolean; message: string } | HttpException> {
     try {
       const { data: user } = (await this.supabase
         .getClient()
         .from('users')
-        .select('*, account!inner(*)')
+        .select('*')
         .eq('reset_token', token)
         .single()) as { data: IUser };
 
-      if (!user || user.reset_token_expiration < new Date()) {
+      if (
+        !user ||
+        !user.reset_token ||
+        user.reset_token_expiration < new Date()
+      ) {
         return new NotFoundException({
           success: false,
           error: 'User not found or token expired',
         });
       }
 
-      const profile_picture = user.account.profile_picture;
+      const { data: account } = (await this.supabase
+        .getClient()
+        .from('accounts')
+        .select('profile_picture')
+        .eq('user_id', user.id)
+        .single()) as { data: IAccount };
+
+      const profile_picture = account.profile_picture;
 
       if (profile_picture) {
         const photoName = profile_picture.substring(
           profile_picture.lastIndexOf('/') + 1,
         );
-        const { data, error } = await this.supabase
+
+        const { data: photo } = (await this.supabase
           .getClient()
           .storage.from('profile_pictures')
-          .remove([photoName]);
+          .exists(photoName)) as { data: boolean };
 
-        if (error) {
-          await this.logger.error(
-            error.message,
-            'account',
-            'Error deleting old profile picture',
-            error.stack,
-          );
+        if (photo) {
+          const { data, error } = await this.supabase
+            .getClient()
+            .storage.from('profile_pictures')
+            .remove([photoName]);
 
-          return new BadRequestException({
-            success: false,
-            error: error.message,
-          });
+          if (error) {
+            await this.logger.error(
+              error.message,
+              'account',
+              'Error deleting old profile picture',
+              error.stack,
+            );
+
+            return new BadRequestException({
+              success: false,
+              error: error.message,
+            });
+          }
         }
       }
 
       await this.supabase.getClient().from('users').delete().eq('id', user.id);
-
+      await session.destroy();
+      
       await this.logger.info(
         `Account deleted successfully for user:
          First Name: ${user.first_name}

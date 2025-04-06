@@ -33,9 +33,10 @@ const DeleteAccount: React.FC = () => {
           setLoading(false);
         })
         .catch((error) => {
-          console.error(error);
-          setMessage("An error occurred. Please try again later.");
-          setLoading(false);
+          if (error) {
+            setMessage("An error occurred. Please try again later.");
+            setLoading(false);
+          }
         });
     } else {
       setMessage("Invalid token.");
