@@ -156,10 +156,10 @@ const AccountSettingsComponent = ({ userData }: AccountSettingsProps) => {
           }}
         >
           <Typography>
-            Face ID:{" "}
+            Face ID
             {userData && userData?.user.face_descriptor && (
               <span className="text-[var(--primary-color)] font-bold">
-                Enabled
+                : Enabled
               </span>
             )}
           </Typography>
