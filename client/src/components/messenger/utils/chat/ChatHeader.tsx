@@ -28,6 +28,8 @@ interface ChatHeaderProps {
   messages: MessagesDTO[];
   roomId: string;
   socket: Socket | null;
+  isFriend: boolean;
+  isFriendLoading: boolean;
 }
 
 const fadeIn = keyframes`
@@ -54,6 +56,8 @@ const ChatHeader = ({
   messages,
   roomId,
   socket,
+  isFriend,
+  isFriendLoading
 }: ChatHeaderProps) => {
   const [isHovered, setIsHovered] = useState(false);
   const [isMediaModalOpen, setIsMediaModalOpen] = useState(false);
@@ -148,7 +152,8 @@ const ChatHeader = ({
               otherUserPrivacySettings={
                 otherUserPrivacySettings as PrivacySettingsDTO
               }
-              otherUserId={otherUser?.id as string}
+              isFriend={isFriend}
+              loading={isFriendLoading}
             />
           </div>
         </div>

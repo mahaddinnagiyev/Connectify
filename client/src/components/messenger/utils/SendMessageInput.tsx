@@ -27,6 +27,7 @@ interface SendMessageInputProps {
   cancelRecording: () => void;
   stopRecordingAndUpload: () => void;
   onKeyPressHandler: (e: React.KeyboardEvent<HTMLTextAreaElement>) => void;
+  isFriendLoading: boolean;
 }
 
 const formatRecordingTime = (seconds: number) => {
@@ -132,6 +133,7 @@ export const SendMessageInput = ({
   cancelRecording,
   stopRecordingAndUpload,
   onKeyPressHandler,
+  isFriendLoading,
 }: SendMessageInputProps) => {
   const emojiPickerRef = useRef<HTMLDivElement>(null);
 
@@ -232,17 +234,31 @@ export const SendMessageInput = ({
           {...props}
         />
 
-        <Tooltip
-          title={messageInput.trim() ? "Send Message" : "Start Recording"}
-          placement="top"
-        >
-          <button
-            className="send-button"
-            onClick={messageInput.trim() ? handleSendMessage : startRecording}
+        {isFriendLoading ? (
+          <Tooltip
+            title="Wait a second until we integrate all features. It will take a few seconds."
+            placement="top"
           >
-            {messageInput.trim() ? <SendIcon /> : <MicIcon />}
-          </button>
-        </Tooltip>
+            <button
+              className="send-button" 
+              disabled
+            >
+              {messageInput.trim() ? <SendIcon /> : <MicIcon />}
+            </button>
+          </Tooltip>
+        ) : (
+          <Tooltip
+            title={messageInput.trim() ? "Send Message" : "Start Recording"}
+            placement="top"
+          >
+            <button
+              className="send-button"
+              onClick={messageInput.trim() ? handleSendMessage : startRecording}
+            >
+              {messageInput.trim() ? <SendIcon /> : <MicIcon />}
+            </button>
+          </Tooltip>
+        )}
       </>
     );
   };

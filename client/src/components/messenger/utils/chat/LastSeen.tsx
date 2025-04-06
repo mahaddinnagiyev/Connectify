@@ -1,46 +1,22 @@
-import { useEffect, useState } from "react";
 import { Account } from "../../../../services/account/dto/account-dto";
 import {
   PrivacySettings,
   PrivacySettingsDTO,
 } from "../../../../services/account/dto/privacy-settings-dto";
-import { getAllFriendshipRequests } from "../../../../services/friendship/friendship-service";
-import { FriendshipStatus } from "../../../../services/friendship/enum/friendship-status.enum";
 
 interface LastSeenProps {
   otherUserAccount: Account;
   otherUserPrivacySettings: PrivacySettingsDTO;
-  otherUserId: string;
+  isFriend: boolean;
+  loading: boolean;
 }
 
 export const LastSeen = ({
   otherUserAccount,
   otherUserPrivacySettings,
-  otherUserId,
+  isFriend,
+  loading
 }: LastSeenProps) => {
-  const [isFriend, setIsFriend] = useState(false);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    if (otherUserPrivacySettings.last_login === PrivacySettings.my_friends) {
-      getAllFriendshipRequests()
-        .then((response) => {
-          if (response.success) {
-            const acceptedFriend = response.friends.find(
-              (friend) =>
-                (friend.friend_id === otherUserId ||
-                  friend.id === otherUserId) &&
-                friend.status === FriendshipStatus.accepted
-            );
-            setIsFriend(!!acceptedFriend);
-          }
-          setLoading(false);
-        })
-        .catch(() => setLoading(false));
-    } else {
-      setLoading(false);
-    }
-  }, [otherUserAccount, otherUserId, otherUserPrivacySettings.last_login]);
 
   if (otherUserPrivacySettings.last_login === PrivacySettings.everyone) {
     return (

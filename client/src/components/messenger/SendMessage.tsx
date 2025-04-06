@@ -19,6 +19,7 @@ import {
 } from "../../services/socket/dto/messages-dto";
 import { Socket } from "socket.io-client";
 import { SendMessageInput } from "./utils/SendMessageInput";
+import InfoMessage from "../messages/InfoMessage";
 
 interface SendMessageProps {
   isBlocked: boolean;
@@ -34,6 +35,7 @@ interface SendMessageProps {
   handleReplyMessage: (message: MessagesDTO | null) => void;
   scrollToBottom: () => void;
   messagesContainerRef: React.RefObject<HTMLDivElement>;
+  isFriendLoading: boolean;
 }
 
 const SendMessage: React.FC<SendMessageProps> = ({
@@ -49,11 +51,13 @@ const SendMessage: React.FC<SendMessageProps> = ({
   replyMessage,
   scrollToBottom,
   messagesContainerRef,
+  isFriendLoading,
 }) => {
   const [messageInput, setMessageInput] = useState("");
   const [prevMessages, setPrevMessages] = useState<MessagesDTO[]>([]);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [infoMessage, setInfoMessage] = useState<string | null>(null);
   const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(
     null
   );
@@ -146,7 +150,13 @@ const SendMessage: React.FC<SendMessageProps> = ({
   const onKeyPressHandler = (e: KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
-      handleSendMessage();
+      if (isFriendLoading) {
+        setInfoMessage(
+          "Wait a second until we integrate all features. It will take a few seconds."
+        );
+      } else {
+        handleSendMessage();
+      }
     }
   };
 
@@ -377,6 +387,13 @@ const SendMessage: React.FC<SendMessageProps> = ({
         />
       )}
 
+      {infoMessage && (
+        <InfoMessage
+          message={infoMessage}
+          onClose={() => setInfoMessage(null)}
+        />
+      )}
+
       {showScrollToBottom && (
         <div
           id="scrollToBottom"
@@ -455,6 +472,7 @@ const SendMessage: React.FC<SendMessageProps> = ({
         cancelRecording={cancelRecording}
         stopRecordingAndUpload={stopRecordingAndUpload}
         onKeyPressHandler={onKeyPressHandler}
+        isFriendLoading={isFriendLoading}
       />
 
       {showAttachModal && (

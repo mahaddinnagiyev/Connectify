@@ -15,7 +15,10 @@ import {
 import { Users } from "../../services/user/dto/user-dto";
 import { createSocket } from "../../services/socket/socket-service";
 import { Account } from "../../services/account/dto/account-dto";
-import { PrivacySettingsDTO } from "../../services/account/dto/privacy-settings-dto";
+import {
+  PrivacySettings,
+  PrivacySettingsDTO,
+} from "../../services/account/dto/privacy-settings-dto";
 import ErrorMessage from "../messages/ErrorMessage";
 import {
   get_block_list,
@@ -31,6 +34,8 @@ import SuccessMessage from "../messages/SuccessMessage";
 import React from "react";
 import { Socket } from "socket.io-client";
 import MessageDetail from "../modals/chat/MessageDetail";
+import { getAllFriendshipRequests } from "../../services/friendship/friendship-service";
+import { FriendshipStatus } from "../../services/friendship/enum/friendship-status.enum";
 
 interface ChatProps {
   currentChatRoomName?: string;
@@ -84,6 +89,8 @@ const Chat = ({
 
   const [newLimit, setNewLimit] = useState(30);
   const [isLoading, setIsLoading] = useState(false);
+  const [isFriendLoading, setIsFriendLoading] = useState(true);
+  const [isFriend, setIsFriend] = useState(false);
   const prevScrollHeight = useRef<number>(0);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -176,6 +183,27 @@ const Chat = ({
     }
     setIsLoading(false);
   }, [messages, messagesContainerRef]);
+
+  useEffect(() => {
+    if (otherUserPrivacySettings?.last_login === PrivacySettings.my_friends) {
+      getAllFriendshipRequests()
+        .then((response) => {
+          if (response.success) {
+            const acceptedFriend = response.friends.find(
+              (friend) =>
+                (friend.friend_id === otherUser?.id ||
+                  friend.id === otherUser?.id) &&
+                friend.status === FriendshipStatus.accepted
+            );
+            setIsFriend(!!acceptedFriend);
+          }
+          setIsFriendLoading(false);
+        })
+        .catch(() => setIsFriendLoading(false));
+    } else {
+      setIsFriendLoading(false);
+    }
+  }, [otherUserAccount, otherUser?.id, otherUserPrivacySettings?.last_login]);
 
   const loadMoreMessages = useCallback(
     (newLimit: number) => {
@@ -348,6 +376,8 @@ const Chat = ({
           socket={socket!}
           roomId={roomId}
           currentChatRoomName={currentChatRoomName}
+          isFriend={isFriend}
+          isFriendLoading={isFriendLoading}
         />
       </div>
       <hr className="font-bold" />
@@ -671,6 +701,7 @@ const Chat = ({
           messages={messages}
           scrollToBottom={scrollToBottom}
           messagesContainerRef={messagesContainerRef}
+          isFriendLoading={isFriendLoading}
         />
       </section>
 
