@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
 import { Link } from "react-router-dom";
 import google_logo from "../../../assets/google.png";
+import { EmojiObjects as EmojiObjectsIcon } from "@mui/icons-material";
+import { Tooltip } from "@mui/material";
 
 interface SignupFormProps {
   formData: {
@@ -40,6 +42,42 @@ const SignupForm: React.FC<SignupFormProps> = ({
 
   const handleTermsChange = () => {
     setTermsAccepted((prev) => !prev);
+  };
+
+  const getRandomItem = (arr: string[]) =>
+    arr[Math.floor(Math.random() * arr.length)];
+
+  const generateUsername = () => {
+    const { first_name, last_name, email } = formData;
+
+    let base = "";
+    const randNum = Math.floor(Math.random() * 100);
+
+    if (first_name || last_name || email) {
+      const first = first_name.toLowerCase().replace(/\s+/g, "");
+      const last = last_name.toLowerCase().replace(/\s+/g, "");
+      const emailPrefix = email.split("@")[0].toLowerCase();
+
+      const options = [
+        `${first}_${getRandomItem(animals)}`,
+        `${getRandomItem(adjectives)}_${last}`,
+        `${getRandomItem(adjectives)}-${emailPrefix}`,
+        `${first}${last}${randNum}`,
+        `${getRandomItem(adjectives)}${getRandomItem(animals)}${randNum}`,
+        `${emailPrefix}_${getRandomItem(animals)}`,
+      ];
+
+      base = getRandomItem(options);
+    } else {
+      base = `${getRandomItem(adjectives)}${getRandomItem(animals)}${randNum}`;
+    }
+
+    handleChange({
+      target: {
+        name: "username",
+        value: base,
+      },
+    } as React.ChangeEvent<HTMLInputElement>);
   };
 
   return (
@@ -99,7 +137,7 @@ const SignupForm: React.FC<SignupFormProps> = ({
         </div>
 
         <div className="signup-form-group flex gap-4">
-          <div className="w-1/2">
+          <div className="w-1/2 relative">
             <label htmlFor="username">Username</label>
             <input
               autoComplete="off"
@@ -113,6 +151,14 @@ const SignupForm: React.FC<SignupFormProps> = ({
               max={255}
               value={formData.username}
             />
+            <Tooltip title="Generate username" placement="top">
+              <button
+                onClick={generateUsername}
+                className="text-sm text-gray-600 hover:text-[var(--primary-color)] transition-all duration-300 generate-username-btn"
+              >
+                <EmojiObjectsIcon />
+              </button>
+            </Tooltip>
           </div>
           <div className="w-1/2">
             <label htmlFor="email">Email</label>
@@ -252,6 +298,7 @@ const SignupForm: React.FC<SignupFormProps> = ({
             style={{
               cursor: termsAccepted ? "pointer" : "not-allowed",
             }}
+            className="signup-form-btn"
           >
             Sign up
           </button>
@@ -272,3 +319,89 @@ const SignupForm: React.FC<SignupFormProps> = ({
 };
 
 export default SignupForm;
+
+const adjectives = [
+  "cool",
+  "fast",
+  "happy",
+  "crazy",
+  "silent",
+  "brave",
+  "lazy",
+  "noisy",
+  "funky",
+  "mystic",
+  "clever",
+  "fuzzy",
+  "tiny",
+  "big",
+  "grumpy",
+  "jolly",
+  "sneaky",
+  "witty",
+  "zany",
+  "swift",
+  "gentle",
+  "fiery",
+  "frosty",
+  "stormy",
+  "sunny",
+  "shiny",
+  "spooky",
+  "dizzy",
+  "quirky",
+  "wild",
+  "silly",
+  "moody",
+  "sleepy",
+  "dreamy",
+  "snappy",
+  "glowing",
+  "breezy",
+  "cloudy",
+  "bold",
+  "electric",
+];
+
+const animals = [
+  "tiger",
+  "otter",
+  "dragon",
+  "eagle",
+  "panther",
+  "shark",
+  "wizard",
+  "ninja",
+  "lion",
+  "koala",
+  "fox",
+  "wolf",
+  "penguin",
+  "dolphin",
+  "unicorn",
+  "phoenix",
+  "griffin",
+  "hamster",
+  "raven",
+  "crow",
+  "cheetah",
+  "hyena",
+  "lemur",
+  "seal",
+  "panda",
+  "orca",
+  "owl",
+  "falcon",
+  "viper",
+  "crab",
+  "turtle",
+  "mongoose",
+  "badger",
+  "bear",
+  "elk",
+  "rhino",
+  "moose",
+  "yak",
+  "ferret",
+  "gecko",
+];

@@ -121,7 +121,7 @@ body {
   outline: none;
 }
 
-.signup-form-group button {
+.signup-form-group .signup-form-btn {
   width: 100%;
   padding: 12px;
   font-size: 16px;
@@ -134,8 +134,15 @@ body {
   transition: background-color 0.3s ease, transform 0.3s ease-in-out;
 }
 
-.signup-form-group button:hover {
+.signup-form-group .signup-form-btn:hover {
   transform: scale(1.02);
+}
+
+.signup-form-group .generate-username-btn {
+  max-width: fit-content;
+  position: absolute;
+  top: 50%;
+  right: 5%;
 }
 
 .signup-form-group span {
@@ -196,7 +203,7 @@ body {
   }
 
   .signup-form-group input,
-  .signup-form-group button {
+  .signup-form-group .signup-form-btn {
     font-size: 14px;
     padding: 10px;
   }
