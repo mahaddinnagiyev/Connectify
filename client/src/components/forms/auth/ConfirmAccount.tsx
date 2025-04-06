@@ -2,37 +2,48 @@ import React, { useState } from "react";
 import { confirm_account } from "../../../services/auth/auth-service";
 import SuccessMessage from "../../messages/SuccessMessage";
 import ErrorMessage from "../../messages/ErrorMessage";
+import CheckModal from "../../modals/spinner/CheckModal";
 
 const ConfirmAccount = () => {
   const [formData, setFormData] = useState({ code: 0 });
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: Number(e.target.value) });
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setErrorMessage(null);
-    setSuccessMessage(null);
+    try {
+      setLoading(true);
+      e.preventDefault();
+      setErrorMessage(null);
+      setSuccessMessage(null);
 
-    const response = await confirm_account(formData);
+      const response = await confirm_account(formData);
 
-    if (response.success) {
-      window.location.replace("/messenger");
-      setSuccessMessage("Account confirmed successfully!");
-    } else {
-      if (Array.isArray(response.message)) {
-        setErrorMessage(response.message[0]);
+      if (response.success) {
+        window.location.replace("/messenger");
+        setSuccessMessage("Account confirmed successfully!");
       } else {
-        setErrorMessage(
-          response.response?.error ??
-            response.message ??
-            response.error ??
-            "Invalid confirmation code"
-        );
+        if (Array.isArray(response.message)) {
+          setErrorMessage(response.message[0]);
+        } else {
+          setErrorMessage(
+            response.response?.error ??
+              response.message ??
+              response.error ??
+              "Invalid confirmation code"
+          );
+        }
       }
+    } catch (error) {
+      if (error) {
+        setErrorMessage("Something went wrong. Please try again.");
+      }
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -50,6 +61,8 @@ const ConfirmAccount = () => {
           onClose={() => setSuccessMessage(null)}
         />
       )}
+
+      {loading && <CheckModal message="Account confirmation in progress" />}
 
       <form onSubmit={handleSubmit} className="signup-form">
         <div className="signup-form-group flex flex-col gap-1">
