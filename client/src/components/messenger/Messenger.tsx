@@ -16,6 +16,7 @@ import { PrivacySettingsDTO } from "../../services/account/dto/privacy-settings-
 import ErrorMessage from "../messages/ErrorMessage";
 import UserChats from "./UserChats";
 import { Socket } from "socket.io-client";
+import CryptoJS from "crypto-js";
 
 const Messenger = () => {
   const [chats, setChats] = useState<
@@ -255,14 +256,19 @@ const Messenger = () => {
       const decodedToken: { id: string } = jwtDecode(token);
       const currentUserId = decodedToken.id;
 
-      const cacheKey = `cachedChats_${currentUserId}`;
+      const encryptionKey = process.env.VITE_CRYPTO_SECRET_KEY;
+
+      const cacheKey = `connectify_chats_${currentUserId}`;
       const cachedData = localStorage.getItem(cacheKey);
 
       if (cachedData) {
-        const { userId, chats: cachedChats } = JSON.parse(cachedData);
+        const { userId, chats: encryptedChats } = JSON.parse(cachedData);
         if (userId === currentUserId) {
-          setChats(cachedChats);
-          setIsLoading(false);
+          const bytes = CryptoJS.AES.decrypt(encryptedChats, encryptionKey!);
+          const decryptedChats = await JSON.parse(
+            bytes.toString(CryptoJS.enc.Utf8)
+          );
+          setChats(decryptedChats);
         }
       }
 
@@ -297,9 +303,14 @@ const Messenger = () => {
           })
         );
 
+        const encryptedData = CryptoJS.AES.encrypt(
+          JSON.stringify(chatsWithUsers),
+          encryptionKey!
+        ).toString();
+
         localStorage.setItem(
           cacheKey,
-          JSON.stringify({ userId: currentUserId, chats: chatsWithUsers })
+          JSON.stringify({ userId: currentUserId, chats: encryptedData })
         );
 
         setChats(chatsWithUsers);
