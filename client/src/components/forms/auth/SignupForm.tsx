@@ -1,9 +1,10 @@
 import React, { useState } from "react";
-import { Visibility, VisibilityOff } from "@mui/icons-material";
+import { Visibility, VisibilityOff, Key } from "@mui/icons-material";
 import { Link } from "react-router-dom";
 import google_logo from "../../../assets/google.png";
 import { EmojiObjects as EmojiObjectsIcon } from "@mui/icons-material";
 import { Tooltip } from "@mui/material";
+import InfoMessage from "../../messages/InfoMessage";
 
 interface SignupFormProps {
   formData: {
@@ -24,6 +25,7 @@ const SignupForm: React.FC<SignupFormProps> = ({
   handleChange,
   handleSubmit,
 }) => {
+  const [infoMessage, setInfoMessage] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [showResetPassword, setShowResetPassword] = useState(false);
   const [termsAccepted, setTermsAccepted] = useState(false);
@@ -80,8 +82,40 @@ const SignupForm: React.FC<SignupFormProps> = ({
     } as React.ChangeEvent<HTMLInputElement>);
   };
 
+  const generatePassword = () => {
+    const charset =
+      "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+-=[]{}|;:,.<>?";
+
+    let generatedPassword: string = "";
+    const passwordLength = Math.floor(Math.random() * 8) + 8;
+
+    for (let i = 0; i < passwordLength; i++) {
+      const randomIndex = Math.floor(Math.random() * charset.length);
+      generatedPassword += charset.charAt(randomIndex);
+
+      navigator.clipboard.writeText(generatedPassword);
+      setInfoMessage(
+        "We created a strong password for you but do not share and forget it. We copy it to your clipboard."
+      );
+    }
+
+    handleChange({
+      target: {
+        name: "password",
+        value: generatedPassword,
+      },
+    } as React.ChangeEvent<HTMLInputElement>);
+  };
+
   return (
     <>
+      {infoMessage && (
+        <InfoMessage
+          message={infoMessage}
+          onClose={() => setInfoMessage(null)}
+        />
+      )}
+
       <div className="auth-buttons">
         <Link to="/auth/login">Log in</Link>
         <Link to="/auth/signup" className="active">
@@ -233,12 +267,35 @@ const SignupForm: React.FC<SignupFormProps> = ({
                 max={255}
                 value={formData.password}
               />
-              <span
-                onClick={togglePasswordVisibility}
-                className="absolute right-3 top-10 cursor-pointer"
+              <Tooltip title="Generate Strong Password" placement="top">
+                <span
+                  onClick={generatePassword}
+                  className="cursor-pointer"
+                  style={{
+                    position: "absolute",
+                    right:
+                      window.innerWidth < 420
+                        ? "18%"
+                        : window.innerWidth < 500
+                        ? "15%"
+                        : "10%",
+                    top: "50%",
+                  }}
+                >
+                  <Key />
+                </span>
+              </Tooltip>
+              <Tooltip
+                title={showPassword ? "Hide Password" : "Show Password"}
+                placement="top"
               >
-                {showPassword ? <VisibilityOff /> : <Visibility />}
-              </span>
+                <span
+                  onClick={togglePasswordVisibility}
+                  className="absolute right-3 top-10 cursor-pointer"
+                >
+                  {showPassword ? <VisibilityOff /> : <Visibility />}
+                </span>
+              </Tooltip>
             </div>
             <p className="text-xs font-serif">
               Password must contain at least 8 characters, 1 uppercase letter, 1
@@ -260,12 +317,17 @@ const SignupForm: React.FC<SignupFormProps> = ({
               onChange={handleChange}
               value={formData.confirm}
             />
-            <span
-              onClick={toggleResetPasswordVisibility}
-              className="absolute right-3 top-10 cursor-pointer"
+            <Tooltip
+              title={showResetPassword ? "Hide Password" : "Show Password"}
+              placement="top"
             >
-              {showResetPassword ? <VisibilityOff /> : <Visibility />}
-            </span>
+              <span
+                onClick={toggleResetPasswordVisibility}
+                className="absolute right-3 top-10 cursor-pointer"
+              >
+                {showResetPassword ? <VisibilityOff /> : <Visibility />}
+              </span>
+            </Tooltip>
           </div>
         </div>
 
