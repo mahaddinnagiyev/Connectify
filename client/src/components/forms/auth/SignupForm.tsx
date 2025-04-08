@@ -286,14 +286,22 @@ const SignupForm: React.FC<SignupFormProps> = ({
                 </span>
               </Tooltip>
               <Tooltip
-                title={showPassword ? "Hide Password" : "Show Password"}
+                title={
+                  showPassword
+                    ? "Click To Hide Password"
+                    : "Click To Show Password"
+                }
                 placement="top"
               >
                 <span
                   onClick={togglePasswordVisibility}
                   className="absolute right-3 top-10 cursor-pointer"
                 >
-                  {showPassword ? <VisibilityOff /> : <Visibility />}
+                  {showPassword ? (
+                    <Visibility style={{ color: "var(--primary-color)" }} />
+                  ) : (
+                    <VisibilityOff />
+                  )}
                 </span>
               </Tooltip>
             </div>
@@ -318,14 +326,22 @@ const SignupForm: React.FC<SignupFormProps> = ({
               value={formData.confirm}
             />
             <Tooltip
-              title={showResetPassword ? "Hide Password" : "Show Password"}
+              title={
+                showResetPassword
+                  ? "Click To Hide Password"
+                  : "Click To Show Password"
+              }
               placement="top"
             >
               <span
                 onClick={toggleResetPasswordVisibility}
                 className="absolute right-3 top-10 cursor-pointer"
               >
-                {showResetPassword ? <VisibilityOff /> : <Visibility />}
+                {showResetPassword ? (
+                  <Visibility style={{ color: "var(--primary-color)" }} />
+                ) : (
+                  <VisibilityOff />
+                )}
               </span>
             </Tooltip>
           </div>

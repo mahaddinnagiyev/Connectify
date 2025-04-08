@@ -60,14 +60,15 @@ const Signup = () => {
           setIsLoading(false);
           if (Array.isArray(response.message)) {
             setErrorMessage(response.message[0]);
+          } else {
+            setErrorMessage(
+              response.response.message ??
+                response.response.error ??
+                response.message ??
+                response.error ??
+                "An error occurred"
+            );
           }
-          setErrorMessage(
-            response.response.message ??
-              response.response.error ??
-              response.message ??
-              response.error ??
-              "An error occurred"
-          );
         }
 
         setIsLoading(false);
