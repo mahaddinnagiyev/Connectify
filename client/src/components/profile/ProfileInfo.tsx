@@ -44,6 +44,7 @@ import { createSocket } from "../../services/socket/socket-service";
 import { PrivacySettingsDTO } from "../../services/account/dto/privacy-settings-dto";
 import CheckModal from "../modals/spinner/CheckModal";
 import { Socket } from "socket.io-client";
+import ProgressModal from "../modals/chat/ProgressModal";
 
 interface UserProfile {
   user: User;
@@ -74,6 +75,7 @@ const ProfileInfo: React.FC<ProfileInfoProps> = ({
   const [accepted, setAccepted] = useState(false);
   const [pending, setPending] = useState(false);
   const [processing, setProcessing] = useState(false);
+  const [processMessage, setProcessMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   const [confirmModalOpen, setConfirmModalOpen] = useState(false);
@@ -181,6 +183,8 @@ const ProfileInfo: React.FC<ProfileInfoProps> = ({
     [key: string]: string;
   }) => {
     try {
+      setProcessing(true);
+      setProcessMessage("Updating Personal Information...");
       const body = {
         first_name: data.first_name,
         last_name: data.last_name,
@@ -189,6 +193,22 @@ const ProfileInfo: React.FC<ProfileInfoProps> = ({
       };
       const response = await edit_user(body);
       if (response.success) {
+        const cacheKey = `cachedProfile_${userData?.user.id}`;
+        const cachedProfile = localStorage.getItem(cacheKey);
+        const parsedProfile: { userId: string; profile: UserProfile } =
+          cachedProfile ? JSON.parse(cachedProfile) : null;
+
+        if (parsedProfile.profile) {
+          parsedProfile.profile.user.first_name =
+            body.first_name && body.first_name;
+          parsedProfile.profile.user.last_name =
+            body.last_name && body.last_name;
+          parsedProfile.profile.user.username = body.username && body.username;
+          parsedProfile.profile.user.gender =
+            (body.gender as Gender) && (body.gender as Gender);
+          localStorage.setItem(cacheKey, JSON.stringify(parsedProfile));
+        }
+
         localStorage.setItem(
           "successMessage",
           response.message ?? "Personal information updated successfully!"
@@ -210,6 +230,9 @@ const ProfileInfo: React.FC<ProfileInfoProps> = ({
       if (error) {
         setErrorMessage("Something went wrong - Please try again later");
       }
+    } finally {
+      setProcessing(false);
+      setProcessMessage(null);
     }
   };
 
@@ -217,12 +240,25 @@ const ProfileInfo: React.FC<ProfileInfoProps> = ({
     [key: string]: string;
   }) => {
     try {
+      setProcessing(true);
+      setProcessMessage("Updating Profile Information...");
       const body = {
         bio: data.bio,
         location: data.location,
       };
       const response = await edit_account(body);
       if (response.success) {
+        const cacheKey = `cachedProfile_${userData?.user.id}`;
+        const cachedProfile = localStorage.getItem(cacheKey);
+        const parsedProfile: { userId: string; profile: UserProfile } =
+          cachedProfile ? JSON.parse(cachedProfile) : null;
+        if (parsedProfile.profile) {
+          parsedProfile.profile.account.bio = body.bio && body.bio;
+          parsedProfile.profile.account.location =
+            body.location && body.location;
+          localStorage.setItem(cacheKey, JSON.stringify(parsedProfile));
+        }
+
         localStorage.setItem(
           "successMessage",
           response.message ?? "Account updated successfully!"
@@ -244,6 +280,9 @@ const ProfileInfo: React.FC<ProfileInfoProps> = ({
       if (error) {
         setErrorMessage("Something went wrong - Please try again later");
       }
+    } finally {
+      setProcessing(false);
+      setProcessMessage(null);
     }
   };
 
@@ -302,6 +341,7 @@ const ProfileInfo: React.FC<ProfileInfoProps> = ({
     if (!userData) return;
     try {
       setProcessing(true);
+      setProcessMessage("Blocking user...");
       const response = await block_and_unblock_user(
         userData.user.id,
         BlockAction.block
@@ -315,12 +355,14 @@ const ProfileInfo: React.FC<ProfileInfoProps> = ({
       }
     } finally {
       setProcessing(false);
+      setProcessMessage(null);
     }
   };
 
   const unblock_user = async (id: string) => {
     try {
       setProcessing(true);
+      setProcessMessage("Unblocking user...");
       const response = await block_and_unblock_user(id, BlockAction.unblock);
       if (response.success) {
         localStorage.setItem("successMessage", response.message);
@@ -344,12 +386,14 @@ const ProfileInfo: React.FC<ProfileInfoProps> = ({
       }
     } finally {
       setProcessing(false);
+      setProcessMessage(null);
     }
   };
 
   const remove_friend = async (id: string) => {
     try {
       setProcessing(true);
+      setProcessMessage("Removing friend...");
       const response = await removeFriendship(id);
       if (response.success) {
         localStorage.setItem("successMessage", response.message);
@@ -373,6 +417,7 @@ const ProfileInfo: React.FC<ProfileInfoProps> = ({
       }
     } finally {
       setProcessing(false);
+      setProcessMessage(null);
       window.location.reload();
     }
   };
@@ -421,9 +466,13 @@ const ProfileInfo: React.FC<ProfileInfoProps> = ({
           onClose={() => setSuccessMessage(null)}
         />
       )}
-      {loading && <CheckModal message="Uploading Photo..." />}
+      {loading && (
+        <ProgressModal open={loading} text="Uploading Profile Photo..." />
+      )}
       {isDataLoaded && <CheckModal message="Loading Profile..." />}
-      {processing && <CheckModal message="Processing..." />}
+      {processing && processMessage && (
+        <ProgressModal open={processing} text={processMessage} />
+      )}
 
       <Box sx={{ width: "100%", padding: 0 }}>
         <Typography
@@ -589,6 +638,7 @@ const ProfileInfo: React.FC<ProfileInfoProps> = ({
           onEdit={() => setEditProfileInfoModalOpen(true)}
           copySocialLink={copy_soical_link}
           accepted={accepted}
+          userId={userData?.user.id}
         />
         {/* Modals */}
         <ImageModal

@@ -26,16 +26,20 @@ import {
   PrivacySettings,
   PrivacySettingsDTO,
 } from "../../services/account/dto/privacy-settings-dto";
-import CheckModal from "../modals/spinner/CheckModal";
+import { User } from "../../services/user/dto/user-dto";
+import { Account } from "../../services/account/dto/account-dto";
+import ProgressModal from "../modals/chat/ProgressModal";
 
 interface SocialLinkProps {
   socialLinks: { id: string; name: string; link: string }[];
   copy_soical_link: (link: string) => void;
   privacy_settings: PrivacySettingsDTO | null;
   accepted: boolean;
+  userId: string;
 }
 
 const SocialLink: React.FC<SocialLinkProps> = ({
+  userId,
   socialLinks,
   copy_soical_link,
   privacy_settings,
@@ -92,6 +96,8 @@ const SocialLink: React.FC<SocialLinkProps> = ({
         return setErrorMessage("Please enter valid URL");
       }
 
+      handleCloseModal();
+
       let response;
       if (editMode && currentLink) {
         response = await edit_social_link(currentLink.id, formData);
@@ -106,6 +112,31 @@ const SocialLink: React.FC<SocialLinkProps> = ({
             ? "Social link updated successfully!"
             : "Social link added successfully!"
         );
+
+        if (editMode) {
+          const cacheKey = `cached_account_settings_${userId}`;
+          const cachedProfile = localStorage.getItem(cacheKey);
+          const parsedData: {
+            userId: string;
+            profile: {
+              user: User;
+              account: Account;
+              privacy_settings: PrivacySettingsDTO;
+            };
+          } = cachedProfile ? JSON.parse(cachedProfile) : null;
+
+          if (parsedData.profile) {
+            const social_link = parsedData.profile.account.social_links.find(
+              (link) => link.id === currentLink?.id
+            );
+
+            if (social_link) {
+              social_link.name = formData.name && formData.name;
+              social_link.link = formData.link && formData.link;
+            }
+          }
+        }
+
         window.location.reload();
       } else {
         if (Array.isArray(response.message)) {
@@ -136,6 +167,8 @@ const SocialLink: React.FC<SocialLinkProps> = ({
     try {
       setIsDeleting(true);
       if (linkToDelete) {
+        handleCloseConfirmDialog();
+
         const response = await delete_social_link(linkToDelete);
         if (response.success) {
           localStorage.setItem(
@@ -332,9 +365,12 @@ const SocialLink: React.FC<SocialLinkProps> = ({
         </>
       )}
 
-      {isDeleting && <CheckModal message="Deleting..." />}
+      {isDeleting && <ProgressModal open={isDeleting} text="Removing..." />}
       {isProcessing && (
-        <CheckModal message={`${editMode ? "Updating..." : "Creating..."}`} />
+        <ProgressModal
+          open={isProcessing}
+          text={`${editMode ? "Updating..." : "Creating..."}`}
+        />
       )}
     </>
   );

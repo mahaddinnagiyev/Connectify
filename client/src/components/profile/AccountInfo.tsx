@@ -15,6 +15,7 @@ interface AccountInfoProps {
       social_links: { id: string; name: string; link: string }[];
     };
   } | null;
+  userId?: string;
   onEdit: () => void;
   copySocialLink: (link: string) => void;
   privacy_settings: PrivacySettingsDTO | null;
@@ -22,6 +23,7 @@ interface AccountInfoProps {
 }
 
 const AccountInfo: React.FC<AccountInfoProps> = ({
+  userId,
   userData,
   onEdit,
   copySocialLink,
@@ -201,6 +203,7 @@ const AccountInfo: React.FC<AccountInfoProps> = ({
           copy_soical_link={copySocialLink}
           privacy_settings={privacy_settings ?? null}
           accepted={accepted}
+          userId={userId ?? ""}
         />
       </Box>
     </>
