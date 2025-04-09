@@ -258,7 +258,7 @@ const Messenger = () => {
 
       const encryptionKey = process.env.VITE_CRYPTO_SECRET_KEY;
 
-      const cacheKey = `connectify_chats_${currentUserId}`;
+      const cacheKey = `connectify_chats`;
       const cachedData = localStorage.getItem(cacheKey);
 
       if (cachedData) {

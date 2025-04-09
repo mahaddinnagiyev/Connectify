@@ -147,6 +147,7 @@ const ChangeRoomNameModal: React.FC<ChangeRoomNameModalProps> = ({
           <TextField
             variant="outlined"
             value={newName}
+            autoComplete="off"
             onChange={(e) => {
               setNewName(e.target.value);
               setError("");

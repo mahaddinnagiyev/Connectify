@@ -26,6 +26,7 @@ import { getMessagesForRoom } from "../../services/socket/socket-service";
 import { Socket } from "socket.io-client";
 import ChangeRoomNameModal from "../modals/chat/ChangeRoomNameModal";
 import ProgressModal from "../modals/chat/ProgressModal";
+import CryptoJS from "crypto-js";
 
 interface UserChatsProps {
   chats: (ChatRoomsDTO & {
@@ -129,18 +130,32 @@ const UserChats = ({
       );
       setIsChangingRoomName(false);
 
-      const cacheKey = `cachedChats_${currentUserId}`;
+      const encryptionKey = process.env.VITE_CRYPTO_SECRET_KEY;
+      const cacheKey = `connectify_chats`;
       const cachedData = localStorage.getItem(cacheKey);
+
       if (cachedData) {
-        const parsedData = JSON.parse(cachedData);
-        const updatedChats = parsedData.chats.map((chat: ChatRoomsDTO) =>
+        const { userId, chats: encryptedChats } = JSON.parse(cachedData);
+
+        const bytes = CryptoJS.AES.decrypt(encryptedChats, encryptionKey!);
+        const decryptedChats: ChatRoomsDTO[] = JSON.parse(
+          bytes.toString(CryptoJS.enc.Utf8)
+        );
+
+        const updatedChats = decryptedChats.map((chat) =>
           chat.id === updatedRoom.id
             ? { ...chat, name: updatedRoom.name }
             : chat
         );
+
+        const reEncrypted = CryptoJS.AES.encrypt(
+          JSON.stringify(updatedChats),
+          encryptionKey!
+        ).toString();
+
         localStorage.setItem(
           cacheKey,
-          JSON.stringify({ ...parsedData, chats: updatedChats })
+          JSON.stringify({ userId, chats: reEncrypted })
         );
       }
     };
