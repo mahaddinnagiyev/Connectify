@@ -19,6 +19,7 @@ import {
 import { User } from "../../../services/user/dto/user-dto";
 import { Account } from "../../../services/account/dto/account-dto";
 import CheckModal from "../../modals/spinner/CheckModal";
+import CryptoJS from "crypto-js";
 
 interface UserProfile {
   user: User;
@@ -73,14 +74,47 @@ const PrivacySettingsComponent: React.FC<PrivacySettingsProps> = ({
     try {
       setLoading(true);
       const response = await update_privacy_settings(privacy);
+
       if (response.success) {
         setSuccessMessage(
           response.message || "Privacy settings updated successfully"
         );
+
+        const cacheKey = "connectify_settings";
+        const encryptionKey = process.env.VITE_CRYPTO_SECRET_KEY;
+        const cachedData = localStorage.getItem(cacheKey);
+
+        if (cachedData) {
+          const { userId: cachedUserId, settings: encryptedSettings } =
+            JSON.parse(cachedData);
+          if (cachedUserId === userData?.user.id) {
+            const bytes = CryptoJS.AES.decrypt(
+              encryptedSettings,
+              encryptionKey!
+            );
+            const decryptedData = JSON.parse(bytes.toString(CryptoJS.enc.Utf8));
+
+            decryptedData.privacy_settings = privacy;
+
+            const newEncryptedSettings = CryptoJS.AES.encrypt(
+              JSON.stringify(decryptedData),
+              encryptionKey!
+            ).toString();
+
+            localStorage.setItem(
+              cacheKey,
+              JSON.stringify({
+                userId: userData?.user.id,
+                settings: newEncryptedSettings,
+              })
+            );
+          }
+        }
       } else {
         setErrorMessage(response.error || "Failed to update privacy settings");
       }
     } catch (error) {
+      console.log(error);
       if (error) {
         setErrorMessage("An error occurred while updating privacy settings");
       }

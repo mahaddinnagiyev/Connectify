@@ -15,6 +15,7 @@ import AccountSettings from "../../components/settings/AccountSettings";
 import { PrivacySettingsDTO } from "../../services/account/dto/privacy-settings-dto";
 import { getToken } from "../../services/auth/token-service";
 import { jwtDecode } from "jwt-decode";
+import CryptoJS from "crypto-js";
 
 interface UserProfile {
   user: User;
@@ -108,64 +109,74 @@ const SettingsPage = () => {
 
     fetchTokenData();
 
-    const cacheKey = `cached_account_settings_${userID}`;
-    const cachedData = localStorage.getItem(cacheKey);
+    const setSettingDatas = async () => {
+      const encryptionKey = process.env.VITE_CRYPTO_SECRET_KEY;
 
-    if (cachedData) {
-      const { userId, settings: cachedAccountSettings } =
-        JSON.parse(cachedData);
-      if (userId === userID) {
-        setUserData(cachedAccountSettings);
-      }
-    }
+      const cacheKey = `connectify_settings`;
+      const cachedData = localStorage.getItem(cacheKey);
 
-    getUserById().then((response) => {
-      if (response.success) {
-        const account_settings_data = {
-          user: response.user ?? {
-            id: null,
-            first_name: null,
-            last_name: null,
-            email: null,
-            username: null,
-            gender: null,
-            face_descriptor: null,
-            created_at: null,
-          },
-          account: response.account ?? {
-            id: null,
-            bio: null,
-            location: null,
-            profile_picture: null,
-            privacy_settings: null,
-            social_links: [],
-          },
-          privacy_settings: response.privacy_settings ?? null,
-        };
-
-        setUserData(account_settings_data);
-
-        localStorage.setItem(
-          cacheKey,
-          JSON.stringify({
-            userId: userID,
-            settings: account_settings_data,
-          })
-        );
-
-        if (localStorage.getItem("cached_account_settings_null")) {
-          localStorage.removeItem("cached_account_settings_null");
+      if (cachedData) {
+        const { userId, settings: encryptedSettings } = JSON.parse(cachedData);
+        if (userId === userID) {
+          const bytes = CryptoJS.AES.decrypt(encryptedSettings, encryptionKey!);
+          const decryptedSettings = await JSON.parse(
+            bytes.toString(CryptoJS.enc.Utf8)
+          );
+          setUserData(decryptedSettings);
         }
-      } else {
-        setErrorMessage(
-          response.response?.message ??
-            response.response?.error ??
-            response.message ??
-            response.error ??
-            "Something went wrong"
-        );
       }
-    });
+
+      getUserById().then((response) => {
+        if (response.success) {
+          const account_settings_data = {
+            user: response.user ?? {
+              id: null,
+              first_name: null,
+              last_name: null,
+              email: null,
+              username: null,
+              gender: null,
+              face_descriptor: null,
+              created_at: null,
+            },
+            account: response.account ?? {
+              id: null,
+              bio: null,
+              location: null,
+              profile_picture: null,
+              privacy_settings: null,
+              social_links: [],
+            },
+            privacy_settings: response.privacy_settings ?? null,
+          };
+
+          setUserData(account_settings_data);
+
+          const encryptedSettings = CryptoJS.AES.encrypt(
+            JSON.stringify(account_settings_data),
+            encryptionKey!
+          ).toString();
+
+          localStorage.setItem(
+            cacheKey,
+            JSON.stringify({
+              userId: userID,
+              settings: encryptedSettings,
+            })
+          );
+        } else {
+          setErrorMessage(
+            response.response?.message ??
+              response.response?.error ??
+              response.message ??
+              response.error ??
+              "Something went wrong"
+          );
+        }
+      });
+    };
+
+    setSettingDatas();
   }, [userID]);
 
   return (

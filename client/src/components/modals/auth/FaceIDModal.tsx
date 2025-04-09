@@ -9,6 +9,7 @@ import {
 import { useLocation, useNavigate } from "react-router-dom";
 import SuccessMessage from "../../messages/SuccessMessage";
 import ErrorMessage from "../../messages/ErrorMessage";
+import CryptoJS from "crypto-js";
 
 export interface FaceIDModalProps {
   onClose: () => void;
@@ -181,13 +182,42 @@ const FaceIDModal = ({
           handleClose();
           success_audio.play();
 
-          const cacheKey = `cached_account_settings_${userID}`;
+          const cacheKey = `connectify_settings`;
+          const encryptionKey = process.env.VITE_CRYPTO_SECRET_KEY;
           const cachedData = localStorage.getItem(cacheKey);
-          const parsedData = cachedData ? JSON.parse(cachedData) : null;
-          if (parsedData && parsedData.settings && parsedData.settings.user) {
-            parsedData.settings.user.face_descriptor = descriptor;
-            localStorage.setItem(cacheKey, JSON.stringify(parsedData));
+
+          if (cachedData) {
+            const { userId: cachedUserId, settings: encryptedSettings } =
+              JSON.parse(cachedData);
+            if (cachedUserId === userID) {
+              const bytes = CryptoJS.AES.decrypt(
+                encryptedSettings,
+                encryptionKey!
+              );
+              const decryptedData = JSON.parse(
+                bytes.toString(CryptoJS.enc.Utf8)
+              );
+              decryptedData.user.face_descriptor = descriptor;
+
+              const newEncryptedSettings = CryptoJS.AES.encrypt(
+                JSON.stringify(decryptedData),
+                encryptionKey!
+              ).toString();
+
+              localStorage.setItem(
+                cacheKey,
+                JSON.stringify({
+                  userId: cachedUserId,
+                  settings: newEncryptedSettings,
+                })
+              );
+            }
           }
+
+          // if (parsedData && parsedData.settings && parsedData.settings.user) {
+          //   parsedData.settings.user.face_descriptor = descriptor;
+          //   localStorage.setItem(cacheKey, JSON.stringify(parsedData));
+          // }
 
           setTimeout(() => {
             window.location.reload();

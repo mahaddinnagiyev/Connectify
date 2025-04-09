@@ -10,6 +10,7 @@ import { PrivacySettingsDTO } from "../../../services/account/dto/privacy-settin
 import { remove_user_face_id } from "../../../services/auth/auth-service";
 import ProgressModal from "../../modals/chat/ProgressModal";
 import ConfirmModal from "../../modals/confirm/ConfirmModal";
+import CryptoJS from "crypto-js";
 
 interface UserProfile {
   user: User;
@@ -45,12 +46,37 @@ const AccountSettingsComponent = ({ userData }: AccountSettingsProps) => {
       if (response.success) {
         setSuccessMessage(response.message ?? "Face ID removed successfully.");
 
-        const cacheKey = `cached_account_settings_${userData?.user.id}`;
+        const cacheKey = `connectify_settings`;
+        const encryptionKey = process.env.VITE_CRYPTO_SECRET_KEY;
         const cachedData = localStorage.getItem(cacheKey);
-        const parsedData = cachedData ? JSON.parse(cachedData) : null;
-        if (parsedData && parsedData.settings && parsedData.settings.user) {
-          parsedData.settings.user.face_descriptor = null;
-          localStorage.setItem(cacheKey, JSON.stringify(parsedData));
+
+        if (cachedData) {
+          const { userId: cachedUserId, settings: encryptedSettings } =
+            JSON.parse(cachedData);
+          if (cachedUserId === userData?.user.id) {
+            const bytes = CryptoJS.AES.decrypt(
+              encryptedSettings,
+              encryptionKey!
+            );
+            const decryptedData = JSON.parse(bytes.toString(CryptoJS.enc.Utf8));
+
+            if (decryptedData.user) {
+              decryptedData.user.face_descriptor = null;
+            }
+
+            const newEncryptedSettings = CryptoJS.AES.encrypt(
+              JSON.stringify(decryptedData),
+              encryptionKey!
+            ).toString();
+
+            localStorage.setItem(
+              cacheKey,
+              JSON.stringify({
+                userId: userData?.user.id,
+                settings: newEncryptedSettings,
+              })
+            );
+          }
         }
 
         setTimeout(() => {
@@ -58,8 +84,8 @@ const AccountSettingsComponent = ({ userData }: AccountSettingsProps) => {
         }, 1500);
       } else {
         setErrorMessage(
-          response.response.message ??
-            response.response.error ??
+          response.response?.message ??
+            response.response?.error ??
             response.message ??
             response.error ??
             "Something went wrong. Please try again."
