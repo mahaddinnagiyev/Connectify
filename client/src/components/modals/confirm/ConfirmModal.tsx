@@ -8,6 +8,7 @@ import {
   IconButton,
   useTheme,
   Typography,
+  Box,
 } from "@mui/material";
 import { Close as CloseIcon } from "@mui/icons-material";
 import { styled } from "@mui/material/styles";
@@ -83,7 +84,14 @@ const ConfirmModal: React.FC<ConfirmModalProps> = ({
       }}
     >
       <StyledDialogTitle id="confirm-dialog-title">
-        {title}
+        <Box
+          sx={{
+            color: color === "inherit" ? "inherit" : theme.palette[color].dark,
+          }}
+        >
+          {title}
+        </Box>
+
         <IconButton
           onClick={onCancel}
           size="small"
@@ -115,8 +123,8 @@ const ConfirmModal: React.FC<ConfirmModalProps> = ({
           sx={{
             textTransform: "none",
             width: "150px",
-            backgroundColor: theme.palette.error.main,
-            "&:hover": { backgroundColor: theme.palette.error.dark },
+            backgroundColor: `theme.palette.${color}.main`,
+            "&:hover": { backgroundColor: `theme.palette.${color}.dark` },
           }}
         >
           {confirmText}

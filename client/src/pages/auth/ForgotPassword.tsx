@@ -33,8 +33,10 @@ const ForgotPassword = () => {
         navigate("/auth/login");
       } else {
         setErrorMessage(
-          response.response.error ||
-            response.message ||
+          response.response.message ??
+            response.response.error ??
+            response.message ??
+            response.error ??
             "An error occurred. Please try again."
         );
       }

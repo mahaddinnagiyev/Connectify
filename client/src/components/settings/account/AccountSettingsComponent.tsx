@@ -7,10 +7,14 @@ import FaceIDModal from "../../modals/auth/FaceIDModal";
 import { User } from "../../../services/user/dto/user-dto";
 import { Account } from "../../../services/account/dto/account-dto";
 import { PrivacySettingsDTO } from "../../../services/account/dto/privacy-settings-dto";
-import { remove_user_face_id } from "../../../services/auth/auth-service";
+import {
+  forgot_password,
+  remove_user_face_id,
+} from "../../../services/auth/auth-service";
 import ProgressModal from "../../modals/chat/ProgressModal";
 import ConfirmModal from "../../modals/confirm/ConfirmModal";
 import CryptoJS from "crypto-js";
+import CheckModal from "../../modals/spinner/CheckModal";
 
 interface UserProfile {
   user: User;
@@ -27,6 +31,9 @@ const AccountSettingsComponent = ({ userData }: AccountSettingsProps) => {
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [removeFaceIdModalOpen, setRemoveFaceIdModalOpen] = useState(false);
+  const [changePasswordModalOpen, setChangePasswordModalOpen] = useState(false);
+  const [isChangePasswordProcessing, setIsChangePasswordProcessing] =
+    useState(false);
   const [isRemoving, setIsRemoving] = useState(false);
   const [faceModalOpen, setFaceModalOpen] = useState(false);
 
@@ -100,6 +107,38 @@ const AccountSettingsComponent = ({ userData }: AccountSettingsProps) => {
     }
   };
 
+  const openChangePasswordModal = () => setChangePasswordModalOpen(true);
+  const closeChangePasswordModal = () => setChangePasswordModalOpen(false);
+
+  const changePasswordRequest = async () => {
+    try {
+      setIsChangePasswordProcessing(true);
+      const response = await forgot_password(userData!.user!.email);
+
+      if (response.success) {
+        setSuccessMessage(
+          response.message ??
+            "Password change link sent to your email. Please check your inbox"
+        );
+      } else {
+        setErrorMessage(
+          response.response?.message ??
+            response.response?.error ??
+            response.message ??
+            response.error ??
+            "Something went wrong. Please try again."
+        );
+      }
+    } catch (error) {
+      if (error) {
+        setErrorMessage("Something went wrong. Please try again.");
+      }
+    } finally {
+      closeChangePasswordModal();
+      setIsChangePasswordProcessing(false);
+    }
+  };
+
   return (
     <Box sx={{ width: "100%", padding: 0, mb: 4 }}>
       {errorMessage && (
@@ -113,6 +152,10 @@ const AccountSettingsComponent = ({ userData }: AccountSettingsProps) => {
           message={successMessage}
           onClose={() => setSuccessMessage(null)}
         />
+      )}
+
+      {isChangePasswordProcessing && (
+        <CheckModal message="Processing. This may take a moment." />
       )}
 
       {/* Əgər üz descriptor qeyd olunmayıbsa xəbərdarlıq */}
@@ -173,6 +216,24 @@ const AccountSettingsComponent = ({ userData }: AccountSettingsProps) => {
           gap: 1,
         }}
       >
+        <Box
+          sx={{
+            display: "grid",
+            gridTemplateColumns: "1fr 150px",
+            alignItems: "center",
+            gap: 1,
+          }}
+        >
+          <Typography>Change Password</Typography>
+          <button
+            type="button"
+            onClick={openChangePasswordModal}
+            color="warning"
+            className="change-password-btn"
+          >
+            Change Password
+          </button>
+        </Box>
         <Box
           sx={{
             display: "grid",
@@ -259,6 +320,18 @@ const AccountSettingsComponent = ({ userData }: AccountSettingsProps) => {
           confirmText="Remove"
           onConfirm={removeFaceID}
           onCancel={closeRemoveFaceIDModal}
+        />
+      )}
+
+      {changePasswordModalOpen && (
+        <ConfirmModal
+          open={changePasswordModalOpen}
+          title="Change Password"
+          message="Are you sure you want to change your password?"
+          color="warning"
+          confirmText="Change"
+          onConfirm={changePasswordRequest}
+          onCancel={closeChangePasswordModal}
         />
       )}
 

@@ -128,7 +128,15 @@ export const isResetTokenValid = async (
 };
 
 // Reset Password
-export const resetPassword = async (password: string, token: string) => {
+export const resetPassword = async (
+  password: string,
+  token: string
+): Promise<{
+  success: boolean;
+  message?: string;
+  error: string;
+  response: { success: boolean; message?: string; error?: string };
+}> => {
   const response = await fetch(
     `${SERVER_USER_URL}/auth/reset-password?token=${token}`,
     {
@@ -173,13 +181,16 @@ export const confirm_delete_account = async (
   error?: string;
   response: { success: boolean; message?: string; error?: string };
 }> => {
-  const response = await fetch(`${SERVER_USER_URL}/auth/delete/confirm?token=${token}`, {
-    method: "DELETE",
-    headers: {
-      "Content-Type": "application/json; charset=utf-8",
-    },
-    credentials: "include",
-  });
+  const response = await fetch(
+    `${SERVER_USER_URL}/auth/delete/confirm?token=${token}`,
+    {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json; charset=utf-8",
+      },
+      credentials: "include",
+    }
+  );
   const data = await response.json();
   return data;
 };

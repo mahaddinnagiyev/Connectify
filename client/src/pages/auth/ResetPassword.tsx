@@ -68,7 +68,13 @@ const ResetPassword = () => {
         localStorage.setItem("successMessage", "Password reset successfully.");
         navigate("/auth/login");
       } else {
-        setErrorMessage(response.message || "Failed to reset password.");
+        setErrorMessage(
+          response.response.message ??
+            response.response.error ??
+            response.message ??
+            response.error ??
+            "Failed to reset password."
+        );
       }
     } catch (error) {
       if (error) {
@@ -103,11 +109,11 @@ const ResetPassword = () => {
           <div className="forgot-password-container">
             <h2>Reset Password</h2>
             <form onSubmit={handleSubmit} className="forgot-password-form">
-              <div className="forgot-password-group">
+              <div className="forgot-password-group relative">
                 <label htmlFor="password">Password</label>
                 <input
                   autoComplete="off"
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   id="password"
                   name="password"
                   placeholder="Enter your new password"
@@ -118,7 +124,7 @@ const ResetPassword = () => {
                   onClick={togglePasswordVisibility}
                   className="absolute right-3 top-10 cursor-pointer"
                 >
-                  {showPassword ? <VisibilityOff /> : <Visibility />}
+                  {showPassword ? <Visibility style={{ color: "var(--primary-color)" }}/> : <VisibilityOff /> }
                 </span>
               </div>
               <div className="forgot-password-group">
