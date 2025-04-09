@@ -579,7 +579,8 @@ export class AuthService {
         .getClient()
         .from('users')
         .select('*')
-        .eq('reset_token', token)) as { data: IUser };
+        .eq('reset_token', token)
+        .single()) as { data: IUser };
 
       if (!user || user.reset_token_expiration < new Date()) {
         return new NotFoundException({
@@ -782,7 +783,7 @@ export class AuthService {
 
       await this.supabase.getClient().from('users').delete().eq('id', user.id);
       await session.destroy();
-      
+
       await this.logger.info(
         `Account deleted successfully for user:
          First Name: ${user.first_name}
