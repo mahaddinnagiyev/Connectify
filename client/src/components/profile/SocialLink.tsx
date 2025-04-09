@@ -26,9 +26,9 @@ import {
   PrivacySettings,
   PrivacySettingsDTO,
 } from "../../services/account/dto/privacy-settings-dto";
-import { User } from "../../services/user/dto/user-dto";
-import { Account } from "../../services/account/dto/account-dto";
 import ProgressModal from "../modals/chat/ProgressModal";
+import CryptoJS from "crypto-js";
+import { SocialLink as SocialLinkDTO } from "../../services/account/dto/social-link-dto";
 
 interface SocialLinkProps {
   socialLinks: { id: string; name: string; link: string }[];
@@ -113,26 +113,44 @@ const SocialLink: React.FC<SocialLinkProps> = ({
             : "Social link added successfully!"
         );
 
-        if (editMode) {
-          const cacheKey = `cached_account_settings_${userId}`;
-          const cachedProfile = localStorage.getItem(cacheKey);
-          const parsedData: {
-            userId: string;
-            profile: {
-              user: User;
-              account: Account;
-              privacy_settings: PrivacySettingsDTO;
-            };
-          } = cachedProfile ? JSON.parse(cachedProfile) : null;
+        if (editMode && currentLink) {
+          const cacheKey = `connectify_profile`;
+          const encryptionKey = process.env.VITE_CRYPTO_SECRET_KEY;
+          const cachedData = localStorage.getItem(cacheKey);
 
-          if (parsedData.profile) {
-            const social_link = parsedData.profile.account.social_links.find(
-              (link) => link.id === currentLink?.id
-            );
+          if (cachedData) {
+            const { userId: cachedUserId, profile: encryptedProfile } =
+              JSON.parse(cachedData);
+            if (cachedUserId === userId) {
+              const bytes = CryptoJS.AES.decrypt(
+                encryptedProfile,
+                encryptionKey!
+              );
+              const decryptedData = JSON.parse(
+                bytes.toString(CryptoJS.enc.Utf8)
+              );
 
-            if (social_link) {
-              social_link.name = formData.name && formData.name;
-              social_link.link = formData.link && formData.link;
+              const targetLink = decryptedData.account.social_links.find(
+                (link: SocialLinkDTO) => link.id === currentLink.id
+              );
+
+              if (targetLink) {
+                targetLink.name = formData.name;
+                targetLink.link = formData.link;
+              }
+
+              const newEncryptedProfile = CryptoJS.AES.encrypt(
+                JSON.stringify(decryptedData),
+                encryptionKey!
+              ).toString();
+
+              localStorage.setItem(
+                cacheKey,
+                JSON.stringify({
+                  userId,
+                  profile: newEncryptedProfile,
+                })
+              );
             }
           }
         }
@@ -166,6 +184,7 @@ const SocialLink: React.FC<SocialLinkProps> = ({
   const handleDelete = async () => {
     try {
       setIsDeleting(true);
+
       if (linkToDelete) {
         handleCloseConfirmDialog();
 
@@ -175,6 +194,43 @@ const SocialLink: React.FC<SocialLinkProps> = ({
             "successMessage",
             "Social link deleted successfully!"
           );
+
+          const cacheKey = `connectify_profile`;
+          const encryptionKey = process.env.VITE_CRYPTO_SECRET_KEY;
+          const cachedData = localStorage.getItem(cacheKey);
+
+          if (cachedData) {
+            const { userId: cachedUserId, profile: encryptedProfile } =
+              JSON.parse(cachedData);
+            if (cachedUserId === userId) {
+              const bytes = CryptoJS.AES.decrypt(
+                encryptedProfile,
+                encryptionKey!
+              );
+              const decryptedData = JSON.parse(
+                bytes.toString(CryptoJS.enc.Utf8)
+              );
+
+              decryptedData.account.social_links =
+                decryptedData.account.social_links.filter(
+                  (link: SocialLinkDTO) => link.id !== linkToDelete
+                );
+
+              const newEncryptedProfile = CryptoJS.AES.encrypt(
+                JSON.stringify(decryptedData),
+                encryptionKey!
+              ).toString();
+
+              localStorage.setItem(
+                cacheKey,
+                JSON.stringify({
+                  userId,
+                  profile: newEncryptedProfile,
+                })
+              );
+            }
+          }
+
           window.location.reload();
         } else {
           if (Array.isArray(response.message)) {

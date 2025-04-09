@@ -25,13 +25,11 @@ import ErrorMessage from "../messages/ErrorMessage";
 import CheckModal from "../modals/spinner/CheckModal";
 import { getUserById } from "../../services/user/user-service";
 import { getFriendRequests } from "../../services/friendship/friendship-service";
-import { User } from "../../services/user/dto/user-dto";
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [profilePicture, setProfilePicture] = useState<string | null>(null);
   const [receivedRequestsCount, setReceivedRequestsCount] = useState(0);
   const menuRef = useRef<HTMLDivElement | null>(null);
@@ -65,14 +63,10 @@ const Header = () => {
       if (response.success) {
         localStorage.removeItem("activeSettingsTab");
         localStorage.removeItem("activeTab");
-        localStorage.removeItem(`cachedChats_${currentUser?.id}`);
+        localStorage.removeItem(`connectify_chats`);
         localStorage.removeItem("videoVolume");
-        localStorage.removeItem(`cachedProfile_${currentUser?.id}`);
-        localStorage.removeItem(`cached_account_settings_${currentUser?.id}`);
-
-        if (localStorage.getItem("cachedProfile_null")) {
-          localStorage.removeItem("cachedProfile_null");
-        }
+        localStorage.removeItem(`connectify_profile`);
+        localStorage.removeItem(`connectify_settings`);
 
         window.location.href = "/auth/login";
       } else {
@@ -99,7 +93,6 @@ const Header = () => {
   useEffect(() => {
     getUserById().then((response) => {
       if (response.success) {
-        setCurrentUser(response.user);
         setProfilePicture(response.account.profile_picture);
       }
     });

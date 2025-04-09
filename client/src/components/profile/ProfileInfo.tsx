@@ -45,6 +45,7 @@ import { PrivacySettingsDTO } from "../../services/account/dto/privacy-settings-
 import CheckModal from "../modals/spinner/CheckModal";
 import { Socket } from "socket.io-client";
 import ProgressModal from "../modals/chat/ProgressModal";
+import CryptoJS from "crypto-js";
 
 interface UserProfile {
   user: User;
@@ -193,20 +194,31 @@ const ProfileInfo: React.FC<ProfileInfoProps> = ({
       };
       const response = await edit_user(body);
       if (response.success) {
-        const cacheKey = `cachedProfile_${userData?.user.id}`;
+        const cacheKey = `connectify_profile`;
         const cachedProfile = localStorage.getItem(cacheKey);
-        const parsedProfile: { userId: string; profile: UserProfile } =
-          cachedProfile ? JSON.parse(cachedProfile) : null;
+        const encryptionKey = process.env.VITE_CRYPTO_SECRET_KEY;
 
-        if (parsedProfile.profile) {
-          parsedProfile.profile.user.first_name =
-            body.first_name && body.first_name;
-          parsedProfile.profile.user.last_name =
-            body.last_name && body.last_name;
-          parsedProfile.profile.user.username = body.username && body.username;
-          parsedProfile.profile.user.gender =
-            (body.gender as Gender) && (body.gender as Gender);
-          localStorage.setItem(cacheKey, JSON.stringify(parsedProfile));
+        if (cachedProfile && encryptionKey) {
+          const parsed = JSON.parse(cachedProfile);
+          if (parsed.userId === userData?.user.id) {
+            const bytes = CryptoJS.AES.decrypt(parsed.profile, encryptionKey);
+            const decrypted = JSON.parse(bytes.toString(CryptoJS.enc.Utf8));
+
+            decrypted.user.first_name = body.first_name;
+            decrypted.user.last_name = body.last_name;
+            decrypted.user.username = body.username;
+            decrypted.user.gender = body.gender;
+
+            const encrypted = CryptoJS.AES.encrypt(
+              JSON.stringify(decrypted),
+              encryptionKey
+            ).toString();
+
+            localStorage.setItem(
+              cacheKey,
+              JSON.stringify({ userId: parsed.userId, profile: encrypted })
+            );
+          }
         }
 
         localStorage.setItem(
@@ -227,6 +239,7 @@ const ProfileInfo: React.FC<ProfileInfoProps> = ({
         }
       }
     } catch (error) {
+      console.log(error);
       if (error) {
         setErrorMessage("Something went wrong - Please try again later");
       }
@@ -248,15 +261,29 @@ const ProfileInfo: React.FC<ProfileInfoProps> = ({
       };
       const response = await edit_account(body);
       if (response.success) {
-        const cacheKey = `cachedProfile_${userData?.user.id}`;
+        const cacheKey = `connectify_profile`;
         const cachedProfile = localStorage.getItem(cacheKey);
-        const parsedProfile: { userId: string; profile: UserProfile } =
-          cachedProfile ? JSON.parse(cachedProfile) : null;
-        if (parsedProfile.profile) {
-          parsedProfile.profile.account.bio = body.bio && body.bio;
-          parsedProfile.profile.account.location =
-            body.location && body.location;
-          localStorage.setItem(cacheKey, JSON.stringify(parsedProfile));
+        const encryptionKey = process.env.VITE_CRYPTO_SECRET_KEY;
+
+        if (cachedProfile && encryptionKey) {
+          const parsed = JSON.parse(cachedProfile);
+          if (parsed.userId === userData?.user.id) {
+            const bytes = CryptoJS.AES.decrypt(parsed.profile, encryptionKey);
+            const decrypted = JSON.parse(bytes.toString(CryptoJS.enc.Utf8));
+
+            decrypted.account.bio = body.bio;
+            decrypted.account.location = body.location;
+
+            const encrypted = CryptoJS.AES.encrypt(
+              JSON.stringify(decrypted),
+              encryptionKey
+            ).toString();
+
+            localStorage.setItem(
+              cacheKey,
+              JSON.stringify({ userId: parsed.userId, profile: encrypted })
+            );
+          }
         }
 
         localStorage.setItem(

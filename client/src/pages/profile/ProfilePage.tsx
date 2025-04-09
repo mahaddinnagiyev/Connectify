@@ -17,6 +17,7 @@ import { Account } from "../../services/account/dto/account-dto";
 import { PrivacySettingsDTO } from "../../services/account/dto/privacy-settings-dto";
 import { getToken } from "../../services/auth/token-service";
 import { jwtDecode } from "jwt-decode";
+import CryptoJS from "crypto-js";
 
 interface UserProfile {
   user: User;
@@ -114,13 +115,23 @@ const ProfilePage = () => {
         setIsDataLoaded(true);
         fetchTokenData();
 
-        const cacheKey = `cachedProfile_${userID}`;
-        const cachedData = localStorage.getItem(cacheKey);
+        const encryptionKey = process.env.VITE_CRYPTO_SECRET_KEY;
 
+        const cacheKey = `connectify_profile`;
+        const cachedData = localStorage.getItem(cacheKey);
         if (cachedData) {
-          const { userId, profile: cachedProfile } = JSON.parse(cachedData);
+          const { userId, profile: encryptedProfile } = JSON.parse(cachedData);
+
           if (userId === userID) {
-            setUserData(cachedProfile);
+            const bytes = CryptoJS.AES.decrypt(
+              encryptedProfile,
+              encryptionKey!
+            );
+            const decryptedChats = await JSON.parse(
+              bytes.toString(CryptoJS.enc.Utf8)
+            );
+
+            setUserData(decryptedChats);
             setIsDataLoaded(false);
           }
         }
@@ -148,17 +159,18 @@ const ProfilePage = () => {
           };
           setUserData(profileData);
 
+          const encryptedProfile = CryptoJS.AES.encrypt(
+            JSON.stringify(profileData),
+            encryptionKey!
+          ).toString();
+
           localStorage.setItem(
             cacheKey,
             JSON.stringify({
               userId: userID,
-              profile: profileData,
+              profile: encryptedProfile,
             })
           );
-
-          if (localStorage.getItem("cachedProfile_null")) {
-            localStorage.removeItem("cachedProfile_null");
-          }
         } else {
           setErrorMessage(
             response.response?.message ??
